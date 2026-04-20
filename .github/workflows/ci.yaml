@@ -1,0 +1,102 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents:      read
+  pull-requests: write
+
+jobs:
+
+  # Run all tests.
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@ee0669bd1cc54295c223e0bb666b733df41de1c5  # v2.7.0
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@8789b3e21e6c11b2697f5eb56eddae542f746c10  # v1.7.0
+        with:
+          version: stable
+
+      - name: Install submodules
+        run: |
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          forge install
+
+      - name: Build contracts
+        run: forge build
+
+      - name: Run forge tests
+        run: forge test
+        env:
+          ETH_RPC_URL: ${{ secrets.ETH_RPC_URL }}
+          FOUNDRY_PROFILE: ${{ github.event_name == 'push' && 'ci' || '' }}
+
+  # Check contract sizes.
+  size:
+    runs-on: ubuntu-latest
+    needs: [test]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@ee0669bd1cc54295c223e0bb666b733df41de1c5  # v2.7.0
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@8789b3e21e6c11b2697f5eb56eddae542f746c10  # v1.7.0
+        with:
+          version: stable
+
+      - name: Install submodules
+        run: |
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          forge install
+
+      - run:
+            chmod +x ./scripts/size.sh
+            scripts/size.sh
+        env:
+          FOUNDRY_PROFILE: ci
+
+  # Check and generate code coverage report.
+  coverage:
+    runs-on: ubuntu-latest
+    needs: [test]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@ee0669bd1cc54295c223e0bb666b733df41de1c5  # v2.7.0
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@8789b3e21e6c11b2697f5eb56eddae542f746c10  # v1.7.0
+        with:
+          version: stable
+
+      - name: Install submodules
+        run: |
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          forge install
+
+      - name: Install lcov
+        run: sudo apt-get install lcov
+
+      - name: Generate code coverage report
+        run: |
+          forge coverage --report lcov
+          lcov --remove ./lcov.info 'tests/*' -o ./lcov.info.pruned --rc branch_coverage=1 -ignore-errors unused
+        env:
+          ETH_RPC_URL: ${{ secrets.ETH_RPC_URL }}
+          FOUNDRY_PROFILE: ${{ github.event_name == 'push' && 'ci' || '' }}
+
+      - name: Report code coverage
+        uses: zgosalvez/github-actions-report-lcov@eda775f552bfb2bffbdedea26f19dfb8c24a1648  # v4.1.26
+        with:
+          coverage-files: lcov.info.pruned
+          minimum-coverage: 90
+          artifact-name: code-coverage-report
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          working-directory: ./
+          update-comment: true

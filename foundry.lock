@@ -1,0 +1,14 @@
+{
+  "modules/erc20": {
+    "rev": "baf791a9f894b0b319a2d42d5b9f8d30349ebaad"
+  },
+  "modules/erc20-helper": {
+    "rev": "2ecb2f4d2505007213b50d7bb9e942cf69b40834"
+  },
+  "modules/forge-std": {
+    "rev": "2999b6563e1f07971a09d48b82f3fac910d72a05"
+  },
+  "modules/proxy-factory": {
+    "rev": "78057cd6415ed2938ffa02b155fa02e0169bc240"
+  }
+}

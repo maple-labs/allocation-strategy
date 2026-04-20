@@ -1,0 +1,42 @@
+// SPDX-License-Identifier: BUSL-1.1
+pragma solidity ^0.8.0;
+
+import { MapleTradingStrategy } from "../../contracts/MapleTradingStrategy.sol";
+
+import { MockMigrator } from "../utils/Mocks.sol";
+import { TestBase }     from "../utils/TestBase.sol";
+
+contract MigrateTests is TestBase {
+
+    address migrator = address(new MockMigrator());
+
+    bytes arguments = abi.encode(address(1337));
+
+    function test_migrate_protocolPaused() external {
+        globals.__setIsFunctionPaused(MapleTradingStrategy.migrate.selector, true);
+
+        vm.expectRevert("MTS:PAUSED");
+        strategy.migrate(migrator, arguments);
+    }
+
+    function test_migrate_notFactory() external {
+        vm.expectRevert("MTS:NOT_FACTORY");
+        strategy.migrate(migrator, arguments);
+    }
+
+    function test_migrate_failedMigration() external {
+        vm.prank(address(factory));
+        vm.expectRevert("MTS:M:FAILED");
+        strategy.migrate(migrator, "");
+    }
+
+    function test_migrate_success() external {
+        assertEq(strategy.manager(), params.manager);
+
+        vm.prank(address(factory));
+        strategy.migrate(migrator, arguments);
+
+        assertEq(strategy.manager(), address(1337));
+    }
+
+}
