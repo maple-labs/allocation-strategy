@@ -5,7 +5,7 @@ import { IMapleTradingStrategyStorage } from "./interfaces/IMapleTradingStrategy
 
 contract MapleTradingStrategyStorage is IMapleTradingStrategyStorage {
 
-    bool transient internal _locked;
+    bool transient internal _locked;  // Used as a reentrancy guard.
 
     address public override manager;
 

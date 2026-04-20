@@ -18,16 +18,6 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
     /*** Modifiers                                                                                                                      ***/
     /**************************************************************************************************************************************/
 
-    modifier nonReentrant() {
-        require(!_locked, "MTS:LOCKED");
-
-        _locked = true;
-
-        _;
-
-        _locked = false;
-    }
-
     modifier onlyFactory() {
         require(msg.sender == _factory(), "MTS:NOT_FACTORY");
 
