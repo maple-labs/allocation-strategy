@@ -22,7 +22,7 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@8789b3e21e6c11b2697f5eb56eddae542f746c10  # v1.7.0
         with:
-          version: stable
+          version: 1.5.1
 
       - name: Install submodules
         run: |
@@ -36,7 +36,7 @@ jobs:
         run: forge test
         env:
           ETH_RPC_URL: ${{ secrets.ETH_RPC_URL }}
-          FOUNDRY_PROFILE: ${{ github.event_name == 'push' && 'ci' || '' }}
+          FOUNDRY_PROFILE: ${{ github.event_name == 'push' && 'ci' || 'default' }}
 
   # Check contract sizes.
   size:
@@ -49,7 +49,7 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@8789b3e21e6c11b2697f5eb56eddae542f746c10  # v1.7.0
         with:
-          version: stable
+          version: 1.5.1
 
       - name: Install submodules
         run: |
@@ -73,7 +73,7 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@8789b3e21e6c11b2697f5eb56eddae542f746c10  # v1.7.0
         with:
-          version: stable
+          version: 1.5.1
 
       - name: Install submodules
         run: |
@@ -89,7 +89,7 @@ jobs:
           lcov --remove ./lcov.info 'tests/*' -o ./lcov.info.pruned --rc branch_coverage=1 -ignore-errors unused
         env:
           ETH_RPC_URL: ${{ secrets.ETH_RPC_URL }}
-          FOUNDRY_PROFILE: ${{ github.event_name == 'push' && 'ci' || '' }}
+          FOUNDRY_PROFILE: ${{ github.event_name == 'push' && 'ci' || 'default' }}
 
       - name: Report code coverage
         uses: zgosalvez/github-actions-report-lcov@eda775f552bfb2bffbdedea26f19dfb8c24a1648  # v4.1.26

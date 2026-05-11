@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
-import { MapleTradingStrategy } from "../../contracts/MapleTradingStrategy.sol";
+import { MapleTradingStrategy } from "../../../contracts/MapleTradingStrategy.sol";
 
-import { MockMigrator } from "../utils/Mocks.sol";
-import { TestBase }     from "../utils/TestBase.sol";
+import { MockMigrator } from "../../utils/Mocks.sol";
+import { TestBase }     from "../../utils/TestBase.sol";
 
 contract MigrateTests is TestBase {
 
@@ -12,19 +12,25 @@ contract MigrateTests is TestBase {
 
     bytes arguments = abi.encode(address(1337));
 
-    function test_migrate_protocolPaused() external {
+    function test_migrate_revert_functionPaused() external {
         globals.__setIsFunctionPaused(MapleTradingStrategy.migrate.selector, true);
 
         vm.expectRevert("MTS:PAUSED");
         strategy.migrate(migrator, arguments);
     }
 
-    function test_migrate_notFactory() external {
+    function test_migrate_revert_notFactory() external {
         vm.expectRevert("MTS:NOT_FACTORY");
         strategy.migrate(migrator, arguments);
     }
 
-    function test_migrate_failedMigration() external {
+    function test_migrate_revert_invalidMigrator() external {
+        vm.prank(address(factory));
+        vm.expectRevert("MTS:M:FAILED");
+        strategy.migrate(makeAddr("randomAddress"), arguments);
+    }
+
+    function test_migrate_revert_invalidArguments() external {
         vm.prank(address(factory));
         vm.expectRevert("MTS:M:FAILED");
         strategy.migrate(migrator, "");
