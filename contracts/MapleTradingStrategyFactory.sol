@@ -17,7 +17,7 @@ contract MapleTradingStrategyFactory is MapleProxyFactory {
     {
         require(IGlobalsLike(mapleGlobals).canDeploy(msg.sender), "MTSF:CI:CANNOT_DEPLOY");
 
-        isInstance[instance_ = super.createInstance(arguments_, salt_)] = true;
+        instance_ = super.createInstance(arguments_, salt_);
     }
 
 }

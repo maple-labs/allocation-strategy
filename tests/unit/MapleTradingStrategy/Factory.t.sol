@@ -6,7 +6,7 @@ import { TestBase } from "../../utils/TestBase.sol";
 contract FactoryTests is TestBase {
 
     function test_factory_success() external view {
-        assertEq(strategy.factory(), address(factory));
+        assertEq(strategy.factory(), address(strategyFactory));
     }
 
 }

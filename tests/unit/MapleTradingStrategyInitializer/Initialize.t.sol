@@ -10,14 +10,74 @@ contract InitializeTests is TestBase {
 
     MapleTradingStrategyInitializerHarness proxy = MapleTradingStrategyInitializerHarness(initializer);
 
+    function setUp() public override {
+        super.setUp();
+
+        manager.__setUnderlyingStrategy(address(proxy));
+    }
+
+    function test_initialize_revert_zeroStrategyManager() external {
+        params.strategyManager = address(0);
+
+        vm.expectRevert("MTSI:I:ZERO_STRATEGY_MANAGER");
+        vm.prank(address(strategyFactory));
+        proxy.__initialize(params);
+    }
+
+    function test_initialize_revert_invalidAsset() external {
+        params.fundsAsset = makeAddr("invalidAsset");
+
+        vm.expectRevert("MTSI:I:INVALID_ASSET");
+        vm.prank(address(strategyFactory));
+        proxy.__initialize(params);
+    }
+
+    function test_initialize_revert_invalidFactory() external {
+        globals.__setIsInstanceOf("STRATEGY_MANAGER_FACTORY", address(managerFactory), false);
+
+        vm.expectRevert("MTSI:I:INVALID_FACTORY");
+        vm.prank(address(strategyFactory));
+        proxy.__initialize(params);
+    }
+
+    function test_initialize_revert_invalidInstance() external {
+        managerFactory.__setIsInstance(address(manager), false);
+
+        vm.expectRevert("MTSI:I:INVALID_INSTANCE");
+        vm.prank(address(strategyFactory));
+        proxy.__initialize(params);
+    }
+
+    function test_initialize_revert_invalidUnderlying() external {
+        manager.__setUnderlyingStrategy(makeAddr("wrongStrategy"));
+
+        vm.expectRevert("MTSI:I:INVALID_UNDERLYING");
+        vm.prank(address(strategyFactory));
+        proxy.__initialize(params);
+    }
+
+    function test_initialize_revert_invalidSumFeeRate() external {
+        params.strategyDelegateFeeRate = 0.5e6;
+        params.strategyProtocolFeeRate = 0.5e6 + 1;
+
+        vm.expectRevert("MTSI:I:INVALID_SUM_FEE_RATE");
+        vm.prank(address(strategyFactory));
+        proxy.__initialize(params);
+    }
+
     function test_initialize_success() external {
         vm.expectEmit();
         emit IMapleTradingStrategyInitializer.Initialized(params);
 
-        vm.prank(address(factory));
+        vm.prank(address(strategyFactory));
         proxy.__initialize(params);
 
-        assertEq(proxy.manager(), address(manager));
+        assertEq(proxy.fundsAsset(),              address(asset));
+        assertEq(proxy.locked(),                  1);
+        assertEq(proxy.strategyDelegateFeeRate(), 0.02e6);
+        assertEq(proxy.strategyProtocolFeeRate(), 0.03e6);
+        assertEq(proxy.strategyManager(),         address(manager));
+        assertEq(proxy.strategyMetadata(),        "MacAttack - 02a");
     }
 
 }

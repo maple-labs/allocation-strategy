@@ -16,7 +16,7 @@ import {
     MockAsset,
     MockFactory,
     MockGlobals,
-    MockManager
+    MockStrategyManager
 } from "./Mocks.sol";
 
 contract TestBase is Test {
@@ -32,11 +32,12 @@ contract TestBase is Test {
 
     IMapleTradingStrategyInitializer.Parameters params;
 
-    MockAsset   asset   = new MockAsset();
-    MockGlobals globals = new MockGlobals();
-    MockManager manager = new MockManager();
+    MockAsset           asset          = new MockAsset();
+    MockFactory         managerFactory = new MockFactory();
+    MockGlobals         globals        = new MockGlobals();
+    MockStrategyManager manager        = new MockStrategyManager();
 
-    MapleTradingStrategyFactory factory;
+    MapleTradingStrategyFactory strategyFactory;
     MapleTradingStrategyHarness strategy;
 
     function setUp() public virtual {
@@ -45,20 +46,31 @@ contract TestBase is Test {
         globals.__setCanDeploy(deployer, true);
         globals.__setGovernor(governor);
         globals.__setSecurityAdmin(securityAdmin);
+        globals.__setIsPoolAsset(address(asset), true);
+        globals.__setIsInstanceOf("STRATEGY_MANAGER_FACTORY", address(managerFactory), true);
 
-        factory = new MapleTradingStrategyFactory(address(globals));
+        manager.__setFactory(address(managerFactory));
+        managerFactory.__setIsInstance(address(manager), true);
+
+        strategyFactory = new MapleTradingStrategyFactory(address(globals));
 
         vm.startPrank(governor);
-        factory.registerImplementation(100, implementation, initializer);
-        factory.setDefaultVersion(100);
+        strategyFactory.registerImplementation(100, implementation, initializer);
+        strategyFactory.setDefaultVersion(100);
         vm.stopPrank();
 
         params = IMapleTradingStrategyInitializer.Parameters({
-            manager: address(manager)
+            fundsAsset:              address(asset),
+            strategyManager:         address(manager),
+            strategyMetadata:        "MacAttack - 02a",
+            strategyDelegateFeeRate: 0.02e6,
+            strategyProtocolFeeRate: 0.03e6
         });
 
+        manager.__setUnderlyingStrategy(strategyFactory.getInstanceAddress(abi.encode(params), "DEFAULT"));
+
         vm.prank(deployer);
-        strategy = MapleTradingStrategyHarness(factory.createInstance(abi.encode(params), "DEFAULT"));
+        strategy = MapleTradingStrategyHarness(strategyFactory.createInstance(abi.encode(params), "DEFAULT"));
     }
 
 }

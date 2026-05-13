@@ -51,7 +51,11 @@ contract MockGlobals {
 
     mapping(address => bool) public canDeploy;
 
+    mapping(address => bool) public isPoolAsset;
+
     mapping(bytes4 => bool) public isFunctionPaused;
+
+    mapping(bytes32 => mapping(address => bool)) public isInstanceOf;
 
     function __setCanDeploy(address caller_, bool canDeploy_) external {
         canDeploy[caller_] = canDeploy_;
@@ -65,6 +69,14 @@ contract MockGlobals {
         isFunctionPaused[signature_] = isFunctionPaused_;
     }
 
+    function __setIsInstanceOf(bytes32 key_, address instance_, bool isInstanceOf_) external {
+        isInstanceOf[key_][instance_] = isInstanceOf_;
+    }
+
+    function __setIsPoolAsset(address asset_, bool isPoolAsset_) external {
+        isPoolAsset[asset_] = isPoolAsset_;
+    }
+
     function __setProtocolPaused(bool protocolPaused_) external {
         protocolPaused = protocolPaused_;
     }
@@ -75,12 +87,25 @@ contract MockGlobals {
 
 }
 
-contract MockManager {}
+contract MockStrategyManager {
+
+    address public factory;
+    address public underlyingStrategy;
+
+    function __setFactory(address factory_) external {
+        factory = factory_;
+    }
+
+    function __setUnderlyingStrategy(address underlyingStrategy_) external {
+        underlyingStrategy = underlyingStrategy_;
+    }
+
+}
 
 contract MockMigrator is MapleTradingStrategyStorage {
 
     fallback() external {
-        manager = abi.decode(msg.data, (address));
+        strategyManager = abi.decode(msg.data, (address));
     }
 
 }

@@ -366,12 +366,14 @@ Natspec must only exist in interface files and must be aligned according to the 
 ```solidity
 /**
  *  @dev    Repay all principal and fees and close a loan.
- *  @param  amount_    An amount to pull from the caller, if any.
- *  @return principal_ The portion of the amount paid paying back principal.
- *  @return interest_  The portion of the amount paid paying interest fees.
+ *  @param  amount    An amount to pull from the caller, if any.
+ *  @return principal The portion of the amount paid paying back principal.
+ *  @return interest  The portion of the amount paid paying interest fees.
  */
-function closeLoan(uint256 amount_) external returns (uint256 principal_, uint256 interest_);
+function closeLoan(uint256 amount) external returns (uint256 principal, uint256 interest);
 ```
+
+Parameters and return values on interfaces don't have trailing `_` for better readability.
 
 # Function Modifiers
 Function modifiers should be ordered in the following manner:

@@ -30,7 +30,7 @@ contract SetImplementationTests is TestBase {
     function test_setImplementation_success() external {
         assertEq(strategy.implementation(), implementation);
 
-        vm.prank(address(factory));
+        vm.prank(address(strategyFactory));
         strategy.setImplementation(newImplementation);
 
         assertEq(strategy.implementation(), newImplementation);

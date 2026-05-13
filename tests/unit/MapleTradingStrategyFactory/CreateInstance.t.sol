@@ -9,12 +9,18 @@ import { TestBase }                    from "../../utils/TestBase.sol";
 
 contract CreateInstanceTests is TestBase {
 
+    function setUp() public override {
+        super.setUp();
+
+        manager.__setUnderlyingStrategy(strategyFactory.getInstanceAddress(abi.encode(params), ""));
+    }
+
     function test_createInstance_revert_invalidDeployer() external {
         globals.__setCanDeploy(deployer, false);
 
         vm.prank(deployer);
         vm.expectRevert("MTSF:CI:CANNOT_DEPLOY");
-        factory.createInstance(abi.encode(params), "");
+        strategyFactory.createInstance(abi.encode(params), "");
     }
 
     function test_createInstance_revert_protocolPaused() external {
@@ -22,24 +28,24 @@ contract CreateInstanceTests is TestBase {
 
         vm.prank(deployer);
         vm.expectRevert("MPF:PROTOCOL_PAUSED");
-        factory.createInstance(abi.encode(params), "");
+        strategyFactory.createInstance(abi.encode(params), "");
     }
 
     function test_createInstance_revert_createCollision() external {
         bytes memory arguments = abi.encode(params);
 
         vm.prank(deployer);
-        factory.createInstance(arguments, "");
+        strategyFactory.createInstance(arguments, "");
 
         vm.prank(deployer);
         vm.expectRevert();
-        factory.createInstance(arguments, "");
+        strategyFactory.createInstance(arguments, "");
     }
 
     function test_createInstance_success() external {
         bytes memory arguments = abi.encode(params);
 
-        address proxy = factory.getInstanceAddress(arguments, "");
+        address proxy = strategyFactory.getInstanceAddress(arguments, "");
 
         vm.expectEmit();
         emit IMapleTradingStrategyInitializer.Initialized(params);
@@ -47,20 +53,25 @@ contract CreateInstanceTests is TestBase {
         vm.expectEmit();
         emit IMapleProxyFactory.InstanceDeployed(100, proxy, arguments);
 
-        assertEq(factory.isInstance(proxy), false);
+        assertEq(strategyFactory.isInstance(proxy), false);
 
         vm.prank(deployer);
-        strategy = MapleTradingStrategyHarness(factory.createInstance(arguments, ""));
+        strategy = MapleTradingStrategyHarness(strategyFactory.createInstance(arguments, ""));
 
         assertEq(address(strategy), proxy);
 
-        assertEq(factory.isInstance(proxy), true);
+        assertEq(strategyFactory.isInstance(proxy), true);
 
-        assertEq(strategy.factory(),        address(factory));
-        assertEq(strategy.globals(),        address(globals));
-        assertEq(strategy.implementation(), address(implementation));
-        assertEq(strategy.manager(),        address(manager));
-        assertEq(strategy.securityAdmin(),  address(securityAdmin));
+        assertEq(strategy.factory(),                 address(strategyFactory));
+        assertEq(strategy.fundsAsset(),              address(asset));
+        assertEq(strategy.locked(),                  1);
+        assertEq(strategy.globals(),                 address(globals));
+        assertEq(strategy.implementation(),          address(implementation));
+        assertEq(strategy.securityAdmin(),           address(securityAdmin));
+        assertEq(strategy.strategyDelegateFeeRate(), 0.02e6);
+        assertEq(strategy.strategyManager(),         address(manager));
+        assertEq(strategy.strategyMetadata(),        "MacAttack - 02a");
+        assertEq(strategy.strategyProtocolFeeRate(), 0.03e6);
     }
 
 }

@@ -19,8 +19,8 @@ contract UpgradeTests is TestBase {
         super.setUp();
 
         vm.startPrank(governor);
-        factory.registerImplementation(200, newImplementation, initializer);
-        factory.enableUpgradePath(100, 200, migrator);
+        strategyFactory.registerImplementation(200, newImplementation, initializer);
+        strategyFactory.enableUpgradePath(100, 200, migrator);
         vm.stopPrank();
     }
 
@@ -47,7 +47,7 @@ contract UpgradeTests is TestBase {
 
     function test_upgrade_revert_notAllowed() external {
         vm.prank(governor);
-        factory.disableUpgradePath(100, 200);
+        strategyFactory.disableUpgradePath(100, 200);
 
         vm.prank(securityAdmin);
         vm.expectRevert("MPF:UI:NOT_ALLOWED");
@@ -61,7 +61,7 @@ contract UpgradeTests is TestBase {
     }
 
     function test_upgrade_success() external {
-        assertEq(strategy.manager(), params.manager);
+        assertEq(strategy.strategyManager(), address(manager));
 
         vm.expectEmit();
         emit IMapleProxied.Upgraded(200, arguments);
@@ -69,7 +69,7 @@ contract UpgradeTests is TestBase {
         vm.prank(securityAdmin);
         strategy.upgrade(200, arguments);
 
-        assertEq(strategy.manager(), address(1337));
+        assertEq(strategy.strategyManager(), address(1337));
     }
 
 }

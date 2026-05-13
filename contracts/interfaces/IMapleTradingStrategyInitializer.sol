@@ -8,10 +8,18 @@ interface IMapleTradingStrategyInitializer {
 
     /**
      *  @dev   Parameters required to initialize a trading strategy.
-     *  @param manager Address of the strategy manager contract.
+     *  @param fundsAsset              Address of the asset used by the strategy.
+     *  @param strategyManager         Address of the strategy manager contract.
+     *  @param strategyMetadata        Optional metadata associated with the trading strategy.
+     *  @param strategyDelegateFeeRate Percentage of yield collected by the strategy delegate.
+     *  @param strategyProtocolFeeRate Percentage of yield collected by the Maple treasury.
      */
     struct Parameters {
-        address manager;
+        address fundsAsset;
+        address strategyManager;
+        string  strategyMetadata;
+        uint32  strategyDelegateFeeRate;
+        uint32  strategyProtocolFeeRate;
     }
 
     /**

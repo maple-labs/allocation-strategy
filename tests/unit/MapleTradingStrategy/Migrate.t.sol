@@ -25,24 +25,24 @@ contract MigrateTests is TestBase {
     }
 
     function test_migrate_revert_invalidMigrator() external {
-        vm.prank(address(factory));
+        vm.prank(address(strategyFactory));
         vm.expectRevert("MTS:M:FAILED");
         strategy.migrate(makeAddr("randomAddress"), arguments);
     }
 
     function test_migrate_revert_invalidArguments() external {
-        vm.prank(address(factory));
+        vm.prank(address(strategyFactory));
         vm.expectRevert("MTS:M:FAILED");
         strategy.migrate(migrator, "");
     }
 
     function test_migrate_success() external {
-        assertEq(strategy.manager(), params.manager);
+        assertEq(strategy.strategyManager(), address(manager));
 
-        vm.prank(address(factory));
+        vm.prank(address(strategyFactory));
         strategy.migrate(migrator, arguments);
 
-        assertEq(strategy.manager(), address(1337));
+        assertEq(strategy.strategyManager(), address(1337));
     }
 
 }

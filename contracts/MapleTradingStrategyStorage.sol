@@ -5,8 +5,15 @@ import { IMapleTradingStrategyStorage } from "./interfaces/IMapleTradingStrategy
 
 contract MapleTradingStrategyStorage is IMapleTradingStrategyStorage {
 
-    bool transient internal _locked;  // Used as a reentrancy guard.
+    uint256 internal _locked;  // Used when checking for reentrancy.
 
-    address public override manager;
+    address public override fundsAsset;       // Address of the underlying asset.
+    address public override strategyManager;  // Address of the strategy manager.
+
+    uint32 public override strategyDelegateFeeRate;  // Percentage of yield collected by the strategy delegate.
+    uint32 public override strategyProtocolFeeRate;  // Percentage of yield collected by the Maple treasury.
+
+    // TODO: Should `bytes` be used here instead?
+    string public override strategyMetadata;  // Optional metadata associated with the trading strategy.
 
 }
