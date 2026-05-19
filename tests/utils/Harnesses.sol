@@ -6,6 +6,10 @@ import { MapleTradingStrategyInitializer } from "../../contracts/MapleTradingStr
 
 contract MapleTradingStrategyHarness is MapleTradingStrategy {
 
+    function __setLocked(uint256 locked_) external {
+        _locked = locked_;
+    }
+
     function locked() external view returns (uint256 locked_) {
         locked_ = _locked;
     }

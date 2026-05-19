@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
+import { ERC20Helper } from "../modules/erc20-helper/src/ERC20Helper.sol";
+
 import { MapleProxiedInternals } from "../modules/proxy-factory/contracts/MapleProxiedInternals.sol";
 
 import { IMapleTradingStrategy }           from "./interfaces/IMapleTradingStrategy.sol";
@@ -17,6 +19,16 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
     /**************************************************************************************************************************************/
     /*** Modifiers                                                                                                                      ***/
     /**************************************************************************************************************************************/
+
+    modifier nonReentrant() {
+        require(_locked == 1, "MTS:LOCKED");
+
+        _locked = 2;
+
+        _;
+
+        _locked = 1;
+    }
 
     modifier onlyFactory() {
         require(msg.sender == _factory(), "MTS:NOT_FACTORY");
@@ -72,6 +84,20 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
         assetsOut_ = assetsIn_;
 
         emit StrategyFunded(strategyManager, assetsIn_);
+    }
+
+    function withdrawFromUnderlyingStrategy(
+        address destination_,
+        uint256 assets_
+    )
+        external override whenNotPaused nonReentrant onlyStrategyManager
+    {
+        // TODO: Check if validation of destination address should be added.
+        // TODO: Check if validation of asset amounts should be added: <0, cash - unaccruedYield]
+
+        require(ERC20Helper.transfer(fundsAsset, destination_, assets_), "MTS:WFUS:TRANSFER_FAILED");
+
+        emit StrategyWithdrawn(strategyManager, destination_, assets_);
     }
 
     /**************************************************************************************************************************************/

@@ -21,6 +21,14 @@ interface IMapleTradingStrategy is IMapleTradingStrategyStorage, IMapleProxied {
      */
     event StrategyFunded(address indexed strategyManager, uint256 assets);
 
+    /**
+     *  @dev   Emitted when assets are withdrawn from the trading strategy.
+     *  @param strategyManager Address of the associated strategy manager.
+     *  @param destination     Address that received the withdrawn assets.
+     *  @param assets          Amount of assets withdrawn from the trading strategy.
+     */
+    event StrategyWithdrawn(address indexed strategyManager, address indexed destination, uint256 assets);
+
     /**************************************************************************************************************************************/
     /*** State-Changing Functions                                                                                                       ***/
     /**************************************************************************************************************************************/
@@ -34,6 +42,15 @@ interface IMapleTradingStrategy is IMapleTradingStrategyStorage, IMapleProxied {
      *                    Equal to the amount of assets that were transferred.
      */
     function fundUnderlyingStrategy(uint256 assetsIn, bytes calldata data) external returns (uint256 assetsOut);
+
+    /**
+     *  @dev    Withdraws assets from the strategy to a specific address.
+     *          Callable only by the strategy manager.
+     *          Only assets sitting in the trading strategy can be withdrawn.
+     *  @param  destination Address to send the assets to.
+     *  @param  assets      Amount of assets to withdraw.
+     */
+    function withdrawFromUnderlyingStrategy(address destination, uint256 assets) external;
 
     /**************************************************************************************************************************************/
     /*** View Functions                                                                                                                 ***/
