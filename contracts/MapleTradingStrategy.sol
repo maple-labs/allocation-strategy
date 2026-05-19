@@ -24,6 +24,12 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
         _;
     }
 
+    modifier onlyStrategyManager() {
+        require(msg.sender == strategyManager, "MTS:NOT_STRATEGY_MANAGER");
+
+        _;
+    }
+
     modifier whenNotPaused() {
         require(!IGlobalsLike(globals()).isFunctionPaused(msg.sig), "MTS:PAUSED");
 
@@ -53,6 +59,20 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
     /**************************************************************************************************************************************/
     /*** State-Changing Functions                                                                                                       ***/
     /**************************************************************************************************************************************/
+
+    function fundUnderlyingStrategy(
+        uint256 assetsIn_,
+        bytes calldata
+    )
+        external override whenNotPaused onlyStrategyManager returns (uint256 assetsOut_)
+    {
+        // TODO: Check if validation for zero asset amounts is needed.
+        // TODO: Check if validation related to transferred asset balances is needed.
+
+        assetsOut_ = assetsIn_;
+
+        emit StrategyFunded(strategyManager, assetsIn_);
+    }
 
     /**************************************************************************************************************************************/
     /*** View Functions                                                                                                                 ***/

@@ -14,9 +14,26 @@ interface IMapleTradingStrategy is IMapleTradingStrategyStorage, IMapleProxied {
     /*** Events                                                                                                                         ***/
     /**************************************************************************************************************************************/
 
+    /**
+     *  @dev   Emitted when assets are deployed into the trading strategy.
+     *  @param strategyManager Address of the associated strategy manager.
+     *  @param assets          Amount of assets transferred into the trading strategy.
+     */
+    event StrategyFunded(address indexed strategyManager, uint256 assets);
+
     /**************************************************************************************************************************************/
     /*** State-Changing Functions                                                                                                       ***/
     /**************************************************************************************************************************************/
+
+    /**
+     *  @dev    Acknowledges assets have been funded to the strategy.
+     *          Callable only by the strategy manager.
+     *  @param  assetsIn  Amount of assets that have been transferred to the strategy.
+     *  @param  data      Unused, but reserved for future strategy-specific calldata.
+     *  @return assetsOut Value of transferred assets after the funding.
+     *                    Equal to the amount of assets that were transferred.
+     */
+    function fundUnderlyingStrategy(uint256 assetsIn, bytes calldata data) external returns (uint256 assetsOut);
 
     /**************************************************************************************************************************************/
     /*** View Functions                                                                                                                 ***/
