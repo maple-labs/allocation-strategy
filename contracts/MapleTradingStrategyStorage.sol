@@ -16,4 +16,6 @@ contract MapleTradingStrategyStorage is IMapleTradingStrategyStorage {
     // TODO: Should `bytes` be used here instead?
     string public override strategyMetadata;  // Optional metadata associated with the trading strategy.
 
+    mapping(address => uint256) public override deploymentCapOf;  // Per-address deployment cap.
+
 }

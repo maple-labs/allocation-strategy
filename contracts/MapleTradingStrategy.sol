@@ -30,6 +30,18 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
         _locked = 1;
     }
 
+    modifier onlyAdmin() {
+        address globals_ = globals();
+
+        require(
+            msg.sender == IGlobalsLike(globals_).strategyDelegateOf(strategyManager) ||
+            msg.sender == IGlobalsLike(globals_).operationalAdmin(),
+            "MTS:NOT_AUTHORIZED"
+        );
+
+        _;
+    }
+
     modifier onlyFactory() {
         require(msg.sender == _factory(), "MTS:NOT_FACTORY");
 
@@ -66,6 +78,34 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
         IProxyFactoryLike(_factory()).upgradeInstance(version_, arguments_);
 
         emit Upgraded(version_, arguments_);
+    }
+
+    /**************************************************************************************************************************************/
+    /*** Administrative Functions                                                                                                       ***/
+    /**************************************************************************************************************************************/
+
+    function setDeploymentCaps(address[] calldata accounts_, uint256[] calldata amounts_) external override whenNotPaused onlyAdmin {
+        require(accounts_.length != 0,               "MTS:SDC:ZERO_LENGTH");
+        require(accounts_.length == amounts_.length, "MTS:SDC:LENGTH_MISMATCH");
+
+        address globals_ = globals();
+
+        for (uint256 i_; i_ < accounts_.length; ++i_) {
+            address account_ = accounts_[i_];
+            uint256 cap_     = amounts_[i_];
+
+            require(
+                IGlobalsLike(globals_).isInstanceOf("TRADING_STRATEGY_DEPLOYER", account_) ||
+                cap_ == 0,
+                "MTS:SDC:INVALID_DEPLOYER"
+            );
+
+            require(deploymentCapOf[account_] != cap_, "MTS:SDC:NO_CHANGE");
+
+            deploymentCapOf[account_] = cap_;
+
+            emit DeploymentCapSet(account_, cap_);
+        }
     }
 
     /**************************************************************************************************************************************/

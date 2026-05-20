@@ -73,4 +73,40 @@ contract TestBase is Test {
         strategy = MapleTradingStrategyHarness(strategyFactory.createInstance(abi.encode(params), "DEFAULT"));
     }
 
+    function array(address element_) internal pure returns (address[] memory array_) {
+        array_    = new address[](1);
+        array_[0] = element_;
+    }
+
+    function array(uint256 element_) internal pure returns (uint256[] memory array_) {
+        array_    = new uint256[](1);
+        array_[0] = element_;
+    }
+
+    function array(address a_, address b_) internal pure returns (address[] memory array_) {
+        array_    = new address[](2);
+        array_[0] = a_;
+        array_[1] = b_;
+    }
+
+    function array(uint256 a_, uint256 b_) internal pure returns (uint256[] memory array_) {
+        array_    = new uint256[](2);
+        array_[0] = a_;
+        array_[1] = b_;
+    }
+
+    function array(address a_, address b_, address c_) internal pure returns (address[] memory array_) {
+        array_    = new address[](3);
+        array_[0] = a_;
+        array_[1] = b_;
+        array_[2] = c_;
+    }
+
+    function array(uint256 a_, uint256 b_, uint256 c_) internal pure returns (uint256[] memory array_) {
+        array_    = new uint256[](3);
+        array_[0] = a_;
+        array_[1] = b_;
+        array_[2] = c_;
+    }
+
 }

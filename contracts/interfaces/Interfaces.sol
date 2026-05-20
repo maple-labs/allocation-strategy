@@ -11,7 +11,11 @@ interface IGlobalsLike {
 
     function isPoolAsset(address asset) external view returns (bool);
 
+    function operationalAdmin() external view returns (address);
+
     function securityAdmin() external view returns (address);
+
+    function strategyDelegateOf(address strategyManager) external view returns (address);
 
 }
 

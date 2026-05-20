@@ -42,6 +42,17 @@ interface IMapleTradingStrategyStorage {
     function strategyProtocolFeeRate() external view returns (uint32 strategyProtocolFeeRate);
 
     /**************************************************************************************************************************************/
+    /*** Caps                                                                                                                           ***/
+    /**************************************************************************************************************************************/
+
+    /**
+     *  @dev    Returns the deployment cap configured for a trading address.
+     *  @param  deployer      Address of the trading address to read the cap for.
+     *  @return deploymentCap Maximum amount of assets the trading address can deploy.
+     */
+    function deploymentCapOf(address deployer) external view returns (uint256 deploymentCap);
+
+    /**************************************************************************************************************************************/
     /*** Miscellaneous                                                                                                                  ***/
     /**************************************************************************************************************************************/
 

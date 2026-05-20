@@ -45,6 +45,7 @@ contract MockFactory {
 contract MockGlobals {
 
     address public governor;
+    address public operationalAdmin;
     address public securityAdmin;
 
     bool public protocolPaused;
@@ -52,6 +53,8 @@ contract MockGlobals {
     mapping(address => bool) public canDeploy;
 
     mapping(address => bool) public isPoolAsset;
+
+    mapping(address => address) public strategyDelegateOf;
 
     mapping(bytes4 => bool) public isFunctionPaused;
 
@@ -77,12 +80,20 @@ contract MockGlobals {
         isPoolAsset[asset_] = isPoolAsset_;
     }
 
+    function __setOperationalAdmin(address operationalAdmin_) external {
+        operationalAdmin = operationalAdmin_;
+    }
+
     function __setProtocolPaused(bool protocolPaused_) external {
         protocolPaused = protocolPaused_;
     }
 
     function __setSecurityAdmin(address securityAdmin_) external {
         securityAdmin = securityAdmin_;
+    }
+
+    function __setStrategyDelegateOf(address strategyManager_, address strategyDelegate_) external {
+        strategyDelegateOf[strategyManager_] = strategyDelegate_;
     }
 
 }

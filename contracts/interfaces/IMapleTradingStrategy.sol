@@ -15,6 +15,13 @@ interface IMapleTradingStrategy is IMapleTradingStrategyStorage, IMapleProxied {
     /**************************************************************************************************************************************/
 
     /**
+     *  @dev   Emitted when the deployment cap of a trading address is set.
+     *  @param account       Trading address the cap was set for.
+     *  @param deploymentCap New deployment cap for the trading address.
+     */
+    event DeploymentCapSet(address indexed account, uint256 deploymentCap);
+
+    /**
      *  @dev   Emitted when assets are deployed into the trading strategy.
      *  @param strategyManager Address of the associated strategy manager.
      *  @param assets          Amount of assets transferred into the trading strategy.
@@ -28,6 +35,18 @@ interface IMapleTradingStrategy is IMapleTradingStrategyStorage, IMapleProxied {
      *  @param assets          Amount of assets withdrawn from the trading strategy.
      */
     event StrategyWithdrawn(address indexed strategyManager, address indexed destination, uint256 assets);
+
+    /**************************************************************************************************************************************/
+    /*** Administrative Functions                                                                                                       ***/
+    /**************************************************************************************************************************************/
+
+    /**
+     *  @dev   Sets the deployment cap for a list of trading addresses.
+     *         Callable only by the strategy delegate or operational admin.
+     *  @param accounts Trading addresses to set deployment caps for.
+     *  @param amounts  New deployment cap to set for each trading address.
+     */
+    function setDeploymentCaps(address[] calldata accounts, uint256[] calldata amounts) external;
 
     /**************************************************************************************************************************************/
     /*** State-Changing Functions                                                                                                       ***/
