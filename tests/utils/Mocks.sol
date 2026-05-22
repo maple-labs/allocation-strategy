@@ -54,6 +54,8 @@ contract MockGlobals {
 
     mapping(address => bool) public isPoolAsset;
 
+    mapping(address => bool) public isValidTradingAddress;
+
     mapping(address => address) public strategyDelegateOf;
 
     mapping(bytes4 => bool) public isFunctionPaused;
@@ -78,6 +80,10 @@ contract MockGlobals {
 
     function __setIsPoolAsset(address asset_, bool isPoolAsset_) external {
         isPoolAsset[asset_] = isPoolAsset_;
+    }
+
+    function __setIsValidTradingAddress(address tradingAddress_, bool isValidTradingAddress_) external {
+        isValidTradingAddress[tradingAddress_] = isValidTradingAddress_;
     }
 
     function __setOperationalAdmin(address operationalAdmin_) external {

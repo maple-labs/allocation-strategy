@@ -94,13 +94,8 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
             address account_ = accounts_[i_];
             uint256 cap_     = amounts_[i_];
 
-            require(
-                IGlobalsLike(globals_).isInstanceOf("TRADING_STRATEGY_DEPLOYER", account_) ||
-                cap_ == 0,
-                "MTS:SDC:INVALID_DEPLOYER"
-            );
-
-            require(deploymentCapOf[account_] != cap_, "MTS:SDC:NO_CHANGE");
+            require(IGlobalsLike(globals_).isValidTradingAddress(account_) || cap_ == 0, "MTS:SDC:INVALID_DEPLOYER");
+            require(deploymentCapOf[account_] != cap_,                                   "MTS:SDC:NO_CHANGE");
 
             deploymentCapOf[account_] = cap_;
 

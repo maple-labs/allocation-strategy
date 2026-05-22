@@ -52,8 +52,8 @@ contract SetDeploymentCapsFailureTests is TestBase {
         address validDeployer2  = makeAddr("validDeployer2");
         address invalidDeployer = makeAddr("invalidDeployer");
 
-        globals.__setIsInstanceOf("TRADING_STRATEGY_DEPLOYER", validDeployer1, true);
-        globals.__setIsInstanceOf("TRADING_STRATEGY_DEPLOYER", validDeployer2, true);
+        globals.__setIsValidTradingAddress(validDeployer1, true);
+        globals.__setIsValidTradingAddress(validDeployer2, true);
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MTS:SDC:INVALID_DEPLOYER");
@@ -72,7 +72,7 @@ contract SetDeploymentCapsFailureTests is TestBase {
 
         address deployer = makeAddr("deployer");
 
-        globals.__setIsInstanceOf("TRADING_STRATEGY_DEPLOYER", deployer, true);
+        globals.__setIsValidTradingAddress(deployer, true);
 
         assertEq(strategy.deploymentCapOf(deployer), 0);
 
@@ -81,7 +81,7 @@ contract SetDeploymentCapsFailureTests is TestBase {
 
         assertEq(strategy.deploymentCapOf(deployer), 100e6);
 
-        globals.__setIsInstanceOf("TRADING_STRATEGY_DEPLOYER", deployer, false);
+        globals.__setIsValidTradingAddress(deployer, false);
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MTS:SDC:INVALID_DEPLOYER");
@@ -95,7 +95,7 @@ contract SetDeploymentCapsFailureTests is TestBase {
 
         address deployer = makeAddr("deployer");
 
-        globals.__setIsInstanceOf("TRADING_STRATEGY_DEPLOYER", deployer, true);
+        globals.__setIsValidTradingAddress(deployer, true);
 
         vm.prank(strategyDelegate);
         strategy.setDeploymentCaps(array(deployer), array(100e6));
@@ -113,7 +113,7 @@ contract SetDeploymentCapsFailureTests is TestBase {
         address whitelistedDeployer = makeAddr("whitelistedDeployer");
         address blacklistedDeployer = makeAddr("blacklistedDeployer");
 
-        globals.__setIsInstanceOf("TRADING_STRATEGY_DEPLOYER", whitelistedDeployer, true);
+        globals.__setIsValidTradingAddress(whitelistedDeployer, true);
 
         assertEq(strategy.deploymentCapOf(whitelistedDeployer), 0);
         assertEq(strategy.deploymentCapOf(blacklistedDeployer), 0);
@@ -144,9 +144,9 @@ contract SetDeploymentCapsSuccessTests is TestBase {
         globals.__setOperationalAdmin(operationalAdmin);
         globals.__setStrategyDelegateOf(address(manager), strategyDelegate);
 
-        globals.__setIsInstanceOf("TRADING_STRATEGY_DEPLOYER", deployer1, true);
-        globals.__setIsInstanceOf("TRADING_STRATEGY_DEPLOYER", deployer2, true);
-        globals.__setIsInstanceOf("TRADING_STRATEGY_DEPLOYER", deployer3, true);
+        globals.__setIsValidTradingAddress(deployer1, true);
+        globals.__setIsValidTradingAddress(deployer2, true);
+        globals.__setIsValidTradingAddress(deployer3, true);
     }
 
     function test_setDeploymentCaps_success_singleAddress() external {
@@ -283,7 +283,7 @@ contract SetDeploymentCapsSuccessTests is TestBase {
     function test_setDeploymentCaps_success_revokedDeployer_zeroCap() external {
         address revokedDeployer = makeAddr("revokedDeployer");
 
-        globals.__setIsInstanceOf("TRADING_STRATEGY_DEPLOYER", revokedDeployer, true);
+        globals.__setIsValidTradingAddress(revokedDeployer, true);
 
         uint256 cap = 100e6;
 
@@ -292,7 +292,7 @@ contract SetDeploymentCapsSuccessTests is TestBase {
 
         assertEq(strategy.deploymentCapOf(revokedDeployer), cap);
 
-        globals.__setIsInstanceOf("TRADING_STRATEGY_DEPLOYER", revokedDeployer, false);
+        globals.__setIsValidTradingAddress(revokedDeployer, false);
 
         vm.expectEmit();
         emit IMapleTradingStrategy.DeploymentCapSet(revokedDeployer, 0);
