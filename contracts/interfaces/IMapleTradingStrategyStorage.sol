@@ -7,6 +7,22 @@ pragma solidity ^0.8.0;
 interface IMapleTradingStrategyStorage {
 
     /**************************************************************************************************************************************/
+    /*** Structs                                                                                                                        ***/
+    /**************************************************************************************************************************************/
+
+    /**
+     *  @dev   Defines which asset management functions an address is authorized to call.
+     *  @param canDeployAssets True if the address can call deployAssets().
+     *  @param canReturnAssets True if the address can call returnAssets().
+     *  @param canRealizeYield True if the address can call realizeYield().
+     */
+    struct Permissions {
+        bool canDeployAssets;
+        bool canReturnAssets;
+        bool canRealizeYield;
+    }
+
+    /**************************************************************************************************************************************/
     /*** Addresses                                                                                                                      ***/
     /**************************************************************************************************************************************/
 
@@ -46,11 +62,46 @@ interface IMapleTradingStrategyStorage {
     /**************************************************************************************************************************************/
 
     /**
+     *  @dev    Returns the amount of assets currently deployed by a trading address.
+     *  @param  account        Address of the trading address.
+     *  @return deployedAssets Amount of assets currently deployed by the address.
+     */
+    function deployedAssetsOf(address account) external view returns (uint256 deployedAssets);
+
+    /**
      *  @dev    Returns the deployment cap configured for a trading address.
-     *  @param  deployer      Address of the trading address to read the cap for.
+     *  @param  account       Address of the trading address to read the cap for.
      *  @return deploymentCap Maximum amount of assets the trading address can deploy.
      */
-    function deploymentCapOf(address deployer) external view returns (uint256 deploymentCap);
+    function deploymentCapOf(address account) external view returns (uint256 deploymentCap);
+
+    /**************************************************************************************************************************************/
+    /*** Accounting                                                                                                                     ***/
+    /**************************************************************************************************************************************/
+
+    /**
+     *  @dev    Returns the total amount of assets currently deployed across all trading addresses.
+     *  @return outstandingAssets Total assets deployed by the strategy.
+     */
+    function outstandingAssets() external view returns (uint256 outstandingAssets);
+
+    /**************************************************************************************************************************************/
+    /*** Permissions                                                                                                                    ***/
+    /**************************************************************************************************************************************/
+
+    /**
+     *  @dev    Returns the permission flags for a given address.
+     *  @param  account         Address to read permissions for.
+     *  @return canDeployAssets Defines if an address can deploy assets.
+     *  @return canReturnAssets Defines if an address can return assets.
+     *  @return canRealizeYield Defines if an address can realize yield.
+     */
+    function permissions(address account)
+        external view returns (
+            bool canDeployAssets,
+            bool canReturnAssets,
+            bool canRealizeYield
+        );
 
     /**************************************************************************************************************************************/
     /*** Miscellaneous                                                                                                                  ***/

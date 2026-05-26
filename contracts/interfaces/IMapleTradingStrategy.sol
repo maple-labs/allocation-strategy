@@ -15,6 +15,14 @@ interface IMapleTradingStrategy is IMapleTradingStrategyStorage, IMapleProxied {
     /**************************************************************************************************************************************/
 
     /**
+     *  @dev   Emitted when assets are deployed.
+     *  @param deployer Address that deployed the assets.
+     *  @param assets   Amount of assets deployed.
+     *  @param metadata Optional metadata associated with the deployment.
+     */
+    event AssetsDeployed(address indexed deployer, uint256 assets, bytes metadata);
+
+    /**
      *  @dev   Emitted when the deployment cap of a trading address is set.
      *  @param account       Trading address the cap was set for.
      *  @param deploymentCap New deployment cap for the trading address.
@@ -37,6 +45,21 @@ interface IMapleTradingStrategy is IMapleTradingStrategyStorage, IMapleProxied {
     event StrategyWithdrawn(address indexed strategyManager, address indexed destination, uint256 assets);
 
     /**************************************************************************************************************************************/
+    /*** Management Functions                                                                                                           ***/
+    /**************************************************************************************************************************************/
+
+    /**
+     *  @dev   Transfers assets from the strategy to the caller.
+     *         Caller must be a valid trading address on MapleGlobals.
+     *         Caller must have permission to deploy assets.
+     *         Cannot deploy more assets than allowed by the deployment cap.
+     *         Cannot deploy more assets than are currently available in the strategy.
+     *  @param assets   Amount of assets to deploy.
+     *  @param metadata Optional metadata associated with the deployment.
+     */
+    function deployAssets(uint256 assets, bytes calldata metadata) external;
+
+    /**************************************************************************************************************************************/
     /*** Administrative Functions                                                                                                       ***/
     /**************************************************************************************************************************************/
 
@@ -49,7 +72,7 @@ interface IMapleTradingStrategy is IMapleTradingStrategyStorage, IMapleProxied {
     function setDeploymentCaps(address[] calldata accounts, uint256[] calldata amounts) external;
 
     /**************************************************************************************************************************************/
-    /*** State-Changing Functions                                                                                                       ***/
+    /*** Liquidity Functions                                                                                                            ***/
     /**************************************************************************************************************************************/
 
     /**
@@ -74,6 +97,13 @@ interface IMapleTradingStrategy is IMapleTradingStrategyStorage, IMapleProxied {
     /**************************************************************************************************************************************/
     /*** View Functions                                                                                                                 ***/
     /**************************************************************************************************************************************/
+
+    /**
+     *  @dev    Returns the amount of assets available for deployment or withdrawal.
+     *          Does not include unrealized assets still sitting in the yield buffer.
+     *  @return availableToWithdraw Assets available for deployment or withdrawal.
+     */
+    function availableToWithdraw() external view returns (uint256 availableToWithdraw);
 
     /**
      *  @dev    Returns the address of the Maple Globals contract.

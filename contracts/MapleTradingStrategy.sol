@@ -5,8 +5,12 @@ import { ERC20Helper } from "../modules/erc20-helper/src/ERC20Helper.sol";
 
 import { MapleProxiedInternals } from "../modules/proxy-factory/contracts/MapleProxiedInternals.sol";
 
-import { IMapleTradingStrategy }           from "./interfaces/IMapleTradingStrategy.sol";
-import { IGlobalsLike, IProxyFactoryLike } from "./interfaces/Interfaces.sol";
+import { IMapleTradingStrategy } from "./interfaces/IMapleTradingStrategy.sol";
+import {
+    IERC20Like,
+    IGlobalsLike,
+    IProxyFactoryLike
+} from "./interfaces/Interfaces.sol";
 
 import { MapleTradingStrategyStorage } from "./MapleTradingStrategyStorage.sol";
 
@@ -81,6 +85,29 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
     }
 
     /**************************************************************************************************************************************/
+    /*** Management Functions                                                                                                           ***/
+    /**************************************************************************************************************************************/
+
+    function deployAssets(uint256 assets_, bytes calldata metadata_) external override whenNotPaused nonReentrant {
+        require(IGlobalsLike(globals()).isValidTradingAddress(msg.sender), "MTS:DA:NOT_TRADING_ADDRESS");
+        require(permissions[msg.sender].canDeployAssets,                   "MTS:DA:NOT_DEPLOYER");
+
+        require(assets_ >  0,                     "MTS:DA:ZERO_ASSETS");
+        require(assets_ <= availableToWithdraw(), "MTS:DA:INSUFFICIENT_ASSETS");
+
+        uint256 deployedAssets_ = deployedAssetsOf[msg.sender] + assets_;
+
+        require(deployedAssets_ <= deploymentCapOf[msg.sender], "MTS:DA:CAP_EXCEEDED");
+
+        outstandingAssets            += assets_;
+        deployedAssetsOf[msg.sender] += assets_;
+
+        require(ERC20Helper.transfer(fundsAsset, msg.sender, assets_), "MTS:DA:TRANSFER_FAILED");
+
+        emit AssetsDeployed(msg.sender, assets_, metadata_);
+    }
+
+    /**************************************************************************************************************************************/
     /*** Administrative Functions                                                                                                       ***/
     /**************************************************************************************************************************************/
 
@@ -104,7 +131,7 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
     }
 
     /**************************************************************************************************************************************/
-    /*** State-Changing Functions                                                                                                       ***/
+    /*** Liquidity Functions                                                                                                            ***/
     /**************************************************************************************************************************************/
 
     function fundUnderlyingStrategy(
@@ -138,6 +165,11 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
     /**************************************************************************************************************************************/
     /*** View Functions                                                                                                                 ***/
     /**************************************************************************************************************************************/
+
+    // TODO: Subtract unrealized assets once yield buffer is implemented.
+    function availableToWithdraw() public view override returns (uint256 availableAssets_) {
+        availableAssets_ = IERC20Like(fundsAsset).balanceOf(address(this));
+    }
 
     function factory() external view override returns (address factory_) {
         factory_ = _factory();
