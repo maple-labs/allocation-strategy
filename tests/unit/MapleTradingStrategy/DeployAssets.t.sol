@@ -16,8 +16,8 @@ contract DeployAssetsTestBase is TestBase {
     function setUp() public override {
         super.setUp();
 
-        globals.__setIsValidTradingAddress(tradingAddress,  true);
-        globals.__setIsValidTradingAddress(tradingAddress2, true);
+        globals.__setIsGovernedInstanceOf("TRADING_ADDRESS", tradingAddress,  true);
+        globals.__setIsGovernedInstanceOf("TRADING_ADDRESS", tradingAddress2, true);
 
         strategy.__setPermissions(tradingAddress,  true);
         strategy.__setPermissions(tradingAddress2, true);
@@ -49,7 +49,7 @@ contract DeployAssetsFailureTests is DeployAssetsTestBase {
     }
 
     function test_deployAssets_revert_notTradingAddress() external {
-        globals.__setIsValidTradingAddress(tradingAddress, false);
+        globals.__setIsGovernedInstanceOf("TRADING_ADDRESS", tradingAddress, false);
 
         vm.prank(tradingAddress);
         vm.expectRevert("MTS:DA:NOT_TRADING_ADDRESS");
@@ -60,7 +60,7 @@ contract DeployAssetsFailureTests is DeployAssetsTestBase {
         strategy.__setPermissions(tradingAddress, false);
 
         vm.prank(tradingAddress);
-        vm.expectRevert("MTS:DA:NOT_DEPLOYER");
+        vm.expectRevert("MTS:DA:NOT_ALLOWED");
         strategy.deployAssets(assetsToDeploy, "");
     }
 
@@ -118,7 +118,7 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
         assertEq(asset.balanceOf(address(strategy)), assetsToDeploy);
         assertEq(asset.balanceOf(tradingAddress),    0);
 
-        assertEq(strategy.outstandingAssets(),              0);
+        assertEq(strategy.totalDeployedAssets(),            0);
         assertEq(strategy.deployedAssetsOf(tradingAddress), 0);
 
         vm.expectEmit();
@@ -130,7 +130,7 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
         assertEq(asset.balanceOf(address(strategy)), assetsToDeploy - 1);
         assertEq(asset.balanceOf(tradingAddress),    1);
 
-        assertEq(strategy.outstandingAssets(),              1);
+        assertEq(strategy.totalDeployedAssets(),            1);
         assertEq(strategy.deployedAssetsOf(tradingAddress), 1);
     }
 
@@ -138,7 +138,7 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
         assertEq(asset.balanceOf(address(strategy)), assetsToDeploy);
         assertEq(asset.balanceOf(tradingAddress),    0);
 
-        assertEq(strategy.outstandingAssets(),              0);
+        assertEq(strategy.totalDeployedAssets(),            0);
         assertEq(strategy.deployedAssetsOf(tradingAddress), 0);
 
         vm.expectEmit();
@@ -150,7 +150,7 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
         assertEq(asset.balanceOf(address(strategy)), 0);
         assertEq(asset.balanceOf(tradingAddress),    assetsToDeploy);
 
-        assertEq(strategy.outstandingAssets(),              assetsToDeploy);
+        assertEq(strategy.totalDeployedAssets(),            assetsToDeploy);
         assertEq(strategy.deployedAssetsOf(tradingAddress), assetsToDeploy);
     }
 
@@ -160,7 +160,7 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
         assertEq(asset.balanceOf(address(strategy)), assetsToDeploy);
         assertEq(asset.balanceOf(tradingAddress),    0);
 
-        assertEq(strategy.outstandingAssets(),              0);
+        assertEq(strategy.totalDeployedAssets(),            0);
         assertEq(strategy.deployedAssetsOf(tradingAddress), 0);
 
         vm.expectEmit();
@@ -172,7 +172,7 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
         assertEq(asset.balanceOf(address(strategy)), 0);
         assertEq(asset.balanceOf(tradingAddress),    assetsToDeploy);
 
-        assertEq(strategy.outstandingAssets(),              assetsToDeploy);
+        assertEq(strategy.totalDeployedAssets(),            assetsToDeploy);
         assertEq(strategy.deployedAssetsOf(tradingAddress), assetsToDeploy);
         assertEq(strategy.deploymentCapOf(tradingAddress),  assetsToDeploy);
     }
@@ -183,7 +183,7 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
         assertEq(asset.balanceOf(address(strategy)), assetsToDeploy);
         assertEq(asset.balanceOf(tradingAddress),    0);
 
-        assertEq(strategy.outstandingAssets(),              deployedAssets);
+        assertEq(strategy.totalDeployedAssets(),            deployedAssets);
         assertEq(strategy.deployedAssetsOf(tradingAddress), deployedAssets);
 
         vm.expectEmit();
@@ -195,7 +195,7 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
         assertEq(asset.balanceOf(address(strategy)), 0);
         assertEq(asset.balanceOf(tradingAddress),    assetsToDeploy);
 
-        assertEq(strategy.outstandingAssets(),              deployedAssets + assetsToDeploy);
+        assertEq(strategy.totalDeployedAssets(),            deployedAssets + assetsToDeploy);
         assertEq(strategy.deployedAssetsOf(tradingAddress), deployedAssets + assetsToDeploy);
     }
 
@@ -204,7 +204,7 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
         assertEq(asset.balanceOf(address(strategy)), assetsToDeploy);
         assertEq(asset.balanceOf(tradingAddress),    0);
 
-        assertEq(strategy.outstandingAssets(),              0);
+        assertEq(strategy.totalDeployedAssets(),            0);
         assertEq(strategy.deployedAssetsOf(tradingAddress), 0);
 
         uint256 firstDeploymentAmount  = assetsToDeploy / 4;
@@ -223,7 +223,7 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
         assertEq(asset.balanceOf(address(strategy)), assetsToDeploy - firstDeploymentAmount);
         assertEq(asset.balanceOf(tradingAddress),    firstDeploymentAmount);
 
-        assertEq(strategy.outstandingAssets(),              firstDeploymentAmount);
+        assertEq(strategy.totalDeployedAssets(),            firstDeploymentAmount);
         assertEq(strategy.deployedAssetsOf(tradingAddress), firstDeploymentAmount);
 
         /**********************************************************************************************************************************/
@@ -239,7 +239,7 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
         assertEq(asset.balanceOf(address(strategy)), assetsToDeploy - firstDeploymentAmount - secondDeploymentAmount);
         assertEq(asset.balanceOf(tradingAddress),    firstDeploymentAmount + secondDeploymentAmount);
 
-        assertEq(strategy.outstandingAssets(),              firstDeploymentAmount + secondDeploymentAmount);
+        assertEq(strategy.totalDeployedAssets(),            firstDeploymentAmount + secondDeploymentAmount);
         assertEq(strategy.deployedAssetsOf(tradingAddress), firstDeploymentAmount + secondDeploymentAmount);
     }
 
@@ -248,7 +248,7 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
         assertEq(asset.balanceOf(tradingAddress),    0);
         assertEq(asset.balanceOf(tradingAddress2),   0);
 
-        assertEq(strategy.outstandingAssets(),               0);
+        assertEq(strategy.totalDeployedAssets(),             0);
         assertEq(strategy.deployedAssetsOf(tradingAddress),  0);
         assertEq(strategy.deployedAssetsOf(tradingAddress2), 0);
 
@@ -269,7 +269,7 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
         assertEq(asset.balanceOf(tradingAddress),    firstDeploymentAmount);
         assertEq(asset.balanceOf(tradingAddress2),   0);
 
-        assertEq(strategy.outstandingAssets(),               firstDeploymentAmount);
+        assertEq(strategy.totalDeployedAssets(),             firstDeploymentAmount);
         assertEq(strategy.deployedAssetsOf(tradingAddress),  firstDeploymentAmount);
         assertEq(strategy.deployedAssetsOf(tradingAddress2), 0);
 
@@ -287,7 +287,7 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
         assertEq(asset.balanceOf(tradingAddress),    firstDeploymentAmount);
         assertEq(asset.balanceOf(tradingAddress2),   secondDeploymentAmount);
 
-        assertEq(strategy.outstandingAssets(),               firstDeploymentAmount + secondDeploymentAmount);
+        assertEq(strategy.totalDeployedAssets(),             firstDeploymentAmount + secondDeploymentAmount);
         assertEq(strategy.deployedAssetsOf(tradingAddress),  firstDeploymentAmount);
         assertEq(strategy.deployedAssetsOf(tradingAddress2), secondDeploymentAmount);
     }

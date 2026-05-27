@@ -81,9 +81,9 @@ interface IMapleTradingStrategyStorage {
 
     /**
      *  @dev    Returns the total amount of assets currently deployed across all trading addresses.
-     *  @return outstandingAssets Total assets deployed by the strategy.
+     *  @return totalDeployedAssets Total amount of assets currently deployed by the strategy.
      */
-    function outstandingAssets() external view returns (uint256 outstandingAssets);
+    function totalDeployedAssets() external view returns (uint256 totalDeployedAssets);
 
     /**************************************************************************************************************************************/
     /*** Permissions                                                                                                                    ***/

@@ -23,6 +23,15 @@ interface IMapleTradingStrategy is IMapleTradingStrategyStorage, IMapleProxied {
     event AssetsDeployed(address indexed deployer, uint256 assets, bytes metadata);
 
     /**
+     *  @dev   Emitted when deployed assets are returned to the strategy.
+     *  @param caller     Address that transferred the assets back.
+     *  @param onBehalfOf Address to which the returned assets were credited.
+     *  @param assets     Amount of assets returned.
+     *  @param metadata   Optional metadata associated with the repayment.
+     */
+    event AssetsReturned(address indexed caller, address indexed onBehalfOf, uint256 assets, bytes metadata);
+
+    /**
      *  @dev   Emitted when the deployment cap of a trading address is set.
      *  @param account       Trading address the cap was set for.
      *  @param deploymentCap New deployment cap for the trading address.
@@ -58,6 +67,18 @@ interface IMapleTradingStrategy is IMapleTradingStrategyStorage, IMapleProxied {
      *  @param metadata Optional metadata associated with the deployment.
      */
     function deployAssets(uint256 assets, bytes calldata metadata) external;
+
+    /**
+     *  @dev   Transfers assets from the caller to the strategy.
+     *         Caller must be a valid trading address on MapleGlobals.
+     *         Caller must have permission to return assets.
+     *         Cannot return more assets than were already deployed.
+     *  @param assets     Amount of assets to return.
+     *  @param onBehalfOf Address that will be credited as having returned the assets.
+     *                    Can be the caller address.
+     *  @param metadata   Optional metadata associated with assets being returned.
+     */
+    function returnAssets(uint256 assets, address onBehalfOf, bytes calldata metadata) external;
 
     /**************************************************************************************************************************************/
     /*** Administrative Functions                                                                                                       ***/

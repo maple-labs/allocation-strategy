@@ -13,11 +13,11 @@ interface IGlobalsLike {
 
     function isFunctionPaused(bytes4 signature) external view returns (bool);
 
+    function isGovernedInstanceOf(bytes32 key, address instance) external view returns (bool);
+
     function isInstanceOf(bytes32 key, address instance) external view returns (bool);
 
     function isPoolAsset(address asset) external view returns (bool);
-
-    function isValidTradingAddress(address tradingAddress) external view returns (bool);
 
     function operationalAdmin() external view returns (address);
 

@@ -20,6 +20,8 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
     /*** Constants                                                                                                                      ***/
     /**************************************************************************************************************************************/
 
+    // TODO: Add `TRADING_ADDRESS` key definition here?
+
     /**************************************************************************************************************************************/
     /*** Modifiers                                                                                                                      ***/
     /**************************************************************************************************************************************/
@@ -58,6 +60,8 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
         _;
     }
 
+    // TODO: Add `onlyTradingAddress` modifier?
+
     modifier whenNotPaused() {
         require(!IGlobalsLike(globals()).isFunctionPaused(msg.sig), "MTS:PAUSED");
 
@@ -89,8 +93,8 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
     /**************************************************************************************************************************************/
 
     function deployAssets(uint256 assets_, bytes calldata metadata_) external override whenNotPaused nonReentrant {
-        require(IGlobalsLike(globals()).isValidTradingAddress(msg.sender), "MTS:DA:NOT_TRADING_ADDRESS");
-        require(permissions[msg.sender].canDeployAssets,                   "MTS:DA:NOT_DEPLOYER");
+        require(IGlobalsLike(globals()).isGovernedInstanceOf("TRADING_ADDRESS", msg.sender), "MTS:DA:NOT_TRADING_ADDRESS");
+        require(permissions[msg.sender].canDeployAssets,                                     "MTS:DA:NOT_ALLOWED");
 
         require(assets_ >  0,                     "MTS:DA:ZERO_ASSETS");
         require(assets_ <= availableToWithdraw(), "MTS:DA:INSUFFICIENT_ASSETS");
@@ -99,12 +103,27 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
 
         require(deployedAssets_ <= deploymentCapOf[msg.sender], "MTS:DA:CAP_EXCEEDED");
 
-        outstandingAssets            += assets_;
+        totalDeployedAssets          += assets_;
         deployedAssetsOf[msg.sender] += assets_;
 
         require(ERC20Helper.transfer(fundsAsset, msg.sender, assets_), "MTS:DA:TRANSFER_FAILED");
 
         emit AssetsDeployed(msg.sender, assets_, metadata_);
+    }
+
+    function returnAssets(uint256 assets_, address onBehalfOf_, bytes calldata metadata_) external override whenNotPaused nonReentrant {
+        require(IGlobalsLike(globals()).isGovernedInstanceOf("TRADING_ADDRESS", msg.sender), "MTS:RA:NOT_TRADING_ADDRESS");
+        require(permissions[msg.sender].canReturnAssets,                                     "MTS:RA:NOT_ALLOWED");
+
+        require(assets_ != 0,                             "MTS:RA:ZERO_ASSETS");
+        require(assets_ <= deployedAssetsOf[onBehalfOf_], "MTS:RA:EXCEEDS_ASSETS");
+
+        totalDeployedAssets           -= assets_;
+        deployedAssetsOf[onBehalfOf_] -= assets_;
+
+        require(ERC20Helper.transferFrom(fundsAsset, msg.sender, address(this), assets_), "MTS:RA:TRANSFER_FAILED");
+
+        emit AssetsReturned(msg.sender, onBehalfOf_, assets_, metadata_);
     }
 
     /**************************************************************************************************************************************/
@@ -121,8 +140,12 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
             address account_ = accounts_[i_];
             uint256 cap_     = amounts_[i_];
 
-            require(IGlobalsLike(globals_).isValidTradingAddress(account_) || cap_ == 0, "MTS:SDC:INVALID_DEPLOYER");
-            require(deploymentCapOf[account_] != cap_,                                   "MTS:SDC:NO_CHANGE");
+            require(
+                IGlobalsLike(globals_).isGovernedInstanceOf("TRADING_ADDRESS", account_) || cap_ == 0,
+                "MTS:SDC:NOT_TRADING_ADDRESS"
+            );
+
+            require(deploymentCapOf[account_] != cap_, "MTS:SDC:NO_CHANGE");
 
             deploymentCapOf[account_] = cap_;
 

@@ -52,11 +52,11 @@ contract SetDeploymentCapsFailureTests is TestBase {
         address validDeployer2  = makeAddr("validDeployer2");
         address invalidDeployer = makeAddr("invalidDeployer");
 
-        globals.__setIsValidTradingAddress(validDeployer1, true);
-        globals.__setIsValidTradingAddress(validDeployer2, true);
+        globals.__setIsGovernedInstanceOf("TRADING_ADDRESS", validDeployer1, true);
+        globals.__setIsGovernedInstanceOf("TRADING_ADDRESS", validDeployer2, true);
 
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTS:SDC:INVALID_DEPLOYER");
+        vm.expectRevert("MTS:SDC:NOT_TRADING_ADDRESS");
         strategy.setDeploymentCaps(
             array(validDeployer1, validDeployer2, invalidDeployer),
             array(100e6,          200e6,          300e6)
@@ -72,7 +72,7 @@ contract SetDeploymentCapsFailureTests is TestBase {
 
         address deployer = makeAddr("deployer");
 
-        globals.__setIsValidTradingAddress(deployer, true);
+        globals.__setIsGovernedInstanceOf("TRADING_ADDRESS", deployer, true);
 
         assertEq(strategy.deploymentCapOf(deployer), 0);
 
@@ -81,10 +81,10 @@ contract SetDeploymentCapsFailureTests is TestBase {
 
         assertEq(strategy.deploymentCapOf(deployer), 100e6);
 
-        globals.__setIsValidTradingAddress(deployer, false);
+        globals.__setIsGovernedInstanceOf("TRADING_ADDRESS", deployer, false);
 
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTS:SDC:INVALID_DEPLOYER");
+        vm.expectRevert("MTS:SDC:NOT_TRADING_ADDRESS");
         strategy.setDeploymentCaps(array(deployer), array(50e6));
 
         assertEq(strategy.deploymentCapOf(deployer), 100e6);
@@ -95,7 +95,7 @@ contract SetDeploymentCapsFailureTests is TestBase {
 
         address deployer = makeAddr("deployer");
 
-        globals.__setIsValidTradingAddress(deployer, true);
+        globals.__setIsGovernedInstanceOf("TRADING_ADDRESS", deployer, true);
 
         vm.prank(strategyDelegate);
         strategy.setDeploymentCaps(array(deployer), array(100e6));
@@ -113,7 +113,7 @@ contract SetDeploymentCapsFailureTests is TestBase {
         address whitelistedDeployer = makeAddr("whitelistedDeployer");
         address blacklistedDeployer = makeAddr("blacklistedDeployer");
 
-        globals.__setIsValidTradingAddress(whitelistedDeployer, true);
+        globals.__setIsGovernedInstanceOf("TRADING_ADDRESS", whitelistedDeployer, true);
 
         assertEq(strategy.deploymentCapOf(whitelistedDeployer), 0);
         assertEq(strategy.deploymentCapOf(blacklistedDeployer), 0);
@@ -144,9 +144,9 @@ contract SetDeploymentCapsSuccessTests is TestBase {
         globals.__setOperationalAdmin(operationalAdmin);
         globals.__setStrategyDelegateOf(address(manager), strategyDelegate);
 
-        globals.__setIsValidTradingAddress(deployer1, true);
-        globals.__setIsValidTradingAddress(deployer2, true);
-        globals.__setIsValidTradingAddress(deployer3, true);
+        globals.__setIsGovernedInstanceOf("TRADING_ADDRESS", deployer1, true);
+        globals.__setIsGovernedInstanceOf("TRADING_ADDRESS", deployer2, true);
+        globals.__setIsGovernedInstanceOf("TRADING_ADDRESS", deployer3, true);
     }
 
     function test_setDeploymentCaps_success_singleAddress() external {
@@ -283,7 +283,7 @@ contract SetDeploymentCapsSuccessTests is TestBase {
     function test_setDeploymentCaps_success_revokedDeployer_zeroCap() external {
         address revokedDeployer = makeAddr("revokedDeployer");
 
-        globals.__setIsValidTradingAddress(revokedDeployer, true);
+        globals.__setIsGovernedInstanceOf("TRADING_ADDRESS", revokedDeployer, true);
 
         uint256 cap = 100e6;
 
@@ -292,7 +292,7 @@ contract SetDeploymentCapsSuccessTests is TestBase {
 
         assertEq(strategy.deploymentCapOf(revokedDeployer), cap);
 
-        globals.__setIsValidTradingAddress(revokedDeployer, false);
+        globals.__setIsGovernedInstanceOf("TRADING_ADDRESS", revokedDeployer, false);
 
         vm.expectEmit();
         emit IMapleTradingStrategy.DeploymentCapSet(revokedDeployer, 0);

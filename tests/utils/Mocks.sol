@@ -54,12 +54,11 @@ contract MockGlobals {
 
     mapping(address => bool) public isPoolAsset;
 
-    mapping(address => bool) public isValidTradingAddress;
-
     mapping(address => address) public strategyDelegateOf;
 
     mapping(bytes4 => bool) public isFunctionPaused;
 
+    mapping(bytes32 => mapping(address => bool)) public isGovernedInstanceOf;
     mapping(bytes32 => mapping(address => bool)) public isInstanceOf;
 
     function __setCanDeploy(address caller_, bool canDeploy_) external {
@@ -82,8 +81,8 @@ contract MockGlobals {
         isPoolAsset[asset_] = isPoolAsset_;
     }
 
-    function __setIsValidTradingAddress(address tradingAddress_, bool isValidTradingAddress_) external {
-        isValidTradingAddress[tradingAddress_] = isValidTradingAddress_;
+    function __setIsGovernedInstanceOf(bytes32 key_, address instance_, bool isGovernedInstanceOf_) external {
+        isGovernedInstanceOf[key_][instance_] = isGovernedInstanceOf_;
     }
 
     function __setOperationalAdmin(address operationalAdmin_) external {

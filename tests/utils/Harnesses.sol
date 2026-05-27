@@ -7,7 +7,7 @@ import { MapleTradingStrategyInitializer } from "../../contracts/MapleTradingStr
 contract MapleTradingStrategyHarness is MapleTradingStrategy {
 
     function __setDeployedAssetsOf(address account_, uint256 amount_) external {
-        outstandingAssets = outstandingAssets - deployedAssetsOf[account_] + amount_;
+        totalDeployedAssets = totalDeployedAssets - deployedAssetsOf[account_] + amount_;
         deployedAssetsOf[account_] = amount_;
     }
 
