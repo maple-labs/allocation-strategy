@@ -9,10 +9,7 @@ import { TestBase } from "../../utils/TestBase.sol";
 
 contract SetDeploymentCapsFailureTests is TestBase {
 
-    address strategyDelegate = makeAddr("strategyDelegate");
-
     function test_setDeploymentCaps_revert_functionPaused() external {
-        globals.__setStrategyDelegateOf(address(manager), strategyDelegate);
         globals.__setIsFunctionPaused(MapleTradingStrategy.setDeploymentCaps.selector, true);
 
         vm.prank(strategyDelegate);
@@ -26,16 +23,12 @@ contract SetDeploymentCapsFailureTests is TestBase {
     }
 
     function test_setDeploymentCaps_revert_zeroLength() external {
-        globals.__setStrategyDelegateOf(address(manager), strategyDelegate);
-
         vm.prank(strategyDelegate);
         vm.expectRevert("MTS:SDC:ZERO_LENGTH");
         strategy.setDeploymentCaps(new address[](0), new uint256[](0));
     }
 
     function test_setDeploymentCaps_revert_lengthMismatch() external {
-        globals.__setStrategyDelegateOf(address(manager), strategyDelegate);
-
         vm.prank(strategyDelegate);
         vm.expectRevert("MTS:SDC:LENGTH_MISMATCH");
         strategy.setDeploymentCaps(new address[](2), new uint256[](1));
@@ -46,8 +39,6 @@ contract SetDeploymentCapsFailureTests is TestBase {
     }
 
     function test_setDeploymentCaps_revert_invalidDeployer() external {
-        globals.__setStrategyDelegateOf(address(manager), strategyDelegate);
-
         address validDeployer1  = makeAddr("validDeployer1");
         address validDeployer2  = makeAddr("validDeployer2");
         address invalidDeployer = makeAddr("invalidDeployer");
@@ -68,8 +59,6 @@ contract SetDeploymentCapsFailureTests is TestBase {
     }
 
     function test_setDeploymentCaps_revert_invalidDeployer_revokedDeployer() external {
-        globals.__setStrategyDelegateOf(address(manager), strategyDelegate);
-
         address deployer = makeAddr("deployer");
 
         globals.__setIsGovernedInstanceOf("TRADING_ADDRESS", deployer, true);
@@ -91,8 +80,6 @@ contract SetDeploymentCapsFailureTests is TestBase {
     }
 
     function test_setDeploymentCaps_revert_noChange_sameCap() external {
-        globals.__setStrategyDelegateOf(address(manager), strategyDelegate);
-
         address deployer = makeAddr("deployer");
 
         globals.__setIsGovernedInstanceOf("TRADING_ADDRESS", deployer, true);
@@ -108,8 +95,6 @@ contract SetDeploymentCapsFailureTests is TestBase {
     }
 
     function test_setDeploymentCaps_revert_noChange_neverCappedZero() external {
-        globals.__setStrategyDelegateOf(address(manager), strategyDelegate);
-
         address whitelistedDeployer = makeAddr("whitelistedDeployer");
         address blacklistedDeployer = makeAddr("blacklistedDeployer");
 
@@ -132,7 +117,6 @@ contract SetDeploymentCapsFailureTests is TestBase {
 contract SetDeploymentCapsSuccessTests is TestBase {
 
     address operationalAdmin = makeAddr("operationalAdmin");
-    address strategyDelegate = makeAddr("strategyDelegate");
 
     address deployer1 = makeAddr("deployer1");
     address deployer2 = makeAddr("deployer2");
@@ -142,7 +126,6 @@ contract SetDeploymentCapsSuccessTests is TestBase {
         super.setUp();
 
         globals.__setOperationalAdmin(operationalAdmin);
-        globals.__setStrategyDelegateOf(address(manager), strategyDelegate);
 
         globals.__setIsGovernedInstanceOf("TRADING_ADDRESS", deployer1, true);
         globals.__setIsGovernedInstanceOf("TRADING_ADDRESS", deployer2, true);

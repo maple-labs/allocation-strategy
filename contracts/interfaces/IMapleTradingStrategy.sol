@@ -138,4 +138,11 @@ interface IMapleTradingStrategy is IMapleTradingStrategyStorage, IMapleProxied {
      */
     function securityAdmin() external view returns (address securityAdmin);
 
+    /**
+     *  @dev    Returns the strategy delegate that receives the delegate's share of accrued yield for the
+     *          bound strategy manager.
+     *  @return strategyDelegate Address of the strategy delegate.
+     */
+    function strategyDelegate() external view returns (address strategyDelegate);
+
 }

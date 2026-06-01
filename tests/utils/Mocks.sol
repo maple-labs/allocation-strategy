@@ -54,8 +54,6 @@ contract MockGlobals {
 
     mapping(address => bool) public isPoolAsset;
 
-    mapping(address => address) public strategyDelegateOf;
-
     mapping(bytes4 => bool) public isFunctionPaused;
 
     mapping(bytes32 => mapping(address => bool)) public isGovernedInstanceOf;
@@ -97,19 +95,20 @@ contract MockGlobals {
         securityAdmin = securityAdmin_;
     }
 
-    function __setStrategyDelegateOf(address strategyManager_, address strategyDelegate_) external {
-        strategyDelegateOf[strategyManager_] = strategyDelegate_;
-    }
-
 }
 
 contract MockStrategyManager {
 
     address public factory;
+    address public strategyDelegate;
     address public underlyingStrategy;
 
     function __setFactory(address factory_) external {
         factory = factory_;
+    }
+
+    function __setStrategyDelegate(address strategyDelegate_) external {
+        strategyDelegate = strategyDelegate_;
     }
 
     function __setUnderlyingStrategy(address underlyingStrategy_) external {

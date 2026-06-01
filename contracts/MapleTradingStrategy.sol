@@ -9,7 +9,8 @@ import { IMapleTradingStrategy } from "./interfaces/IMapleTradingStrategy.sol";
 import {
     IERC20Like,
     IGlobalsLike,
-    IProxyFactoryLike
+    IProxyFactoryLike,
+    IStrategyManagerLike
 } from "./interfaces/Interfaces.sol";
 
 import { MapleTradingStrategyStorage } from "./MapleTradingStrategyStorage.sol";
@@ -40,7 +41,7 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
         address globals_ = globals();
 
         require(
-            msg.sender == IGlobalsLike(globals_).strategyDelegateOf(strategyManager) ||
+            msg.sender == IStrategyManagerLike(strategyManager).strategyDelegate() ||
             msg.sender == IGlobalsLike(globals_).operationalAdmin(),
             "MTS:NOT_AUTHORIZED"
         );
@@ -208,6 +209,10 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
 
     function securityAdmin() public view override returns (address securityAdmin_) {
         securityAdmin_ = IGlobalsLike(globals()).securityAdmin();
+    }
+
+    function strategyDelegate() public view override returns (address strategyDelegate_) {
+        strategyDelegate_ = IStrategyManagerLike(strategyManager).strategyDelegate();
     }
 
     /**************************************************************************************************************************************/

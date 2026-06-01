@@ -21,9 +21,10 @@ import {
 
 contract TestBase is Test {
 
-    address deployer      = makeAddr("deployer");
-    address governor      = makeAddr("governor");
-    address securityAdmin = makeAddr("securityAdmin");
+    address deployer         = makeAddr("deployer");
+    address governor         = makeAddr("governor");
+    address securityAdmin    = makeAddr("securityAdmin");
+    address strategyDelegate = makeAddr("strategyDelegate");
 
     address implementation = address(new MapleTradingStrategyHarness());
     address initializer    = address(new MapleTradingStrategyInitializerHarness());
@@ -50,6 +51,7 @@ contract TestBase is Test {
         globals.__setIsInstanceOf("STRATEGY_MANAGER_FACTORY", address(managerFactory), true);
 
         manager.__setFactory(address(managerFactory));
+        manager.__setStrategyDelegate(strategyDelegate);
         managerFactory.__setIsInstance(address(manager), true);
 
         strategyFactory = new MapleTradingStrategyFactory(address(globals));
