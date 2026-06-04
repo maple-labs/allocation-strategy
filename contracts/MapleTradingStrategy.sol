@@ -220,6 +220,10 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
         availableAssets_ = IERC20Like(fundsAsset).balanceOf(address(this)) - unrealizedAssets();
     }
 
+    function assetsUnderManagement() external view override returns (uint256 assetsUnderManagement_) {
+        assetsUnderManagement_ = totalDeployedAssets + availableToWithdraw();
+    }
+
     function factory() external view override returns (address factory_) {
         factory_ = _factory();
     }

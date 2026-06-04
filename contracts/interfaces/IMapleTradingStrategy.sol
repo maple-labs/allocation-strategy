@@ -159,6 +159,13 @@ interface IMapleTradingStrategy is IMapleTradingStrategyStorage, IMapleProxied {
     function availableToWithdraw() external view returns (uint256 availableToWithdraw);
 
     /**
+     *  @dev    Returns the total amount of assets managed by the strategy.
+     *          Includes all deployed assets and cash in the strategy, but doesn't include unrealized yield.
+     *  @return assetsUnderManagement Total assets managed by the strategy.
+     */
+    function assetsUnderManagement() external view returns (uint256 assetsUnderManagement);
+
+    /**
      *  @dev    Returns the address of the Maple Globals contract.
      *  @return globals Address of the Maple Globals contract.
      */
