@@ -19,6 +19,8 @@ interface IGlobalsLike {
 
     function isPoolAsset(address asset) external view returns (bool);
 
+    function mapleTreasury() external view returns (address);
+
     function operationalAdmin() external view returns (address);
 
     function securityAdmin() external view returns (address);

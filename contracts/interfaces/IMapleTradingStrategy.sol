@@ -53,6 +53,26 @@ interface IMapleTradingStrategy is IMapleTradingStrategyStorage, IMapleProxied {
      */
     event StrategyWithdrawn(address indexed strategyManager, address indexed destination, uint256 assets);
 
+    /**
+     *  @dev   Emitted when yield is transferred to the yield buffer.
+     *  @param caller          Address that transferred the yield.
+     *  @param unrealizedYield Amount of unrealized yield carried over.
+     *  @param netYield        Amount of net yield transferred.
+     *  @param delegateFee     Amount of fees collected by the delegate.
+     *  @param protocolFee     Amount of fees collected by the protocol.
+     *  @param duration        Duration over which the yield will be realized.
+     *  @param metadata        Optional metadata associated with the yield.
+     */
+    event YieldRealized(
+        address indexed caller,
+        uint256 unrealizedYield,
+        uint256 netYield,
+        uint256 delegateFee,
+        uint256 protocolFee,
+        uint32  duration,
+        bytes   metadata
+    );
+
     /**************************************************************************************************************************************/
     /*** Management Functions                                                                                                           ***/
     /**************************************************************************************************************************************/
@@ -79,6 +99,18 @@ interface IMapleTradingStrategy is IMapleTradingStrategyStorage, IMapleProxied {
      *  @param metadata   Optional metadata associated with assets being returned.
      */
     function returnAssets(uint256 assets, address onBehalfOf, bytes calldata metadata) external;
+
+    /**
+     *  @dev   Transfers assets from the caller to the yield buffer.
+     *         Caller must be a valid trading address on MapleGlobals.
+     *         Caller must have permission to realize yield.
+     *         Zero assets is valid and only updates the duration of the yield buffer.
+     *         Zero duration is valid and causes all yield to be realized immediately.
+     *  @param assets   Amount of assets to realize as yield.
+     *  @param duration Duration over which to realize assets in seconds.
+     *  @param metadata Optional metadata associated with the yield.
+     */
+    function realizeYield(uint256 assets, uint32 duration, bytes calldata metadata) external;
 
     /**************************************************************************************************************************************/
     /*** Administrative Functions                                                                                                       ***/
@@ -133,6 +165,18 @@ interface IMapleTradingStrategy is IMapleTradingStrategyStorage, IMapleProxied {
     function globals() external view returns (address globals);
 
     /**
+     *  @dev    Returns the Maple treasury address which receives the protocol fees.
+     *  @return mapleTreasury Address of the Maple treasury.
+     */
+    function mapleTreasury() external view returns (address mapleTreasury);
+
+    /**
+     *  @dev    Returns the current amount of yield assets that has been realized.
+     *  @return realizedAssets Amount of yield assets realized.
+     */
+    function realizedAssets() external view returns (uint256 realizedAssets);
+
+    /**
      *  @dev    Returns the address of the security admin.
      *  @return securityAdmin Address of the security admin.
      */
@@ -144,5 +188,11 @@ interface IMapleTradingStrategy is IMapleTradingStrategyStorage, IMapleProxied {
      *  @return strategyDelegate Address of the strategy delegate.
      */
     function strategyDelegate() external view returns (address strategyDelegate);
+
+    /**
+     *  @dev    Returns the current amount of yield assets that has not been realized.
+     *  @return unrealizedAssets Amount of yield assets not yet realized.
+     */
+    function unrealizedAssets() external view returns (uint256 unrealizedAssets);
 
 }

@@ -21,7 +21,9 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
     /*** Constants                                                                                                                      ***/
     /**************************************************************************************************************************************/
 
-    // TODO: Add `TRADING_ADDRESS` key definition here?
+    bytes32 internal constant INSTANCE_KEY = "TRADING_ADDRESS";
+
+    uint256 internal constant HUNDRED_PERCENT = 1e6;
 
     /**************************************************************************************************************************************/
     /*** Modifiers                                                                                                                      ***/
@@ -94,8 +96,8 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
     /**************************************************************************************************************************************/
 
     function deployAssets(uint256 assets_, bytes calldata metadata_) external override whenNotPaused nonReentrant {
-        require(IGlobalsLike(globals()).isGovernedInstanceOf("TRADING_ADDRESS", msg.sender), "MTS:DA:NOT_TRADING_ADDRESS");
-        require(permissions[msg.sender].canDeployAssets,                                     "MTS:DA:NOT_ALLOWED");
+        require(IGlobalsLike(globals()).isGovernedInstanceOf(INSTANCE_KEY, msg.sender), "MTS:DA:NOT_TRADING_ADDRESS");
+        require(permissions[msg.sender].canDeployAssets,                                "MTS:DA:NOT_ALLOWED");
 
         require(assets_ >  0,                     "MTS:DA:ZERO_ASSETS");
         require(assets_ <= availableToWithdraw(), "MTS:DA:INSUFFICIENT_ASSETS");
@@ -113,8 +115,8 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
     }
 
     function returnAssets(uint256 assets_, address onBehalfOf_, bytes calldata metadata_) external override whenNotPaused nonReentrant {
-        require(IGlobalsLike(globals()).isGovernedInstanceOf("TRADING_ADDRESS", msg.sender), "MTS:RA:NOT_TRADING_ADDRESS");
-        require(permissions[msg.sender].canReturnAssets,                                     "MTS:RA:NOT_ALLOWED");
+        require(IGlobalsLike(globals()).isGovernedInstanceOf(INSTANCE_KEY, msg.sender), "MTS:RA:NOT_TRADING_ADDRESS");
+        require(permissions[msg.sender].canReturnAssets,                                "MTS:RA:NOT_ALLOWED");
 
         require(assets_ != 0,                             "MTS:RA:ZERO_ASSETS");
         require(assets_ <= deployedAssetsOf[onBehalfOf_], "MTS:RA:EXCEEDS_ASSETS");
@@ -125,6 +127,29 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
         require(ERC20Helper.transferFrom(fundsAsset, msg.sender, address(this), assets_), "MTS:RA:TRANSFER_FAILED");
 
         emit AssetsReturned(msg.sender, onBehalfOf_, assets_, metadata_);
+    }
+
+    function realizeYield(uint256 yield_, uint32 duration_, bytes calldata metadata_) external override whenNotPaused nonReentrant {
+        address fundsAsset_ = fundsAsset;
+        address globals_    = globals();
+
+        require(IGlobalsLike(globals_).isGovernedInstanceOf(INSTANCE_KEY, msg.sender), "MTS:RY:NOT_TRADING_ADDRESS");
+        require(permissions[msg.sender].canRealizeYield,                               "MTS:RY:NOT_ALLOWED");
+
+        if (yield_ != 0) {
+            require(ERC20Helper.transferFrom(fundsAsset_, msg.sender, address(this), yield_), "MTS:RY:TRANSFER_FROM_FAILED");
+        }
+
+        ( uint256 netYield_, uint256 delegateFee_, uint256 protocolFee_ ) = _accrueFees(fundsAsset_, yield_);
+
+        uint256 unrealizedYield_ = unrealizedAssets();
+        uint32  yieldStart_      = uint32(block.timestamp);
+
+        scheduledYieldAssets = netYield_ + unrealizedYield_;
+        yieldStart           = yieldStart_;
+        yieldDeadline        = yieldStart_ + duration_;
+
+        emit YieldRealized(msg.sender, unrealizedYield_, netYield_, delegateFee_, protocolFee_, duration_, metadata_);
     }
 
     /**************************************************************************************************************************************/
@@ -142,7 +167,7 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
             uint256 cap_     = amounts_[i_];
 
             require(
-                IGlobalsLike(globals_).isGovernedInstanceOf("TRADING_ADDRESS", account_) || cap_ == 0,
+                IGlobalsLike(globals_).isGovernedInstanceOf(INSTANCE_KEY, account_) || cap_ == 0,
                 "MTS:SDC:NOT_TRADING_ADDRESS"
             );
 
@@ -190,9 +215,9 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
     /*** View Functions                                                                                                                 ***/
     /**************************************************************************************************************************************/
 
-    // TODO: Subtract unrealized assets once yield buffer is implemented.
     function availableToWithdraw() public view override returns (uint256 availableAssets_) {
-        availableAssets_ = IERC20Like(fundsAsset).balanceOf(address(this));
+        // TODO: Consider adding a zero floor check.
+        availableAssets_ = IERC20Like(fundsAsset).balanceOf(address(this)) - unrealizedAssets();
     }
 
     function factory() external view override returns (address factory_) {
@@ -207,6 +232,22 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
         implementation_ = _implementation();
     }
 
+    function mapleTreasury() public view override returns (address mapleTreasury_) {
+        mapleTreasury_ = IGlobalsLike(globals()).mapleTreasury();
+    }
+
+    function realizedAssets() public view override returns (uint256 realizedAssets_) {
+        uint256 scheduledYieldAssets_ = scheduledYieldAssets;
+        uint256 yieldStart_           = yieldStart;
+
+        uint256 elapsedDuration_ = block.timestamp - yieldStart_;
+        uint256 totalDuration_   = yieldDeadline - yieldStart_;
+
+        if (totalDuration_ == 0 || elapsedDuration_ >= totalDuration_) return scheduledYieldAssets_;
+
+        realizedAssets_ = scheduledYieldAssets_ * elapsedDuration_ / totalDuration_;
+    }
+
     function securityAdmin() public view override returns (address securityAdmin_) {
         securityAdmin_ = IGlobalsLike(globals()).securityAdmin();
     }
@@ -215,8 +256,35 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
         strategyDelegate_ = IStrategyManagerLike(strategyManager).strategyDelegate();
     }
 
+    function unrealizedAssets() public view override returns (uint256 unrealizedAssets_) {
+        unrealizedAssets_ = scheduledYieldAssets - realizedAssets();
+    }
+
     /**************************************************************************************************************************************/
     /*** Internal Functions                                                                                                             ***/
     /**************************************************************************************************************************************/
+
+    function _accrueFees(
+        address fundsAsset_,
+        uint256 yield_
+    )
+        internal returns (
+            uint256 netYield_,
+            uint256 delegateFee_,
+            uint256 protocolFee_
+        )
+    {
+        delegateFee_ = yield_ * strategyDelegateFeeRate / HUNDRED_PERCENT;
+        protocolFee_ = yield_ * strategyProtocolFeeRate / HUNDRED_PERCENT;
+        netYield_    = yield_ - delegateFee_ - protocolFee_;
+
+        if (delegateFee_ != 0) {
+            require(ERC20Helper.transfer(fundsAsset_, strategyDelegate(), delegateFee_), "MTS:CF:DELEGATE_TRANSFER_FAILED");
+        }
+
+        if (protocolFee_ != 0) {
+            require(ERC20Helper.transfer(fundsAsset_, mapleTreasury(), protocolFee_), "MTS:CF:PROTOCOL_TRANSFER_FAILED");
+        }
+    }
 
 }

@@ -23,6 +23,7 @@ contract TestBase is Test {
 
     address deployer         = makeAddr("deployer");
     address governor         = makeAddr("governor");
+    address mapleTreasury    = makeAddr("mapleTreasury");
     address securityAdmin    = makeAddr("securityAdmin");
     address strategyDelegate = makeAddr("strategyDelegate");
 
@@ -46,6 +47,7 @@ contract TestBase is Test {
 
         globals.__setCanDeploy(deployer, true);
         globals.__setGovernor(governor);
+        globals.__setMapleTreasury(mapleTreasury);
         globals.__setSecurityAdmin(securityAdmin);
         globals.__setIsPoolAsset(address(asset), true);
         globals.__setIsInstanceOf("STRATEGY_MANAGER_FACTORY", address(managerFactory), true);
@@ -69,6 +71,7 @@ contract TestBase is Test {
             strategyProtocolFeeRate: 0.03e6
         });
 
+        manager.__setStrategyDelegate(strategyDelegate);
         manager.__setUnderlyingStrategy(strategyFactory.getInstanceAddress(abi.encode(params), "DEFAULT"));
 
         vm.prank(deployer);

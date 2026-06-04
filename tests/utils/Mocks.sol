@@ -45,6 +45,7 @@ contract MockFactory {
 contract MockGlobals {
 
     address public governor;
+    address public mapleTreasury;
     address public operationalAdmin;
     address public securityAdmin;
 
@@ -65,6 +66,10 @@ contract MockGlobals {
 
     function __setGovernor(address governor_) external {
         governor = governor_;
+    }
+
+    function __setMapleTreasury(address mapleTreasury_) external {
+        mapleTreasury = mapleTreasury_;
     }
 
     function __setIsFunctionPaused(bytes4 signature_, bool isFunctionPaused_) external {

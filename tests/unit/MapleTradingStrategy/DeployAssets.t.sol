@@ -78,6 +78,15 @@ contract DeployAssetsFailureTests is DeployAssetsTestBase {
         strategy.deployAssets(assetsToDeploy, "");
     }
 
+    function test_deployAssets_revert_unrealizedAssets() external {
+        strategy.__setYieldBuffer(assetsToDeploy, startingTime, startingTime + 1 days);
+
+        vm.warp(startingTime + 1 days - 1 seconds);
+        vm.prank(tradingAddress);
+        vm.expectRevert("MTS:DA:INSUFFICIENT_ASSETS");
+        strategy.deployAssets(assetsToDeploy, "");
+    }
+
     function test_deployAssets_revert_zeroCap() external {
         strategy.__setDeploymentCapOf(tradingAddress, 0);
 
@@ -175,6 +184,35 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
         assertEq(strategy.totalDeployedAssets(),            assetsToDeploy);
         assertEq(strategy.deployedAssetsOf(tradingAddress), assetsToDeploy);
         assertEq(strategy.deploymentCapOf(tradingAddress),  assetsToDeploy);
+    }
+
+    function test_deployAssets_success_unrealizedAssets() external {
+        strategy.__setYieldBuffer(assetsToDeploy, startingTime, startingTime + 3 days);
+
+        vm.warp(startingTime + 2 days);
+
+        uint256 realizedAssets   = assetsToDeploy * 2 / 3;
+        uint256 unrealizedAssets = assetsToDeploy - realizedAssets;
+
+        assertEq(asset.balanceOf(address(strategy)), assetsToDeploy);
+        assertEq(asset.balanceOf(tradingAddress),    0);
+
+        assertEq(strategy.availableToWithdraw(),            realizedAssets);
+        assertEq(strategy.totalDeployedAssets(),            0);
+        assertEq(strategy.deployedAssetsOf(tradingAddress), 0);
+
+        vm.expectEmit();
+        emit IMapleTradingStrategy.AssetsDeployed(tradingAddress, realizedAssets, "");
+
+        vm.prank(tradingAddress);
+        strategy.deployAssets(realizedAssets, "");
+
+        assertEq(asset.balanceOf(address(strategy)), unrealizedAssets);
+        assertEq(asset.balanceOf(tradingAddress),    realizedAssets);
+
+        assertEq(strategy.availableToWithdraw(),            0);
+        assertEq(strategy.totalDeployedAssets(),            realizedAssets);
+        assertEq(strategy.deployedAssetsOf(tradingAddress), realizedAssets);
     }
 
     function test_deployAssets_success_existingDeployment() external {

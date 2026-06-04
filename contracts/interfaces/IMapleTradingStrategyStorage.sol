@@ -80,10 +80,28 @@ interface IMapleTradingStrategyStorage {
     /**************************************************************************************************************************************/
 
     /**
+     *  @dev    Returns the total amount of assets in the yield buffer since it was last updated.
+     *  @return scheduledYieldAssets Total assets in the yield buffer since last update.
+     */
+    function scheduledYieldAssets() external view returns (uint256 scheduledYieldAssets);
+
+    /**
      *  @dev    Returns the total amount of assets currently deployed across all trading addresses.
      *  @return totalDeployedAssets Total amount of assets currently deployed by the strategy.
      */
     function totalDeployedAssets() external view returns (uint256 totalDeployedAssets);
+
+    /**
+     *  @dev    Returns the timestamp when all yield assets are fully realized.
+     *  @return yieldDeadline Timestamp when yield assets are fully realized.
+     */
+    function yieldDeadline() external view returns (uint32 yieldDeadline);
+
+    /**
+     *  @dev    Returns the timestamp when the yield buffer was last updated.
+     *  @return yieldStart Timestamp when the current yield buffer was last updated.
+     */
+    function yieldStart() external view returns (uint32 yieldStart);
 
     /**************************************************************************************************************************************/
     /*** Permissions                                                                                                                    ***/

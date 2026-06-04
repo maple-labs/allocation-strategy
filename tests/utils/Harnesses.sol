@@ -15,6 +15,17 @@ contract MapleTradingStrategyHarness is MapleTradingStrategy {
         deploymentCapOf[account_] = cap_;
     }
 
+    function __setEmptyYieldBuffer() external {
+        scheduledYieldAssets = 0;
+        yieldStart           = 0;
+        yieldDeadline        = 0;
+    }
+
+    function __setFeeRates(uint32 delegateFeeRate_, uint32 protocolFeeRate_) external {
+        strategyDelegateFeeRate = delegateFeeRate_;
+        strategyProtocolFeeRate = protocolFeeRate_;
+    }
+
     function __setLocked(uint256 locked_) external {
         _locked = locked_;
     }
@@ -25,6 +36,12 @@ contract MapleTradingStrategyHarness is MapleTradingStrategy {
             canReturnAssets: allowed_,
             canRealizeYield: allowed_
         });
+    }
+
+    function __setYieldBuffer(uint256 yieldAssets_, uint32 yieldStart_, uint32 yieldDeadline_) external {
+        scheduledYieldAssets = yieldAssets_;
+        yieldStart           = yieldStart_;
+        yieldDeadline        = yieldDeadline_;
     }
 
     function locked() external view returns (uint256 locked_) {
