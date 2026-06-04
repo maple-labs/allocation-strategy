@@ -183,29 +183,25 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
     /*** Liquidity Functions                                                                                                            ***/
     /**************************************************************************************************************************************/
 
+    // NOTE: Funding caps are enforced by the strategy manager.
     function fundUnderlyingStrategy(
         uint256 assetsIn_,
         bytes calldata
     )
         external override whenNotPaused onlyStrategyManager returns (uint256 assetsOut_)
     {
-        // TODO: Check if validation for zero asset amounts is needed.
-        // TODO: Check if validation related to transferred asset balances is needed.
-
         assetsOut_ = assetsIn_;
 
         emit StrategyFunded(strategyManager, assetsIn_);
     }
 
+    // NOTE: Withdrawal limits are enforced by the strategy manager.
     function withdrawFromUnderlyingStrategy(
         address destination_,
         uint256 assets_
     )
         external override whenNotPaused nonReentrant onlyStrategyManager
     {
-        // TODO: Check if validation of destination address should be added.
-        // TODO: Check if validation of asset amounts should be added: <0, cash - unaccruedYield]
-
         require(ERC20Helper.transfer(fundsAsset, destination_, assets_), "MTS:WFUS:TRANSFER_FAILED");
 
         emit StrategyWithdrawn(strategyManager, destination_, assets_);
@@ -216,7 +212,6 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
     /**************************************************************************************************************************************/
 
     function availableToWithdraw() public view override returns (uint256 availableAssets_) {
-        // TODO: Consider adding a zero floor check.
         availableAssets_ = IERC20Like(fundsAsset).balanceOf(address(this)) - unrealizedAssets();
     }
 
