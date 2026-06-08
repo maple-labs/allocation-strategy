@@ -23,6 +23,8 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
 
     bytes32 internal constant INSTANCE_KEY = "TRADING_ADDRESS";
 
+    string public constant STRATEGY_TYPE = "TRADING";
+
     uint256 internal constant HUNDRED_PERCENT = 1e6;
 
     /**************************************************************************************************************************************/
@@ -186,7 +188,7 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
     // NOTE: Funding caps are enforced by the strategy manager.
     function fundUnderlyingStrategy(
         uint256 assetsIn_,
-        bytes calldata
+        bytes calldata /* data_ */
     )
         external override whenNotPaused onlyStrategyManager returns (uint256 assetsOut_)
     {
@@ -195,13 +197,14 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
         emit StrategyFunded(strategyManager, assetsIn_);
     }
 
-    // NOTE: Withdrawal limits are enforced by the strategy manager.
     function withdrawFromUnderlyingStrategy(
         address destination_,
-        uint256 assets_
+        uint256 assets_,
+        bytes calldata /* data_ */
     )
         external override whenNotPaused nonReentrant onlyStrategyManager
     {
+        require(assets_ <= availableToWithdraw(),                        "MTS:WFUS:INSUFFICIENT_ASSETS");
         require(ERC20Helper.transfer(fundsAsset, destination_, assets_), "MTS:WFUS:TRANSFER_FAILED");
 
         emit StrategyWithdrawn(strategyManager, destination_, assets_);

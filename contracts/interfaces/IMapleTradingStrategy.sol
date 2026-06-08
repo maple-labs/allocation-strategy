@@ -139,13 +139,14 @@ interface IMapleTradingStrategy is IMapleTradingStrategyStorage, IMapleProxied {
     function fundUnderlyingStrategy(uint256 assetsIn, bytes calldata data) external returns (uint256 assetsOut);
 
     /**
-     *  @dev    Withdraws assets from the strategy to a specific address.
-     *          Callable only by the strategy manager.
-     *          Only assets sitting in the trading strategy can be withdrawn.
-     *  @param  destination Address to send the assets to.
-     *  @param  assets      Amount of assets to withdraw.
+     *  @dev   Withdraws assets from the strategy to a specific address.
+     *         Callable only by the strategy manager.
+     *         Only assets sitting in the trading strategy can be withdrawn.
+     *  @param destination Address to send the assets to.
+     *  @param assets      Amount of assets to withdraw.
+     *  @param data        Unused, but reserved for future strategy-specific calldata.
      */
-    function withdrawFromUnderlyingStrategy(address destination, uint256 assets) external;
+    function withdrawFromUnderlyingStrategy(address destination, uint256 assets, bytes calldata data) external;
 
     /**************************************************************************************************************************************/
     /*** View Functions                                                                                                                 ***/

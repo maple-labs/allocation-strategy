@@ -24,7 +24,7 @@ contract WithdrawFromUnderlyingStrategyTests is TestBase {
 
         vm.prank(address(manager));
         vm.expectRevert("MTS:PAUSED");
-        strategy.withdrawFromUnderlyingStrategy(destination, assets);
+        strategy.withdrawFromUnderlyingStrategy(destination, assets, "");
     }
 
     function test_withdrawFromUnderlyingStrategy_revert_reentrancy() external {
@@ -32,12 +32,28 @@ contract WithdrawFromUnderlyingStrategyTests is TestBase {
 
         vm.prank(address(manager));
         vm.expectRevert("MTS:LOCKED");
-        strategy.withdrawFromUnderlyingStrategy(destination, assets);
+        strategy.withdrawFromUnderlyingStrategy(destination, assets, "");
     }
 
     function test_withdrawFromUnderlyingStrategy_revert_notStrategyManager() external {
         vm.expectRevert("MTS:NOT_STRATEGY_MANAGER");
-        strategy.withdrawFromUnderlyingStrategy(destination, assets);
+        strategy.withdrawFromUnderlyingStrategy(destination, assets, "");
+    }
+
+    function test_withdrawFromUnderlyingStrategy_revert_insufficientAssets() external {
+        vm.prank(address(manager));
+        vm.expectRevert("MTS:WFUS:INSUFFICIENT_ASSETS");
+        strategy.withdrawFromUnderlyingStrategy(destination, assets + 1, "");
+    }
+
+    function test_withdrawFromUnderlyingStrategy_revert_unrealizedAssets() external {
+        strategy.__setYieldBuffer(1, startingTime, startingTime + 1 seconds);
+
+        assertEq(strategy.unrealizedAssets(), 1);
+
+        vm.prank(address(manager));
+        vm.expectRevert("MTS:WFUS:INSUFFICIENT_ASSETS");
+        strategy.withdrawFromUnderlyingStrategy(destination, assets, "");
     }
 
     function test_withdrawFromUnderlyingStrategy_revert_transferFailed() external {
@@ -45,15 +61,7 @@ contract WithdrawFromUnderlyingStrategyTests is TestBase {
 
         vm.prank(address(manager));
         vm.expectRevert("MTS:WFUS:TRANSFER_FAILED");
-        strategy.withdrawFromUnderlyingStrategy(destination, assets);
-    }
-
-    function test_withdrawFromUnderlyingStrategy_revert_transferUnderflow() external {
-        asset.burn(address(strategy), 1);
-
-        vm.prank(address(manager));
-        vm.expectRevert("MTS:WFUS:TRANSFER_FAILED");
-        strategy.withdrawFromUnderlyingStrategy(destination, assets);
+        strategy.withdrawFromUnderlyingStrategy(destination, assets, "");
     }
 
     function test_withdrawFromUnderlyingStrategy_success_partialWithdrawal() external {
@@ -66,7 +74,7 @@ contract WithdrawFromUnderlyingStrategyTests is TestBase {
         emit IMapleTradingStrategy.StrategyWithdrawn(address(manager), destination, withdrawalAmount);
 
         vm.prank(address(manager));
-        strategy.withdrawFromUnderlyingStrategy(destination, withdrawalAmount);
+        strategy.withdrawFromUnderlyingStrategy(destination, withdrawalAmount, "");
 
         assertEq(asset.balanceOf(address(strategy)), assets - withdrawalAmount);
         assertEq(asset.balanceOf(destination),       withdrawalAmount);
@@ -80,7 +88,7 @@ contract WithdrawFromUnderlyingStrategyTests is TestBase {
         emit IMapleTradingStrategy.StrategyWithdrawn(address(manager), destination, assets);
 
         vm.prank(address(manager));
-        strategy.withdrawFromUnderlyingStrategy(destination, assets);
+        strategy.withdrawFromUnderlyingStrategy(destination, assets, "");
 
         assertEq(asset.balanceOf(address(strategy)), 0);
         assertEq(asset.balanceOf(destination),       assets);

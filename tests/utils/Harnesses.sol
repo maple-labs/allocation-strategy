@@ -15,12 +15,6 @@ contract MapleTradingStrategyHarness is MapleTradingStrategy {
         deploymentCapOf[account_] = cap_;
     }
 
-    function __setEmptyYieldBuffer() external {
-        scheduledYieldAssets = 0;
-        yieldStart           = 0;
-        yieldDeadline        = 0;
-    }
-
     function __setFeeRates(uint32 delegateFeeRate_, uint32 protocolFeeRate_) external {
         strategyDelegateFeeRate = delegateFeeRate_;
         strategyProtocolFeeRate = protocolFeeRate_;
