@@ -113,6 +113,7 @@ contract ReturnAssetsSuccessTests is ReturnAssetsTestBase {
 
         assertEq(strategy.totalDeployedAssets(),             deployedAssets1 + deployedAssets2);
         assertEq(strategy.deployedAssetsOf(tradingAddress1), deployedAssets1);
+        assertEq(strategy.assetsUnderManagement(),           deployedAssets1 + deployedAssets2);
 
         vm.expectEmit();
         emit IMapleTradingStrategy.AssetsReturned(tradingAddress1, tradingAddress1, assetsToReturn, "");
@@ -125,6 +126,7 @@ contract ReturnAssetsSuccessTests is ReturnAssetsTestBase {
 
         assertEq(strategy.totalDeployedAssets(),             deployedAssets1 + deployedAssets2 - assetsToReturn);
         assertEq(strategy.deployedAssetsOf(tradingAddress1), deployedAssets1 - assetsToReturn);
+        assertEq(strategy.assetsUnderManagement(),           deployedAssets1 + deployedAssets2);
     }
 
     function test_returnAssets_success_fullReturn_sameDeployer() external {
@@ -133,6 +135,7 @@ contract ReturnAssetsSuccessTests is ReturnAssetsTestBase {
 
         assertEq(strategy.totalDeployedAssets(),             deployedAssets1 + deployedAssets2);
         assertEq(strategy.deployedAssetsOf(tradingAddress1), deployedAssets1);
+        assertEq(strategy.assetsUnderManagement(),           deployedAssets1 + deployedAssets2);
 
         vm.expectEmit();
         emit IMapleTradingStrategy.AssetsReturned(tradingAddress1, tradingAddress1, deployedAssets1, "");
@@ -145,6 +148,7 @@ contract ReturnAssetsSuccessTests is ReturnAssetsTestBase {
 
         assertEq(strategy.totalDeployedAssets(),             deployedAssets2);
         assertEq(strategy.deployedAssetsOf(tradingAddress1), 0);
+        assertEq(strategy.assetsUnderManagement(),           deployedAssets1 + deployedAssets2);
     }
 
     function test_returnAssets_success_partialReturn_differentDeployer() external {
@@ -157,6 +161,7 @@ contract ReturnAssetsSuccessTests is ReturnAssetsTestBase {
         assertEq(strategy.totalDeployedAssets(),             deployedAssets1 + deployedAssets2);
         assertEq(strategy.deployedAssetsOf(tradingAddress1), deployedAssets1);
         assertEq(strategy.deployedAssetsOf(tradingAddress2), deployedAssets2);
+        assertEq(strategy.assetsUnderManagement(),           deployedAssets1 + deployedAssets2);
 
         vm.expectEmit();
         emit IMapleTradingStrategy.AssetsReturned(tradingAddress2, tradingAddress1, assetsToReturn, "");
@@ -171,6 +176,7 @@ contract ReturnAssetsSuccessTests is ReturnAssetsTestBase {
         assertEq(strategy.totalDeployedAssets(),             deployedAssets1 + deployedAssets2 - assetsToReturn);
         assertEq(strategy.deployedAssetsOf(tradingAddress1), deployedAssets1 - assetsToReturn);
         assertEq(strategy.deployedAssetsOf(tradingAddress2), deployedAssets2);
+        assertEq(strategy.assetsUnderManagement(),           deployedAssets1 + deployedAssets2);
     }
 
     function test_returnAssets_success_fullReturn_differentDeployer() external {
@@ -181,6 +187,7 @@ contract ReturnAssetsSuccessTests is ReturnAssetsTestBase {
         assertEq(strategy.totalDeployedAssets(),             deployedAssets1 + deployedAssets2);
         assertEq(strategy.deployedAssetsOf(tradingAddress1), deployedAssets1);
         assertEq(strategy.deployedAssetsOf(tradingAddress2), deployedAssets2);
+        assertEq(strategy.assetsUnderManagement(),           deployedAssets1 + deployedAssets2);
 
         vm.expectEmit();
         emit IMapleTradingStrategy.AssetsReturned(tradingAddress2, tradingAddress1, deployedAssets1, "");
@@ -195,6 +202,7 @@ contract ReturnAssetsSuccessTests is ReturnAssetsTestBase {
         assertEq(strategy.totalDeployedAssets(),             deployedAssets2);
         assertEq(strategy.deployedAssetsOf(tradingAddress1), 0);
         assertEq(strategy.deployedAssetsOf(tradingAddress2), deployedAssets2);
+        assertEq(strategy.assetsUnderManagement(),           deployedAssets1 + deployedAssets2);
     }
 
     function test_returnAssets_success_partialReturn_revokedDeployer() external {
@@ -210,6 +218,7 @@ contract ReturnAssetsSuccessTests is ReturnAssetsTestBase {
         assertEq(strategy.totalDeployedAssets(),             deployedAssets1 + deployedAssets2);
         assertEq(strategy.deployedAssetsOf(tradingAddress1), deployedAssets1);
         assertEq(strategy.deployedAssetsOf(tradingAddress2), deployedAssets2);
+        assertEq(strategy.assetsUnderManagement(),           deployedAssets1 + deployedAssets2);
 
         vm.expectEmit();
         emit IMapleTradingStrategy.AssetsReturned(tradingAddress2, tradingAddress1, assetsToReturn, "recovery");
@@ -224,6 +233,7 @@ contract ReturnAssetsSuccessTests is ReturnAssetsTestBase {
         assertEq(strategy.totalDeployedAssets(),             deployedAssets1 + deployedAssets2 - assetsToReturn);
         assertEq(strategy.deployedAssetsOf(tradingAddress1), deployedAssets1 - assetsToReturn);
         assertEq(strategy.deployedAssetsOf(tradingAddress2), deployedAssets2);
+        assertEq(strategy.assetsUnderManagement(),           deployedAssets1 + deployedAssets2);
     }
 
     function test_returnAssets_success_multipleCallersAndDeployers() external {
@@ -234,6 +244,7 @@ contract ReturnAssetsSuccessTests is ReturnAssetsTestBase {
         assertEq(strategy.totalDeployedAssets(),             deployedAssets1 + deployedAssets2);
         assertEq(strategy.deployedAssetsOf(tradingAddress1), deployedAssets1);
         assertEq(strategy.deployedAssetsOf(tradingAddress2), deployedAssets2);
+        assertEq(strategy.assetsUnderManagement(),           deployedAssets1 + deployedAssets2);
 
         uint256 totalDeployedAssets = deployedAssets1 + deployedAssets2;
 
@@ -258,6 +269,7 @@ contract ReturnAssetsSuccessTests is ReturnAssetsTestBase {
         assertEq(strategy.totalDeployedAssets(),             totalDeployedAssets);
         assertEq(strategy.deployedAssetsOf(tradingAddress1), deployedAssets1 - assetsToReturn1);
         assertEq(strategy.deployedAssetsOf(tradingAddress2), deployedAssets2);
+        assertEq(strategy.assetsUnderManagement(),           deployedAssets1 + deployedAssets2);
 
         /**********************************************************************************************************************************/
         /*** Step 2: Address 2 Returns Assets on Behalf of Address 1                                                                    ***/
@@ -280,6 +292,7 @@ contract ReturnAssetsSuccessTests is ReturnAssetsTestBase {
         assertEq(strategy.totalDeployedAssets(),             totalDeployedAssets);
         assertEq(strategy.deployedAssetsOf(tradingAddress1), deployedAssets1 - assetsToReturn1 - assetsToReturn2);
         assertEq(strategy.deployedAssetsOf(tradingAddress2), deployedAssets2);
+        assertEq(strategy.assetsUnderManagement(),           deployedAssets1 + deployedAssets2);
 
         /**********************************************************************************************************************************/
         /*** Step 3: Address 1 Returns Assets on Behalf of Address 2                                                                      ***/
@@ -302,6 +315,7 @@ contract ReturnAssetsSuccessTests is ReturnAssetsTestBase {
         assertEq(strategy.totalDeployedAssets(),             totalDeployedAssets);
         assertEq(strategy.deployedAssetsOf(tradingAddress1), deployedAssets1 - assetsToReturn1 - assetsToReturn2);
         assertEq(strategy.deployedAssetsOf(tradingAddress2), deployedAssets2 - assetsToReturn3);
+        assertEq(strategy.assetsUnderManagement(),           deployedAssets1 + deployedAssets2);
 
         /**********************************************************************************************************************************/
         /*** Step 4: Address 2 Returns Assets for Itself                                                                                ***/
@@ -324,6 +338,7 @@ contract ReturnAssetsSuccessTests is ReturnAssetsTestBase {
         assertEq(strategy.totalDeployedAssets(),             totalDeployedAssets);
         assertEq(strategy.deployedAssetsOf(tradingAddress1), deployedAssets1 - assetsToReturn1 - assetsToReturn2);
         assertEq(strategy.deployedAssetsOf(tradingAddress2), deployedAssets2 - assetsToReturn3 - assetsToReturn4);
+        assertEq(strategy.assetsUnderManagement(),           deployedAssets1 + deployedAssets2);
     }
 
 }

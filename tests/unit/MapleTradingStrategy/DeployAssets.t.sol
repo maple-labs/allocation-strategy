@@ -129,6 +129,7 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
 
         assertEq(strategy.totalDeployedAssets(),            0);
         assertEq(strategy.deployedAssetsOf(tradingAddress), 0);
+        assertEq(strategy.assetsUnderManagement(),          assetsToDeploy);
 
         vm.expectEmit();
         emit IMapleTradingStrategy.AssetsDeployed(tradingAddress, 1, "a");
@@ -141,6 +142,7 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
 
         assertEq(strategy.totalDeployedAssets(),            1);
         assertEq(strategy.deployedAssetsOf(tradingAddress), 1);
+        assertEq(strategy.assetsUnderManagement(),          assetsToDeploy);
     }
 
     function test_deployAssets_success_firstDeployment() external {
@@ -149,6 +151,7 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
 
         assertEq(strategy.totalDeployedAssets(),            0);
         assertEq(strategy.deployedAssetsOf(tradingAddress), 0);
+        assertEq(strategy.assetsUnderManagement(),          assetsToDeploy);
 
         vm.expectEmit();
         emit IMapleTradingStrategy.AssetsDeployed(tradingAddress, assetsToDeploy, "a");
@@ -161,6 +164,7 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
 
         assertEq(strategy.totalDeployedAssets(),            assetsToDeploy);
         assertEq(strategy.deployedAssetsOf(tradingAddress), assetsToDeploy);
+        assertEq(strategy.assetsUnderManagement(),          assetsToDeploy);
     }
 
     function test_deployAssets_success_exactDeployment() external {
@@ -171,6 +175,7 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
 
         assertEq(strategy.totalDeployedAssets(),            0);
         assertEq(strategy.deployedAssetsOf(tradingAddress), 0);
+        assertEq(strategy.assetsUnderManagement(),          assetsToDeploy);
 
         vm.expectEmit();
         emit IMapleTradingStrategy.AssetsDeployed(tradingAddress, assetsToDeploy, "a");
@@ -184,6 +189,7 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
         assertEq(strategy.totalDeployedAssets(),            assetsToDeploy);
         assertEq(strategy.deployedAssetsOf(tradingAddress), assetsToDeploy);
         assertEq(strategy.deploymentCapOf(tradingAddress),  assetsToDeploy);
+        assertEq(strategy.assetsUnderManagement(),          assetsToDeploy);
     }
 
     function test_deployAssets_success_unrealizedAssets() external {
@@ -200,6 +206,7 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
         assertEq(strategy.availableToWithdraw(),            realizedAssets);
         assertEq(strategy.totalDeployedAssets(),            0);
         assertEq(strategy.deployedAssetsOf(tradingAddress), 0);
+        assertEq(strategy.assetsUnderManagement(),          realizedAssets);
 
         vm.expectEmit();
         emit IMapleTradingStrategy.AssetsDeployed(tradingAddress, realizedAssets, "");
@@ -213,6 +220,7 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
         assertEq(strategy.availableToWithdraw(),            0);
         assertEq(strategy.totalDeployedAssets(),            realizedAssets);
         assertEq(strategy.deployedAssetsOf(tradingAddress), realizedAssets);
+        assertEq(strategy.assetsUnderManagement(),          realizedAssets);
     }
 
     function test_deployAssets_success_existingDeployment() external {
@@ -223,6 +231,7 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
 
         assertEq(strategy.totalDeployedAssets(),            deployedAssets);
         assertEq(strategy.deployedAssetsOf(tradingAddress), deployedAssets);
+        assertEq(strategy.assetsUnderManagement(),          deployedAssets + assetsToDeploy);
 
         vm.expectEmit();
         emit IMapleTradingStrategy.AssetsDeployed(tradingAddress, assetsToDeploy, "a");
@@ -235,6 +244,7 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
 
         assertEq(strategy.totalDeployedAssets(),            deployedAssets + assetsToDeploy);
         assertEq(strategy.deployedAssetsOf(tradingAddress), deployedAssets + assetsToDeploy);
+        assertEq(strategy.assetsUnderManagement(),          deployedAssets + assetsToDeploy);
     }
 
     function test_deployAssets_success_multipleDeployments() external {
@@ -244,6 +254,7 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
 
         assertEq(strategy.totalDeployedAssets(),            0);
         assertEq(strategy.deployedAssetsOf(tradingAddress), 0);
+        assertEq(strategy.assetsUnderManagement(),          assetsToDeploy);
 
         uint256 firstDeploymentAmount  = assetsToDeploy / 4;
         uint256 secondDeploymentAmount = assetsToDeploy / 3;
@@ -263,6 +274,7 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
 
         assertEq(strategy.totalDeployedAssets(),            firstDeploymentAmount);
         assertEq(strategy.deployedAssetsOf(tradingAddress), firstDeploymentAmount);
+        assertEq(strategy.assetsUnderManagement(),          assetsToDeploy);
 
         /**********************************************************************************************************************************/
         /*** Step 2: Second Deployment                                                                                                  ***/
@@ -289,6 +301,7 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
         assertEq(strategy.totalDeployedAssets(),             0);
         assertEq(strategy.deployedAssetsOf(tradingAddress),  0);
         assertEq(strategy.deployedAssetsOf(tradingAddress2), 0);
+        assertEq(strategy.assetsUnderManagement(),           assetsToDeploy);
 
         uint256 firstDeploymentAmount  = assetsToDeploy / 3;
         uint256 secondDeploymentAmount = assetsToDeploy / 7;
@@ -310,6 +323,7 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
         assertEq(strategy.totalDeployedAssets(),             firstDeploymentAmount);
         assertEq(strategy.deployedAssetsOf(tradingAddress),  firstDeploymentAmount);
         assertEq(strategy.deployedAssetsOf(tradingAddress2), 0);
+        assertEq(strategy.assetsUnderManagement(),           assetsToDeploy);
 
         /**********************************************************************************************************************************/
         /*** Step 2: Second Deployment                                                                                                  ***/
@@ -328,6 +342,7 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
         assertEq(strategy.totalDeployedAssets(),             firstDeploymentAmount + secondDeploymentAmount);
         assertEq(strategy.deployedAssetsOf(tradingAddress),  firstDeploymentAmount);
         assertEq(strategy.deployedAssetsOf(tradingAddress2), secondDeploymentAmount);
+        assertEq(strategy.assetsUnderManagement(),           assetsToDeploy);
     }
 
 }

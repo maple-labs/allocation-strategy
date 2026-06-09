@@ -70,6 +70,8 @@ contract WithdrawFromUnderlyingStrategyTests is TestBase {
         assertEq(asset.balanceOf(address(strategy)), assets);
         assertEq(asset.balanceOf(destination),       0);
 
+        assertEq(strategy.assetsUnderManagement(), assets);
+
         vm.expectEmit();
         emit IMapleTradingStrategy.StrategyWithdrawn(address(manager), destination, withdrawalAmount);
 
@@ -78,11 +80,15 @@ contract WithdrawFromUnderlyingStrategyTests is TestBase {
 
         assertEq(asset.balanceOf(address(strategy)), assets - withdrawalAmount);
         assertEq(asset.balanceOf(destination),       withdrawalAmount);
+
+        assertEq(strategy.assetsUnderManagement(), assets - withdrawalAmount);
     }
 
     function test_withdrawFromUnderlyingStrategy_success_fullWithdrawal() external {
         assertEq(asset.balanceOf(address(strategy)), assets);
         assertEq(asset.balanceOf(destination),       0);
+
+        assertEq(strategy.assetsUnderManagement(), assets);
 
         vm.expectEmit();
         emit IMapleTradingStrategy.StrategyWithdrawn(address(manager), destination, assets);
@@ -92,6 +98,8 @@ contract WithdrawFromUnderlyingStrategyTests is TestBase {
 
         assertEq(asset.balanceOf(address(strategy)), 0);
         assertEq(asset.balanceOf(destination),       assets);
+
+        assertEq(strategy.assetsUnderManagement(), 0);
     }
 
 }
