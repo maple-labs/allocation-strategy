@@ -39,11 +39,25 @@ interface IMapleTradingStrategy is IMapleTradingStrategyStorage, IMapleProxied {
     event DeploymentCapSet(address indexed account, uint256 deploymentCap);
 
     /**
+     *  @dev   Emitted when the strategy delegate fee rate is set.
+     *  @param strategyDelegateFeeRate Percentage of yield collected by the strategy delegate, defined with 6 decimals
+     *                                 of precision (1e6 == 100%).
+     */
+    event StrategyDelegateFeeRateSet(uint32 strategyDelegateFeeRate);
+
+    /**
      *  @dev   Emitted when assets are deployed into the trading strategy.
      *  @param strategyManager Address of the associated strategy manager.
      *  @param assets          Amount of assets transferred into the trading strategy.
      */
     event StrategyFunded(address indexed strategyManager, uint256 assets);
+
+    /**
+     *  @dev   Emitted when the strategy protocol fee rate is set.
+     *  @param strategyProtocolFeeRate Percentage of yield collected by the Maple treasury, defined with 6 decimals
+     *                                 of precision (1e6 == 100%).
+     */
+    event StrategyProtocolFeeRateSet(uint32 strategyProtocolFeeRate);
 
     /**
      *  @dev   Emitted when assets are withdrawn from the trading strategy.
@@ -123,6 +137,24 @@ interface IMapleTradingStrategy is IMapleTradingStrategyStorage, IMapleProxied {
      *  @param amounts  New deployment cap to set for each trading address.
      */
     function setDeploymentCaps(address[] calldata accounts, uint256[] calldata amounts) external;
+
+    /**
+     *  @dev   Sets the percentage of yield collected by the strategy delegate.
+     *         Callable only by the strategy delegate.
+     *         The combined strategy delegate and protocol fee rates cannot exceed 1e6.
+     *  @param strategyDelegateFeeRate Percentage of yield collected by the strategy delegate, defined with 6 decimals
+     *                                 of precision (1e6 == 100%).
+     */
+    function setStrategyDelegateFeeRate(uint32 strategyDelegateFeeRate) external;
+
+    /**
+     *  @dev   Sets the percentage of yield collected by the Maple treasury.
+     *         Callable only by protocol admins.
+     *         The combined strategy delegate and protocol fee rates cannot exceed 1e6.
+     *  @param strategyProtocolFeeRate Percentage of yield collected by the Maple treasury, defined with 6 decimals
+     *                                 of precision (1e6 == 100%).
+     */
+    function setStrategyProtocolFeeRate(uint32 strategyProtocolFeeRate) external;
 
     /**************************************************************************************************************************************/
     /*** Liquidity Functions                                                                                                            ***/

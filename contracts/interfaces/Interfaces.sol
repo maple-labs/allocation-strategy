@@ -11,6 +11,8 @@ interface IGlobalsLike {
 
     function canDeploy(address caller) external view returns (bool);
 
+    function governor() external view returns (address);
+
     function isFunctionPaused(bytes4 signature) external view returns (bool);
 
     function isGovernedInstanceOf(bytes32 key, address instance) external view returns (bool);

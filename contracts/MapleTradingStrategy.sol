@@ -59,6 +59,24 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
         _;
     }
 
+    modifier onlyProtocolAdmins() {
+        address globals_ = globals();
+
+        require(
+            msg.sender == IGlobalsLike(globals_).governor() ||
+            msg.sender == IGlobalsLike(globals_).operationalAdmin(),
+            "MTS:NOT_ADMIN"
+        );
+
+        _;
+    }
+
+    modifier onlyStrategyDelegate() {
+        require(msg.sender == strategyDelegate(), "MTS:NOT_STRATEGY_DELEGATE");
+
+        _;
+    }
+
     modifier onlyStrategyManager() {
         require(msg.sender == strategyManager, "MTS:NOT_STRATEGY_MANAGER");
 
@@ -179,6 +197,26 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
 
             emit DeploymentCapSet(account_, cap_);
         }
+    }
+
+    function setStrategyDelegateFeeRate(uint32 strategyDelegateFeeRate_) external override whenNotPaused nonReentrant onlyStrategyDelegate {
+        require(strategyDelegateFeeRate_ != strategyDelegateFeeRate,                   "MTS:SSDFR:NO_CHANGE");
+        require(strategyDelegateFeeRate_ <= HUNDRED_PERCENT,                           "MTS:SSDFR:INVALID_FEE_RATE");
+        require(strategyDelegateFeeRate_ + strategyProtocolFeeRate <= HUNDRED_PERCENT, "MTS:SSDFR:INVALID_SUM_FEE_RATE");
+
+        strategyDelegateFeeRate = strategyDelegateFeeRate_;
+
+        emit StrategyDelegateFeeRateSet(strategyDelegateFeeRate_);
+    }
+
+    function setStrategyProtocolFeeRate(uint32 strategyProtocolFeeRate_) external override whenNotPaused nonReentrant onlyProtocolAdmins {
+        require(strategyProtocolFeeRate_ != strategyProtocolFeeRate,                   "MTS:SSPFR:NO_CHANGE");
+        require(strategyProtocolFeeRate_ <= HUNDRED_PERCENT,                           "MTS:SSPFR:INVALID_FEE_RATE");
+        require(strategyDelegateFeeRate + strategyProtocolFeeRate_ <= HUNDRED_PERCENT, "MTS:SSPFR:INVALID_SUM_FEE_RATE");
+
+        strategyProtocolFeeRate = strategyProtocolFeeRate_;
+
+        emit StrategyProtocolFeeRateSet(strategyProtocolFeeRate_);
     }
 
     /**************************************************************************************************************************************/
