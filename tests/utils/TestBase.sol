@@ -24,6 +24,7 @@ contract TestBase is Test {
     address deployer         = makeAddr("deployer");
     address governor         = makeAddr("governor");
     address mapleTreasury    = makeAddr("mapleTreasury");
+    address operationalAdmin = makeAddr("operationalAdmin");
     address securityAdmin    = makeAddr("securityAdmin");
     address strategyDelegate = makeAddr("strategyDelegate");
 
@@ -48,6 +49,7 @@ contract TestBase is Test {
         globals.__setCanDeploy(deployer, true);
         globals.__setGovernor(governor);
         globals.__setMapleTreasury(mapleTreasury);
+        globals.__setOperationalAdmin(operationalAdmin);
         globals.__setSecurityAdmin(securityAdmin);
         globals.__setIsPoolAsset(address(asset), true);
         globals.__setIsInstanceOf("STRATEGY_MANAGER_FACTORY", address(managerFactory), true);

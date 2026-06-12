@@ -116,16 +116,12 @@ contract SetDeploymentCapsFailureTests is TestBase {
 
 contract SetDeploymentCapsSuccessTests is TestBase {
 
-    address operationalAdmin = makeAddr("operationalAdmin");
-
     address deployer1 = makeAddr("deployer1");
     address deployer2 = makeAddr("deployer2");
     address deployer3 = makeAddr("deployer3");
 
     function setUp() public override {
         super.setUp();
-
-        globals.__setOperationalAdmin(operationalAdmin);
 
         globals.__setIsGovernedInstanceOf("TRADING_ADDRESS", deployer1, true);
         globals.__setIsGovernedInstanceOf("TRADING_ADDRESS", deployer2, true);

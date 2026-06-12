@@ -39,6 +39,14 @@ interface IMapleTradingStrategy is IMapleTradingStrategyStorage, IMapleProxied {
     event DeploymentCapSet(address indexed account, uint256 deploymentCap);
 
     /**
+     *  @dev   Emitted when a loss is recognized against a deployer.
+     *  @param caller   Address that called recognizeLoss.
+     *  @param deployer Address of the deployer the loss is attributed to.
+     *  @param assets   Amount of assets recognized as lost.
+     */
+    event LossRecognized(address indexed caller, address indexed deployer, uint256 assets);
+
+    /**
      *  @dev   Emitted when the strategy delegate fee rate is set.
      *  @param strategyDelegateFeeRate Percentage of yield collected by the strategy delegate, defined with 6 decimals
      *                                 of precision (1e6 == 100%).
@@ -129,6 +137,15 @@ interface IMapleTradingStrategy is IMapleTradingStrategyStorage, IMapleProxied {
     /**************************************************************************************************************************************/
     /*** Administrative Functions                                                                                                       ***/
     /**************************************************************************************************************************************/
+
+    /**
+     *  @dev   Recognizes a loss against a deployer, reducing their deployed amount and total outstanding assets.
+     *         Callable only by the strategy delegate or operational admin.
+     *         Cannot exceed the deployer's currently deployed amount.
+     *  @param assets   Amount of assets to recognize as lost.
+     *  @param deployer Address of the deployer the loss is attributed to.
+     */
+    function recognizeLoss(uint256 assets, address deployer) external;
 
     /**
      *  @dev   Sets the deployment cap for a list of trading addresses.

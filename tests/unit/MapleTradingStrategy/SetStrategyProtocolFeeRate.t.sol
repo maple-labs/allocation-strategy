@@ -84,8 +84,7 @@ contract SetStrategyProtocolFeeRateFailureTests is TestBase {
 
 contract SetStrategyProtocolFeeRateSuccessTests is TestBase {
 
-    address operationalAdmin = makeAddr("operationalAdmin");
-    address tradingAddress   = makeAddr("tradingAddress");
+    address tradingAddress = makeAddr("tradingAddress");
 
     function setUp() public override {
         super.setUp();

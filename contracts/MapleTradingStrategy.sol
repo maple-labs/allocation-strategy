@@ -176,6 +176,16 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
     /*** Administrative Functions                                                                                                       ***/
     /**************************************************************************************************************************************/
 
+    function recognizeLoss(uint256 assets_, address deployer_) external override whenNotPaused onlyAdmin {
+        require(assets_ != 0,                           "MTS:RL:ZERO_ASSETS");
+        require(assets_ <= deployedAssetsOf[deployer_], "MTS:RL:EXCEEDS_DEPLOYED");
+
+        totalDeployedAssets         -= assets_;
+        deployedAssetsOf[deployer_] -= assets_;
+
+        emit LossRecognized(msg.sender, deployer_, assets_);
+    }
+
     function setDeploymentCaps(address[] calldata accounts_, uint256[] calldata amounts_) external override whenNotPaused onlyAdmin {
         require(accounts_.length != 0,               "MTS:SDC:ZERO_LENGTH");
         require(accounts_.length == amounts_.length, "MTS:SDC:LENGTH_MISMATCH");
