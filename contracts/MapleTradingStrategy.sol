@@ -149,6 +149,7 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
         emit AssetsReturned(msg.sender, onBehalfOf_, assets_, metadata_);
     }
 
+    // TODO: If the total amount of `scheduledYieldAssets` is zero, should we clean up `yieldStart` and `yieldDeadline`? Should we revert?
     function realizeYield(uint256 yield_, uint32 duration_, bytes calldata metadata_) external override whenNotPaused nonReentrant {
         address fundsAsset_ = fundsAsset;
         address globals_    = globals();
@@ -175,6 +176,23 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
     /**************************************************************************************************************************************/
     /*** Administrative Functions                                                                                                       ***/
     /**************************************************************************************************************************************/
+
+    // TODO: Revisit ACL, and check if `destination` address should be added.
+    // TODO: If we cancel all of the yield, should the `yieldStart` and `yieldDeadline` be cleaned up?
+    function cancelYield(uint256 assets_) external override whenNotPaused nonReentrant onlyAdmin {
+        uint256 unrealizedYield_ = unrealizedAssets();
+        uint256 cancelledAssets_ = assets_ == type(uint256).max ? unrealizedYield_ : assets_;
+
+        require(cancelledAssets_ != 0,                "MTS:CY:ZERO_ASSETS");
+        require(cancelledAssets_ <= unrealizedYield_, "MTS:CY:EXCEEDS_UNREALIZED");
+
+        scheduledYieldAssets = unrealizedYield_ - cancelledAssets_;
+        yieldStart           = uint32(block.timestamp);
+
+        require(ERC20Helper.transfer(fundsAsset, msg.sender, cancelledAssets_), "MTS:CY:TRANSFER_FAILED");
+
+        emit YieldCancelled(msg.sender, cancelledAssets_);
+    }
 
     function recognizeLoss(uint256 assets_, address deployer_) external override whenNotPaused onlyAdmin {
         require(assets_ != 0,                           "MTS:RL:ZERO_ASSETS");
