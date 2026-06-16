@@ -61,6 +61,12 @@ interface IMapleTradingStrategy is IMapleTradingStrategyStorage, IMapleProxied {
     event StrategyFunded(address indexed strategyManager, uint256 assets);
 
     /**
+     *  @dev   Emitted when the strategy metadata is set.
+     *  @param strategyMetadata Optional metadata associated with the strategy.
+     */
+    event StrategyMetadataSet(string strategyMetadata);
+
+    /**
      *  @dev   Emitted when the strategy protocol fee rate is set.
      *  @param strategyProtocolFeeRate Percentage of yield collected by the Maple treasury, defined with 6 decimals
      *                                 of precision (1e6 == 100%).
@@ -171,6 +177,13 @@ interface IMapleTradingStrategy is IMapleTradingStrategyStorage, IMapleProxied {
      *  @param amounts  New deployment cap to set for each trading address.
      */
     function setDeploymentCaps(address[] calldata accounts, uint256[] calldata amounts) external;
+
+    /**
+     *  @dev   Updates the metadata of the trading strategy.
+     *         Callable only by the strategy delegate or operational admin.
+     *  @param metadata Optional metadata associated with the strategy.
+     */
+    function setMetadata(string calldata metadata) external;
 
     /**
      *  @dev   Sets the percentage of yield collected by the strategy delegate.

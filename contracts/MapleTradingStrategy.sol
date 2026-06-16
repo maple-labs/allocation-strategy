@@ -227,6 +227,14 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
         }
     }
 
+    function setMetadata(string calldata metadata_) external override whenNotPaused onlyAdmin {
+        require(keccak256(bytes(metadata_)) != keccak256(bytes(strategyMetadata)), "MTS:SM:NO_CHANGE");
+
+        strategyMetadata = metadata_;
+
+        emit StrategyMetadataSet(metadata_);
+    }
+
     function setStrategyDelegateFeeRate(uint32 strategyDelegateFeeRate_) external override whenNotPaused nonReentrant onlyStrategyDelegate {
         require(strategyDelegateFeeRate_ != strategyDelegateFeeRate,                   "MTS:SSDFR:NO_CHANGE");
         require(strategyDelegateFeeRate_ <= HUNDRED_PERCENT,                           "MTS:SSDFR:INVALID_FEE_RATE");
