@@ -115,6 +115,43 @@ contract TestBase is Test {
         array_[2] = c_;
     }
 
+    function array(bool element_) internal pure returns (bool[] memory array_) {
+        array_    = new bool[](1);
+        array_[0] = element_;
+    }
+
+    function array(bool a_, bool b_) internal pure returns (bool[] memory array_) {
+        array_    = new bool[](2);
+        array_[0] = a_;
+        array_[1] = b_;
+    }
+
+    function array(bool a_, bool b_, bool c_) internal pure returns (bool[] memory array_) {
+        array_    = new bool[](3);
+        array_[0] = a_;
+        array_[1] = b_;
+        array_[2] = c_;
+    }
+
+    function assertPermissions(
+        address account_,
+        bool    expectedCanDeployAssets_,
+        bool    expectedCanReturnAssets_,
+        bool    expectedCanRealizeYield_
+    )
+        internal view
+    {
+        (
+            bool actualCanDeployAssets_,
+            bool actualCanReturnAssets_,
+            bool actualCanRealizeYield_
+        ) = strategy.permissions(account_);
+
+        assertEq(actualCanDeployAssets_, expectedCanDeployAssets_);
+        assertEq(actualCanReturnAssets_, expectedCanReturnAssets_);
+        assertEq(actualCanRealizeYield_, expectedCanRealizeYield_);
+    }
+
     function initializationArguments() internal view returns (bytes memory arguments_) {
         arguments_ = bytes.concat(abi.encode(address(manager)), abi.encode(params));
     }

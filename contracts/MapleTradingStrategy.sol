@@ -235,6 +235,54 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
         emit StrategyMetadataSet(metadata_);
     }
 
+    function setPermissions(
+        address[] calldata accounts_,
+        bool[]    calldata canDeployAssets_,
+        bool[]    calldata canReturnAssets_,
+        bool[]    calldata canRealizeYield_
+    )
+        external override whenNotPaused onlyAdmin
+    {
+        uint256 length_ = accounts_.length;
+
+        require(length_ != 0, "MTS:SP:ZERO_LENGTH");
+        require(
+            length_ == canDeployAssets_.length &&
+            length_ == canReturnAssets_.length &&
+            length_ == canRealizeYield_.length,
+            "MTS:SP:LENGTH_MISMATCH"
+        );
+
+        address globals_ = globals();
+
+        for (uint256 i_; i_ < length_; ++i_) {
+            address account_             = accounts_[i_];
+            bool    canDeployAssetsFlag_ = canDeployAssets_[i_];
+            bool    canReturnAssetsFlag_ = canReturnAssets_[i_];
+            bool    canRealizeYieldFlag_ = canRealizeYield_[i_];
+            bool    isTotalRevoke_       = !canDeployAssetsFlag_ && !canReturnAssetsFlag_ && !canRealizeYieldFlag_;
+
+            require(IGlobalsLike(globals_).isGovernedInstanceOf(INSTANCE_KEY, account_) || isTotalRevoke_, "MTS:SP:NOT_TRADING_ADDRESS");
+
+            Permissions memory currentPermissions_ = permissions[account_];
+
+            require(
+                currentPermissions_.canDeployAssets != canDeployAssetsFlag_ ||
+                currentPermissions_.canReturnAssets != canReturnAssetsFlag_ ||
+                currentPermissions_.canRealizeYield != canRealizeYieldFlag_,
+                "MTS:SP:NO_CHANGE"
+            );
+
+            permissions[account_] = Permissions({
+                canDeployAssets: canDeployAssetsFlag_,
+                canReturnAssets: canReturnAssetsFlag_,
+                canRealizeYield: canRealizeYieldFlag_
+            });
+
+            emit PermissionSet(account_, canDeployAssetsFlag_, canReturnAssetsFlag_, canRealizeYieldFlag_);
+        }
+    }
+
     function setStrategyDelegateFeeRate(uint32 strategyDelegateFeeRate_) external override whenNotPaused nonReentrant onlyStrategyDelegate {
         require(strategyDelegateFeeRate_ != strategyDelegateFeeRate,                   "MTS:SSDFR:NO_CHANGE");
         require(strategyDelegateFeeRate_ <= HUNDRED_PERCENT,                           "MTS:SSDFR:INVALID_FEE_RATE");

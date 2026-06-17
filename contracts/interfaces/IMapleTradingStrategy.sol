@@ -47,6 +47,20 @@ interface IMapleTradingStrategy is IMapleTradingStrategyStorage, IMapleProxied {
     event LossRecognized(address indexed caller, address indexed deployer, uint256 assets);
 
     /**
+     *  @dev   Emitted when permissions are set for a trading address.
+     *  @param account         Trading address the permissions were set for.
+     *  @param canDeployAssets Defines if the address can call deployAssets().
+     *  @param canReturnAssets Defines if the address can call returnAssets().
+     *  @param canRealizeYield Defines if the address can call realizeYield().
+     */
+    event PermissionSet(
+        address indexed account,
+        bool    canDeployAssets,
+        bool    canReturnAssets,
+        bool    canRealizeYield
+    );
+
+    /**
      *  @dev   Emitted when the strategy delegate fee rate is set.
      *  @param strategyDelegateFeeRate Percentage of yield collected by the strategy delegate, defined with 6 decimals
      *                                 of precision (1e6 == 100%).
@@ -184,6 +198,22 @@ interface IMapleTradingStrategy is IMapleTradingStrategyStorage, IMapleProxied {
      *  @param metadata Optional metadata associated with the strategy.
      */
     function setMetadata(string calldata metadata) external;
+
+    /**
+     *  @dev   Sets permissions for a list of trading addresses.
+     *         Callable only by the strategy delegate or operational admin.
+     *         Addresses must be valid trading addresses on MapleGlobals to receive any enabled permission.
+     *  @param accounts        Trading addresses to set permissions for.
+     *  @param canDeployAssets Defines if each address can call deployAssets().
+     *  @param canReturnAssets Defines if each address can call returnAssets().
+     *  @param canRealizeYield Defines if each address can call realizeYield().
+     */
+    function setPermissions(
+        address[] calldata accounts,
+        bool[]    calldata canDeployAssets,
+        bool[]    calldata canReturnAssets,
+        bool[]    calldata canRealizeYield
+    ) external;
 
     /**
      *  @dev   Sets the percentage of yield collected by the strategy delegate.
