@@ -17,11 +17,9 @@ contract InitializeTests is TestBase {
     }
 
     function test_initialize_revert_zeroStrategyManager() external {
-        params.strategyManager = address(0);
-
         vm.expectRevert("MTSI:I:ZERO_STRATEGY_MANAGER");
         vm.prank(address(strategyFactory));
-        proxy.__initialize(params);
+        proxy.__initialize(address(0), params);
     }
 
     function test_initialize_revert_invalidAsset() external {
@@ -29,7 +27,7 @@ contract InitializeTests is TestBase {
 
         vm.expectRevert("MTSI:I:INVALID_ASSET");
         vm.prank(address(strategyFactory));
-        proxy.__initialize(params);
+        proxy.__initialize(address(manager), params);
     }
 
     function test_initialize_revert_invalidFactory() external {
@@ -37,7 +35,7 @@ contract InitializeTests is TestBase {
 
         vm.expectRevert("MTSI:I:INVALID_FACTORY");
         vm.prank(address(strategyFactory));
-        proxy.__initialize(params);
+        proxy.__initialize(address(manager), params);
     }
 
     function test_initialize_revert_invalidInstance() external {
@@ -45,7 +43,7 @@ contract InitializeTests is TestBase {
 
         vm.expectRevert("MTSI:I:INVALID_INSTANCE");
         vm.prank(address(strategyFactory));
-        proxy.__initialize(params);
+        proxy.__initialize(address(manager), params);
     }
 
     function test_initialize_revert_invalidUnderlying() external {
@@ -53,7 +51,7 @@ contract InitializeTests is TestBase {
 
         vm.expectRevert("MTSI:I:INVALID_UNDERLYING");
         vm.prank(address(strategyFactory));
-        proxy.__initialize(params);
+        proxy.__initialize(address(manager), params);
     }
 
     function test_initialize_revert_invalidSumFeeRate() external {
@@ -62,15 +60,15 @@ contract InitializeTests is TestBase {
 
         vm.expectRevert("MTSI:I:INVALID_SUM_FEE_RATE");
         vm.prank(address(strategyFactory));
-        proxy.__initialize(params);
+        proxy.__initialize(address(manager), params);
     }
 
     function test_initialize_success() external {
         vm.expectEmit();
-        emit IMapleTradingStrategyInitializer.Initialized(params);
+        emit IMapleTradingStrategyInitializer.Initialized(address(manager), params);
 
         vm.prank(address(strategyFactory));
-        proxy.__initialize(params);
+        proxy.__initialize(address(manager), params);
 
         assertEq(proxy.fundsAsset(),              address(asset));
         assertEq(proxy.locked(),                  1);

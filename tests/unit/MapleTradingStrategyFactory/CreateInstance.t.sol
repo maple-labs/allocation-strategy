@@ -12,7 +12,7 @@ contract CreateInstanceTests is TestBase {
     function setUp() public override {
         super.setUp();
 
-        manager.__setUnderlyingStrategy(strategyFactory.getInstanceAddress(abi.encode(params), ""));
+        manager.__setUnderlyingStrategy(strategyFactory.getInstanceAddress(initializationArguments(), ""));
     }
 
     function test_createInstance_revert_invalidDeployer() external {
@@ -20,7 +20,7 @@ contract CreateInstanceTests is TestBase {
 
         vm.prank(deployer);
         vm.expectRevert("MTSF:CI:CANNOT_DEPLOY");
-        strategyFactory.createInstance(abi.encode(params), "");
+        strategyFactory.createInstance(initializationArguments(), "");
     }
 
     function test_createInstance_revert_protocolPaused() external {
@@ -28,11 +28,11 @@ contract CreateInstanceTests is TestBase {
 
         vm.prank(deployer);
         vm.expectRevert("MPF:PROTOCOL_PAUSED");
-        strategyFactory.createInstance(abi.encode(params), "");
+        strategyFactory.createInstance(initializationArguments(), "");
     }
 
     function test_createInstance_revert_createCollision() external {
-        bytes memory arguments = abi.encode(params);
+        bytes memory arguments = initializationArguments();
 
         vm.prank(deployer);
         strategyFactory.createInstance(arguments, "");
@@ -42,13 +42,26 @@ contract CreateInstanceTests is TestBase {
         strategyFactory.createInstance(arguments, "");
     }
 
+    function test_createInstance_revert_malformedPayload() external {
+        vm.prank(deployer);
+        vm.expectRevert("MPF:CI:FAILED");
+        strategyFactory.createInstance(new bytes(0), "");
+
+        bytes memory validArguments     = initializationArguments();
+        bytes memory truncatedArguments = new bytes(validArguments.length - 1);
+
+        vm.prank(deployer);
+        vm.expectRevert("MPF:CI:FAILED");
+        strategyFactory.createInstance(truncatedArguments, "");
+    }
+
     function test_createInstance_success() external {
-        bytes memory arguments = abi.encode(params);
+        bytes memory arguments = initializationArguments();
 
         address proxy = strategyFactory.getInstanceAddress(arguments, "");
 
         vm.expectEmit();
-        emit IMapleTradingStrategyInitializer.Initialized(params);
+        emit IMapleTradingStrategyInitializer.Initialized(address(manager), params);
 
         vm.expectEmit();
         emit IMapleProxyFactory.InstanceDeployed(100, proxy, arguments);

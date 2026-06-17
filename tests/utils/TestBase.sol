@@ -67,17 +67,16 @@ contract TestBase is Test {
 
         params = IMapleTradingStrategyInitializer.Parameters({
             fundsAsset:              address(asset),
-            strategyManager:         address(manager),
             strategyMetadata:        "MacAttack - 02a",
             strategyDelegateFeeRate: 0.02e6,
             strategyProtocolFeeRate: 0.03e6
         });
 
         manager.__setStrategyDelegate(strategyDelegate);
-        manager.__setUnderlyingStrategy(strategyFactory.getInstanceAddress(abi.encode(params), "DEFAULT"));
+        manager.__setUnderlyingStrategy(strategyFactory.getInstanceAddress(initializationArguments(), "DEFAULT"));
 
         vm.prank(deployer);
-        strategy = MapleTradingStrategyHarness(strategyFactory.createInstance(abi.encode(params), "DEFAULT"));
+        strategy = MapleTradingStrategyHarness(strategyFactory.createInstance(initializationArguments(), "DEFAULT"));
     }
 
     function array(address element_) internal pure returns (address[] memory array_) {
@@ -114,6 +113,10 @@ contract TestBase is Test {
         array_[0] = a_;
         array_[1] = b_;
         array_[2] = c_;
+    }
+
+    function initializationArguments() internal view returns (bytes memory arguments_) {
+        arguments_ = bytes.concat(abi.encode(address(manager)), abi.encode(params));
     }
 
 }

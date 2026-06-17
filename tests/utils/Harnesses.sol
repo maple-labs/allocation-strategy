@@ -46,8 +46,8 @@ contract MapleTradingStrategyHarness is MapleTradingStrategy {
 
 contract MapleTradingStrategyInitializerHarness is MapleTradingStrategyInitializer {
 
-    function __initialize(Parameters memory params_) external {
-        _initialize(params_);
+    function __initialize(address strategyManager_, Parameters memory params_) external {
+        _initialize(strategyManager_, params_);
     }
 
     function locked() external view returns (uint256 locked_) {

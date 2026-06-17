@@ -8,15 +8,14 @@ interface IMapleTradingStrategyInitializer {
 
     /**
      *  @dev   Parameters required to initialize a trading strategy.
+     *         Initializer arguments are encoded as abi.encode(strategyManager) || abi.encode(params).
      *  @param fundsAsset              Address of the asset used by the strategy.
-     *  @param strategyManager         Address of the strategy manager contract.
      *  @param strategyMetadata        Optional metadata associated with the trading strategy.
      *  @param strategyDelegateFeeRate Percentage of yield collected by the strategy delegate.
      *  @param strategyProtocolFeeRate Percentage of yield collected by the Maple treasury.
      */
     struct Parameters {
         address fundsAsset;
-        address strategyManager;
         string  strategyMetadata;
         uint32  strategyDelegateFeeRate;
         uint32  strategyProtocolFeeRate;
@@ -24,8 +23,9 @@ interface IMapleTradingStrategyInitializer {
 
     /**
      *  @dev   Emitted when the trading strategy proxy is initialized.
-     *  @param params Trading strategy parameters set during initialization.
+     *  @param strategyManager Address of the strategy manager contract.
+     *  @param params          Trading strategy parameters set during initialization.
      */
-    event Initialized(Parameters params);
+    event Initialized(address indexed strategyManager, Parameters params);
 
 }
