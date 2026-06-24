@@ -102,10 +102,10 @@ contract AssetsUnderManagementTests is TestBase {
 
         vm.warp(startingTime + yieldDuration / 3);
 
-        uint256 realizedAssets   = yieldAssets / 3;
-        uint256 unrealizedAssets = yieldAssets - realizedAssets;
+        uint256 realizedYield   = yieldAssets / 3;
+        uint256 unrealizedYield = yieldAssets - realizedYield;
 
-        assertEq(strategy.assetsUnderManagement(), strategyBalance - unrealizedAssets);
+        assertEq(strategy.assetsUnderManagement(), strategyBalance - unrealizedYield);
     }
 
     // NOTE: Unreachable since yield can't be withdrawn before it realizes.
@@ -127,10 +127,10 @@ contract AssetsUnderManagementTests is TestBase {
 
         vm.warp(startingTime + yieldDuration / 3);
 
-        uint256 realizedAssets   = yieldAssets / 3;
-        uint256 unrealizedAssets = yieldAssets - realizedAssets;
+        uint256 realizedYield   = yieldAssets / 3;
+        uint256 unrealizedYield = yieldAssets - realizedYield;
 
-        assertEq(strategy.assetsUnderManagement(), deployedAssets + strategyBalance - unrealizedAssets);
+        assertEq(strategy.assetsUnderManagement(), deployedAssets + strategyBalance - unrealizedYield);
     }
 
     /**************************************************************************************************************************************/

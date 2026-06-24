@@ -78,7 +78,7 @@ contract DeployAssetsFailureTests is DeployAssetsTestBase {
         strategy.deployAssets(assetsToDeploy, "");
     }
 
-    function test_deployAssets_revert_unrealizedAssets() external {
+    function test_deployAssets_revert_unrealizedYield() external {
         strategy.__setYieldBuffer(assetsToDeploy, startingTime, startingTime + 1 days);
 
         vm.warp(startingTime + 1 days - 1 seconds);
@@ -192,35 +192,35 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
         assertEq(strategy.assetsUnderManagement(),          assetsToDeploy);
     }
 
-    function test_deployAssets_success_unrealizedAssets() external {
+    function test_deployAssets_success_unrealizedYield() external {
         strategy.__setYieldBuffer(assetsToDeploy, startingTime, startingTime + 3 days);
 
         vm.warp(startingTime + 2 days);
 
-        uint256 realizedAssets   = assetsToDeploy * 2 / 3;
-        uint256 unrealizedAssets = assetsToDeploy - realizedAssets;
+        uint256 realizedYield   = assetsToDeploy * 2 / 3;
+        uint256 unrealizedYield = assetsToDeploy - realizedYield;
 
         assertEq(asset.balanceOf(address(strategy)), assetsToDeploy);
         assertEq(asset.balanceOf(tradingAddress),    0);
 
-        assertEq(strategy.availableToWithdraw(),            realizedAssets);
+        assertEq(strategy.availableToWithdraw(),            realizedYield);
         assertEq(strategy.totalDeployedAssets(),            0);
         assertEq(strategy.deployedAssetsOf(tradingAddress), 0);
-        assertEq(strategy.assetsUnderManagement(),          realizedAssets);
+        assertEq(strategy.assetsUnderManagement(),          realizedYield);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.AssetsDeployed(tradingAddress, realizedAssets, "");
+        emit IMapleTradingStrategy.AssetsDeployed(tradingAddress, realizedYield, "");
 
         vm.prank(tradingAddress);
-        strategy.deployAssets(realizedAssets, "");
+        strategy.deployAssets(realizedYield, "");
 
-        assertEq(asset.balanceOf(address(strategy)), unrealizedAssets);
-        assertEq(asset.balanceOf(tradingAddress),    realizedAssets);
+        assertEq(asset.balanceOf(address(strategy)), unrealizedYield);
+        assertEq(asset.balanceOf(tradingAddress),    realizedYield);
 
         assertEq(strategy.availableToWithdraw(),            0);
-        assertEq(strategy.totalDeployedAssets(),            realizedAssets);
-        assertEq(strategy.deployedAssetsOf(tradingAddress), realizedAssets);
-        assertEq(strategy.assetsUnderManagement(),          realizedAssets);
+        assertEq(strategy.totalDeployedAssets(),            realizedYield);
+        assertEq(strategy.deployedAssetsOf(tradingAddress), realizedYield);
+        assertEq(strategy.assetsUnderManagement(),          realizedYield);
     }
 
     function test_deployAssets_success_existingDeployment() external {

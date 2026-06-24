@@ -46,10 +46,10 @@ contract WithdrawFromUnderlyingStrategyTests is TestBase {
         strategy.withdrawFromUnderlyingStrategy(destination, assets + 1, "");
     }
 
-    function test_withdrawFromUnderlyingStrategy_revert_unrealizedAssets() external {
+    function test_withdrawFromUnderlyingStrategy_revert_unrealizedYield() external {
         strategy.__setYieldBuffer(1, startingTime, startingTime + 1 seconds);
 
-        assertEq(strategy.unrealizedAssets(), 1);
+        assertEq(strategy.unrealizedYield(), 1);
 
         vm.prank(address(manager));
         vm.expectRevert("MTS:WFUS:INSUFFICIENT_ASSETS");

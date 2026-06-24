@@ -20,6 +20,10 @@ contract MapleTradingStrategyHarness is MapleTradingStrategy {
         strategyProtocolFeeRate = protocolFeeRate_;
     }
 
+    function __setImpairedAssets(uint256 impairedAssets_) external {
+        impairedAssets = impairedAssets_;
+    }
+
     function __setLocked(uint256 locked_) external {
         _locked = locked_;
     }

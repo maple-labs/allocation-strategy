@@ -39,6 +39,18 @@ interface IMapleTradingStrategy is IMapleTradingStrategyStorage, IMapleProxied {
     event DeploymentCapSet(address indexed account, uint256 deploymentCap);
 
     /**
+     *  @dev   Emitted when assets are impaired.
+     *  @param assets Amount of assets that were impaired.
+     */
+    event Impaired(uint256 assets);
+
+    /**
+     *  @dev   Emitted when assets are unimpaired.
+     *  @param assets Amount of assets that were unimpaired.
+     */
+    event ImpairmentRemoved(uint256 assets);
+
+    /**
      *  @dev   Emitted when a loss is recognized against a deployer.
      *  @param caller   Address that called recognizeLoss.
      *  @param deployer Address of the deployer the loss is attributed to.
@@ -176,6 +188,20 @@ interface IMapleTradingStrategy is IMapleTradingStrategyStorage, IMapleProxied {
     function cancelYield(uint256 assets) external;
 
     /**
+     *  @dev   Increases the amount of impaired assets.
+     *         Callable only by protocol admins.
+     *  @param assets Amount of assets to impair.
+     */
+    function impair(uint256 assets) external;
+
+    /**
+     *  @dev   Decreases the amount of impaired assets.
+     *         Callable only by protocol admins.
+     *  @param assets Amount of assets to unimpair.
+     */
+    function removeImpairment(uint256 assets) external;
+
+    /**
      *  @dev   Recognizes a loss against a deployer, reducing their deployed amount and total outstanding assets.
      *         Callable only by the strategy delegate or operational admin.
      *         Cannot exceed the deployer's currently deployed amount.
@@ -289,9 +315,9 @@ interface IMapleTradingStrategy is IMapleTradingStrategyStorage, IMapleProxied {
 
     /**
      *  @dev    Returns the current amount of yield assets that has been realized.
-     *  @return realizedAssets Amount of yield assets realized.
+     *  @return realizedYield Amount of yield assets realized.
      */
-    function realizedAssets() external view returns (uint256 realizedAssets);
+    function realizedYield() external view returns (uint256 realizedYield);
 
     /**
      *  @dev    Returns the address of the security admin.
@@ -307,9 +333,16 @@ interface IMapleTradingStrategy is IMapleTradingStrategyStorage, IMapleProxied {
     function strategyDelegate() external view returns (address strategyDelegate);
 
     /**
-     *  @dev    Returns the current amount of yield assets that has not been realized.
-     *  @return unrealizedAssets Amount of yield assets not yet realized.
+     *  @dev    Returns the amount of unrealized losses.
+     *          Equal to the amount of impaired assets capped to the AUM of the strategy.
+     *  @return unrealizedLosses Amount of unrealized losses.
      */
-    function unrealizedAssets() external view returns (uint256 unrealizedAssets);
+    function unrealizedLosses() external view returns (uint256 unrealizedLosses);
+
+    /**
+     *  @dev    Returns the current amount of yield assets that has not been realized.
+     *  @return unrealizedYield Amount of yield assets not yet realized.
+     */
+    function unrealizedYield() external view returns (uint256 unrealizedYield);
 
 }

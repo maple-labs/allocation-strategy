@@ -48,8 +48,8 @@ contract RealizeYieldTestBase is TestBase {
         assertEq(strategy.yieldStart(),           0);
         assertEq(strategy.yieldDeadline(),        0);
 
-        assertEq(strategy.realizedAssets(),      0);
-        assertEq(strategy.unrealizedAssets(),    0);
+        assertEq(strategy.realizedYield(),       0);
+        assertEq(strategy.unrealizedYield(),     0);
         assertEq(strategy.availableToWithdraw(), 0);
 
         // Prepare assets for the trading address and the strategy.
@@ -76,8 +76,8 @@ contract RealizeYieldTestBase is TestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldDeadline);
 
-        assertEq(strategy.realizedAssets(),      0);
-        assertEq(strategy.unrealizedAssets(),    scheduledYieldAssets);
+        assertEq(strategy.realizedYield(),       0);
+        assertEq(strategy.unrealizedYield(),     scheduledYieldAssets);
         assertEq(strategy.availableToWithdraw(), strategyBalance - scheduledYieldAssets);
     }
 
@@ -164,8 +164,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldStart);
 
-        assertEq(strategy.realizedAssets(),        scheduledYieldAssets);
-        assertEq(strategy.unrealizedAssets(),      0);
+        assertEq(strategy.realizedYield(),         scheduledYieldAssets);
+        assertEq(strategy.unrealizedYield(),       0);
         assertEq(strategy.availableToWithdraw(),   strategyBalance);
         assertEq(strategy.assetsUnderManagement(), strategyBalance);
 
@@ -184,8 +184,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldStart);
 
-        assertEq(strategy.realizedAssets(),        0);
-        assertEq(strategy.unrealizedAssets(),      0);
+        assertEq(strategy.realizedYield(),         0);
+        assertEq(strategy.unrealizedYield(),       0);
         assertEq(strategy.availableToWithdraw(),   strategyBalance);
         assertEq(strategy.assetsUnderManagement(), strategyBalance);
     }
@@ -200,8 +200,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldDeadline);
 
-        assertEq(strategy.realizedAssets(),        0);
-        assertEq(strategy.unrealizedAssets(),      scheduledYieldAssets);
+        assertEq(strategy.realizedYield(),         0);
+        assertEq(strategy.unrealizedYield(),       scheduledYieldAssets);
         assertEq(strategy.availableToWithdraw(),   strategyBalance - scheduledYieldAssets);
         assertEq(strategy.assetsUnderManagement(), strategyBalance - scheduledYieldAssets);
 
@@ -220,8 +220,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldStart);
 
-        assertEq(strategy.realizedAssets(),        scheduledYieldAssets);
-        assertEq(strategy.unrealizedAssets(),      0);
+        assertEq(strategy.realizedYield(),         scheduledYieldAssets);
+        assertEq(strategy.unrealizedYield(),       0);
         assertEq(strategy.availableToWithdraw(),   strategyBalance);
         assertEq(strategy.assetsUnderManagement(), strategyBalance);
     }
@@ -230,8 +230,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         uint256 elapsedDuration  = yieldAccruing - yieldStart;
         uint256 totalDuration    = yieldDeadline - yieldStart;
 
-        uint256 realizedAssets   = scheduledYieldAssets * elapsedDuration / totalDuration;
-        uint256 unrealizedAssets = scheduledYieldAssets - realizedAssets;
+        uint256 realizedYield   = scheduledYieldAssets * elapsedDuration / totalDuration;
+        uint256 unrealizedYield = scheduledYieldAssets - realizedYield;
 
         vm.warp(yieldAccruing);
 
@@ -244,13 +244,13 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldDeadline);
 
-        assertEq(strategy.realizedAssets(),        realizedAssets);
-        assertEq(strategy.unrealizedAssets(),      unrealizedAssets);
-        assertEq(strategy.availableToWithdraw(),   strategyBalance - unrealizedAssets);
-        assertEq(strategy.assetsUnderManagement(), strategyBalance - unrealizedAssets);
+        assertEq(strategy.realizedYield(),         realizedYield);
+        assertEq(strategy.unrealizedYield(),       unrealizedYield);
+        assertEq(strategy.availableToWithdraw(),   strategyBalance - unrealizedYield);
+        assertEq(strategy.assetsUnderManagement(), strategyBalance - unrealizedYield);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldRealized(tradingAddress, unrealizedAssets, 0, 0, 0, 0, "");
+        emit IMapleTradingStrategy.YieldRealized(tradingAddress, unrealizedYield, 0, 0, 0, 0, "");
 
         vm.prank(tradingAddress);
         strategy.realizeYield(0, 0, "");
@@ -260,12 +260,12 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
-        assertEq(strategy.scheduledYieldAssets(), unrealizedAssets);
+        assertEq(strategy.scheduledYieldAssets(), unrealizedYield);
         assertEq(strategy.yieldStart(),           yieldAccruing);
         assertEq(strategy.yieldDeadline(),        yieldAccruing);
 
-        assertEq(strategy.realizedAssets(),        unrealizedAssets);
-        assertEq(strategy.unrealizedAssets(),      0);
+        assertEq(strategy.realizedYield(),         unrealizedYield);
+        assertEq(strategy.unrealizedYield(),       0);
         assertEq(strategy.availableToWithdraw(),   strategyBalance);
         assertEq(strategy.assetsUnderManagement(), strategyBalance);
     }
@@ -282,8 +282,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldDeadline);
 
-        assertEq(strategy.realizedAssets(),      scheduledYieldAssets);
-        assertEq(strategy.unrealizedAssets(),    0);
+        assertEq(strategy.realizedYield(),       scheduledYieldAssets);
+        assertEq(strategy.unrealizedYield(),     0);
         assertEq(strategy.availableToWithdraw(), strategyBalance);
 
         vm.expectEmit();
@@ -301,8 +301,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldDeadline);
         assertEq(strategy.yieldDeadline(),        yieldDeadline);
 
-        assertEq(strategy.realizedAssets(),      0);
-        assertEq(strategy.unrealizedAssets(),    0);
+        assertEq(strategy.realizedYield(),       0);
+        assertEq(strategy.unrealizedYield(),     0);
         assertEq(strategy.availableToWithdraw(), strategyBalance);
     }
 
@@ -318,8 +318,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldDeadline);
 
-        assertEq(strategy.realizedAssets(),        scheduledYieldAssets);
-        assertEq(strategy.unrealizedAssets(),      0);
+        assertEq(strategy.realizedYield(),         scheduledYieldAssets);
+        assertEq(strategy.unrealizedYield(),       0);
         assertEq(strategy.availableToWithdraw(),   strategyBalance);
         assertEq(strategy.assetsUnderManagement(), strategyBalance);
 
@@ -338,8 +338,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldFinished);
         assertEq(strategy.yieldDeadline(),        yieldFinished);
 
-        assertEq(strategy.realizedAssets(),        0);
-        assertEq(strategy.unrealizedAssets(),      0);
+        assertEq(strategy.realizedYield(),         0);
+        assertEq(strategy.unrealizedYield(),       0);
         assertEq(strategy.availableToWithdraw(),   strategyBalance);
         assertEq(strategy.assetsUnderManagement(), strategyBalance);
     }
@@ -361,8 +361,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldStart);
 
-        assertEq(strategy.realizedAssets(),        scheduledYieldAssets);
-        assertEq(strategy.unrealizedAssets(),      0);
+        assertEq(strategy.realizedYield(),         scheduledYieldAssets);
+        assertEq(strategy.unrealizedYield(),       0);
         assertEq(strategy.availableToWithdraw(),   strategyBalance);
         assertEq(strategy.assetsUnderManagement(), strategyBalance);
 
@@ -381,8 +381,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldStart + newYieldDuration);
 
-        assertEq(strategy.realizedAssets(),        0);
-        assertEq(strategy.unrealizedAssets(),      0);
+        assertEq(strategy.realizedYield(),         0);
+        assertEq(strategy.unrealizedYield(),       0);
         assertEq(strategy.availableToWithdraw(),   strategyBalance);
         assertEq(strategy.assetsUnderManagement(), strategyBalance);
     }
@@ -397,8 +397,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldDeadline);
 
-        assertEq(strategy.realizedAssets(),        0);
-        assertEq(strategy.unrealizedAssets(),      scheduledYieldAssets);
+        assertEq(strategy.realizedYield(),         0);
+        assertEq(strategy.unrealizedYield(),       scheduledYieldAssets);
         assertEq(strategy.availableToWithdraw(),   strategyBalance - scheduledYieldAssets);
         assertEq(strategy.assetsUnderManagement(), strategyBalance - scheduledYieldAssets);
 
@@ -417,8 +417,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldStart + newYieldDuration);
 
-        assertEq(strategy.realizedAssets(),        0);
-        assertEq(strategy.unrealizedAssets(),      scheduledYieldAssets);
+        assertEq(strategy.realizedYield(),         0);
+        assertEq(strategy.unrealizedYield(),       scheduledYieldAssets);
         assertEq(strategy.availableToWithdraw(),   strategyBalance - scheduledYieldAssets);
         assertEq(strategy.assetsUnderManagement(), strategyBalance - scheduledYieldAssets);
     }
@@ -427,8 +427,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         uint256 elapsedDuration  = yieldAccruing - yieldStart;
         uint256 totalDuration    = yieldDeadline - yieldStart;
 
-        uint256 realizedAssets   = scheduledYieldAssets * elapsedDuration / totalDuration;
-        uint256 unrealizedAssets = scheduledYieldAssets - realizedAssets;
+        uint256 realizedYield   = scheduledYieldAssets * elapsedDuration / totalDuration;
+        uint256 unrealizedYield = scheduledYieldAssets - realizedYield;
 
         vm.warp(yieldAccruing);
 
@@ -441,13 +441,13 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldDeadline);
 
-        assertEq(strategy.realizedAssets(),        realizedAssets);
-        assertEq(strategy.unrealizedAssets(),      unrealizedAssets);
-        assertEq(strategy.availableToWithdraw(),   strategyBalance - unrealizedAssets);
-        assertEq(strategy.assetsUnderManagement(), strategyBalance - unrealizedAssets);
+        assertEq(strategy.realizedYield(),         realizedYield);
+        assertEq(strategy.unrealizedYield(),       unrealizedYield);
+        assertEq(strategy.availableToWithdraw(),   strategyBalance - unrealizedYield);
+        assertEq(strategy.assetsUnderManagement(), strategyBalance - unrealizedYield);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldRealized(tradingAddress, unrealizedAssets, 0, 0, 0, newYieldDuration, "");
+        emit IMapleTradingStrategy.YieldRealized(tradingAddress, unrealizedYield, 0, 0, 0, newYieldDuration, "");
 
         vm.prank(tradingAddress);
         strategy.realizeYield(0, newYieldDuration, "");
@@ -457,14 +457,14 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
-        assertEq(strategy.scheduledYieldAssets(), unrealizedAssets);
+        assertEq(strategy.scheduledYieldAssets(), unrealizedYield);
         assertEq(strategy.yieldStart(),           yieldAccruing);
         assertEq(strategy.yieldDeadline(),        yieldAccruing + newYieldDuration);
 
-        assertEq(strategy.realizedAssets(),        0);
-        assertEq(strategy.unrealizedAssets(),      unrealizedAssets);
-        assertEq(strategy.availableToWithdraw(),   strategyBalance - unrealizedAssets);
-        assertEq(strategy.assetsUnderManagement(), strategyBalance - unrealizedAssets);
+        assertEq(strategy.realizedYield(),         0);
+        assertEq(strategy.unrealizedYield(),       unrealizedYield);
+        assertEq(strategy.availableToWithdraw(),   strategyBalance - unrealizedYield);
+        assertEq(strategy.assetsUnderManagement(), strategyBalance - unrealizedYield);
     }
 
     function test_realizeYield_success_zeroYield_nonZeroDuration_withFees_bufferAtDeadline() external {
@@ -479,8 +479,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldDeadline);
 
-        assertEq(strategy.realizedAssets(),      scheduledYieldAssets);
-        assertEq(strategy.unrealizedAssets(),    0);
+        assertEq(strategy.realizedYield(),       scheduledYieldAssets);
+        assertEq(strategy.unrealizedYield(),     0);
         assertEq(strategy.availableToWithdraw(), strategyBalance);
 
         vm.expectEmit();
@@ -498,8 +498,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldDeadline);
         assertEq(strategy.yieldDeadline(),        yieldDeadline + newYieldDuration);
 
-        assertEq(strategy.realizedAssets(),      0);
-        assertEq(strategy.unrealizedAssets(),    0);
+        assertEq(strategy.realizedYield(),       0);
+        assertEq(strategy.unrealizedYield(),     0);
         assertEq(strategy.availableToWithdraw(), strategyBalance);
     }
 
@@ -515,8 +515,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldDeadline);
 
-        assertEq(strategy.realizedAssets(),        scheduledYieldAssets);
-        assertEq(strategy.unrealizedAssets(),      0);
+        assertEq(strategy.realizedYield(),         scheduledYieldAssets);
+        assertEq(strategy.unrealizedYield(),       0);
         assertEq(strategy.availableToWithdraw(),   strategyBalance);
         assertEq(strategy.assetsUnderManagement(), strategyBalance);
 
@@ -535,8 +535,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldFinished);
         assertEq(strategy.yieldDeadline(),        yieldFinished + newYieldDuration);
 
-        assertEq(strategy.realizedAssets(),        0);
-        assertEq(strategy.unrealizedAssets(),      0);
+        assertEq(strategy.realizedYield(),         0);
+        assertEq(strategy.unrealizedYield(),       0);
         assertEq(strategy.availableToWithdraw(),   strategyBalance);
         assertEq(strategy.assetsUnderManagement(), strategyBalance);
     }
@@ -560,8 +560,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldStart);
 
-        assertEq(strategy.realizedAssets(),        scheduledYieldAssets);
-        assertEq(strategy.unrealizedAssets(),      0);
+        assertEq(strategy.realizedYield(),         scheduledYieldAssets);
+        assertEq(strategy.unrealizedYield(),       0);
         assertEq(strategy.availableToWithdraw(),   strategyBalance);
         assertEq(strategy.assetsUnderManagement(), strategyBalance);
 
@@ -580,8 +580,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldStart);
 
-        assertEq(strategy.realizedAssets(),        newYieldAmount);
-        assertEq(strategy.unrealizedAssets(),      0);
+        assertEq(strategy.realizedYield(),         newYieldAmount);
+        assertEq(strategy.unrealizedYield(),       0);
         assertEq(strategy.availableToWithdraw(),   strategyBalance + newYieldAmount);
         assertEq(strategy.assetsUnderManagement(), strategyBalance + newYieldAmount);
     }
@@ -598,8 +598,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldDeadline);
 
-        assertEq(strategy.realizedAssets(),        0);
-        assertEq(strategy.unrealizedAssets(),      scheduledYieldAssets);
+        assertEq(strategy.realizedYield(),         0);
+        assertEq(strategy.unrealizedYield(),       scheduledYieldAssets);
         assertEq(strategy.availableToWithdraw(),   strategyBalance - scheduledYieldAssets);
         assertEq(strategy.assetsUnderManagement(), strategyBalance - scheduledYieldAssets);
 
@@ -618,8 +618,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldStart);
 
-        assertEq(strategy.realizedAssets(),        scheduledYieldAssets + newYieldAmount);
-        assertEq(strategy.unrealizedAssets(),      0);
+        assertEq(strategy.realizedYield(),         scheduledYieldAssets + newYieldAmount);
+        assertEq(strategy.unrealizedYield(),       0);
         assertEq(strategy.availableToWithdraw(),   strategyBalance + newYieldAmount);
         assertEq(strategy.assetsUnderManagement(), strategyBalance + newYieldAmount);
     }
@@ -630,8 +630,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         uint256 elapsedDuration  = yieldAccruing - yieldStart;
         uint256 totalDuration    = yieldDeadline - yieldStart;
 
-        uint256 realizedAssets   = scheduledYieldAssets * elapsedDuration / totalDuration;
-        uint256 unrealizedAssets = scheduledYieldAssets - realizedAssets;
+        uint256 realizedYield   = scheduledYieldAssets * elapsedDuration / totalDuration;
+        uint256 unrealizedYield = scheduledYieldAssets - realizedYield;
 
         vm.warp(yieldAccruing);
 
@@ -644,13 +644,13 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldDeadline);
 
-        assertEq(strategy.realizedAssets(),        realizedAssets);
-        assertEq(strategy.unrealizedAssets(),      unrealizedAssets);
-        assertEq(strategy.availableToWithdraw(),   strategyBalance - unrealizedAssets);
-        assertEq(strategy.assetsUnderManagement(), strategyBalance - unrealizedAssets);
+        assertEq(strategy.realizedYield(),         realizedYield);
+        assertEq(strategy.unrealizedYield(),       unrealizedYield);
+        assertEq(strategy.availableToWithdraw(),   strategyBalance - unrealizedYield);
+        assertEq(strategy.assetsUnderManagement(), strategyBalance - unrealizedYield);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldRealized(tradingAddress, unrealizedAssets, newYieldAmount, 0, 0, 0, "");
+        emit IMapleTradingStrategy.YieldRealized(tradingAddress, unrealizedYield, newYieldAmount, 0, 0, 0, "");
 
         vm.prank(tradingAddress);
         strategy.realizeYield(newYieldAmount, 0, "");
@@ -660,12 +660,12 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
-        assertEq(strategy.scheduledYieldAssets(), unrealizedAssets + newYieldAmount);
+        assertEq(strategy.scheduledYieldAssets(), unrealizedYield + newYieldAmount);
         assertEq(strategy.yieldStart(),           yieldAccruing);
         assertEq(strategy.yieldDeadline(),        yieldAccruing);
 
-        assertEq(strategy.realizedAssets(),        unrealizedAssets + newYieldAmount);
-        assertEq(strategy.unrealizedAssets(),      0);
+        assertEq(strategy.realizedYield(),         unrealizedYield + newYieldAmount);
+        assertEq(strategy.unrealizedYield(),       0);
         assertEq(strategy.availableToWithdraw(),   strategyBalance + newYieldAmount);
         assertEq(strategy.assetsUnderManagement(), strategyBalance + newYieldAmount);
     }
@@ -684,8 +684,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldDeadline);
 
-        assertEq(strategy.realizedAssets(),      scheduledYieldAssets);
-        assertEq(strategy.unrealizedAssets(),    0);
+        assertEq(strategy.realizedYield(),       scheduledYieldAssets);
+        assertEq(strategy.unrealizedYield(),     0);
         assertEq(strategy.availableToWithdraw(), strategyBalance);
 
         vm.expectEmit();
@@ -703,8 +703,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldDeadline);
         assertEq(strategy.yieldDeadline(),        yieldDeadline);
 
-        assertEq(strategy.realizedAssets(),      newYieldAmount);
-        assertEq(strategy.unrealizedAssets(),    0);
+        assertEq(strategy.realizedYield(),       newYieldAmount);
+        assertEq(strategy.unrealizedYield(),     0);
         assertEq(strategy.availableToWithdraw(), strategyBalance + newYieldAmount);
     }
 
@@ -722,8 +722,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldDeadline);
 
-        assertEq(strategy.realizedAssets(),        scheduledYieldAssets);
-        assertEq(strategy.unrealizedAssets(),      0);
+        assertEq(strategy.realizedYield(),         scheduledYieldAssets);
+        assertEq(strategy.unrealizedYield(),       0);
         assertEq(strategy.availableToWithdraw(),   strategyBalance);
         assertEq(strategy.assetsUnderManagement(), strategyBalance);
 
@@ -742,8 +742,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldFinished);
         assertEq(strategy.yieldDeadline(),        yieldFinished);
 
-        assertEq(strategy.realizedAssets(),        newYieldAmount);
-        assertEq(strategy.unrealizedAssets(),      0);
+        assertEq(strategy.realizedYield(),         newYieldAmount);
+        assertEq(strategy.unrealizedYield(),       0);
         assertEq(strategy.availableToWithdraw(),   strategyBalance + newYieldAmount);
         assertEq(strategy.assetsUnderManagement(), strategyBalance + newYieldAmount);
     }
@@ -769,8 +769,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldStart);
 
-        assertEq(strategy.realizedAssets(),        scheduledYieldAssets);
-        assertEq(strategy.unrealizedAssets(),      0);
+        assertEq(strategy.realizedYield(),         scheduledYieldAssets);
+        assertEq(strategy.unrealizedYield(),       0);
         assertEq(strategy.availableToWithdraw(),   strategyBalance);
         assertEq(strategy.assetsUnderManagement(), strategyBalance);
 
@@ -789,8 +789,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldStart);
 
-        assertEq(strategy.realizedAssets(),        netYieldAmount);
-        assertEq(strategy.unrealizedAssets(),      0);
+        assertEq(strategy.realizedYield(),         netYieldAmount);
+        assertEq(strategy.unrealizedYield(),       0);
         assertEq(strategy.availableToWithdraw(),   strategyBalance + netYieldAmount);
         assertEq(strategy.assetsUnderManagement(), strategyBalance + netYieldAmount);
     }
@@ -809,8 +809,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldDeadline);
 
-        assertEq(strategy.realizedAssets(),        0);
-        assertEq(strategy.unrealizedAssets(),      scheduledYieldAssets);
+        assertEq(strategy.realizedYield(),         0);
+        assertEq(strategy.unrealizedYield(),       scheduledYieldAssets);
         assertEq(strategy.availableToWithdraw(),   strategyBalance - scheduledYieldAssets);
         assertEq(strategy.assetsUnderManagement(), strategyBalance - scheduledYieldAssets);
 
@@ -829,8 +829,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldStart);
 
-        assertEq(strategy.realizedAssets(),        scheduledYieldAssets + netYieldAmount);
-        assertEq(strategy.unrealizedAssets(),      0);
+        assertEq(strategy.realizedYield(),         scheduledYieldAssets + netYieldAmount);
+        assertEq(strategy.unrealizedYield(),       0);
         assertEq(strategy.availableToWithdraw(),   strategyBalance + netYieldAmount);
         assertEq(strategy.assetsUnderManagement(), strategyBalance + netYieldAmount);
     }
@@ -839,8 +839,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         uint256 elapsedDuration  = yieldAccruing - yieldStart;
         uint256 totalDuration    = yieldDeadline - yieldStart;
 
-        uint256 realizedAssets   = scheduledYieldAssets * elapsedDuration / totalDuration;
-        uint256 unrealizedAssets = scheduledYieldAssets - realizedAssets;
+        uint256 realizedYield   = scheduledYieldAssets * elapsedDuration / totalDuration;
+        uint256 unrealizedYield = scheduledYieldAssets - realizedYield;
 
         uint256 delegateFee    = newYieldAmount * delegateFeeRate / 1e6;
         uint256 protocolFee    = newYieldAmount * protocolFeeRate / 1e6;
@@ -857,13 +857,13 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldDeadline);
 
-        assertEq(strategy.realizedAssets(),        realizedAssets);
-        assertEq(strategy.unrealizedAssets(),      unrealizedAssets);
-        assertEq(strategy.availableToWithdraw(),   strategyBalance - unrealizedAssets);
-        assertEq(strategy.assetsUnderManagement(), strategyBalance - unrealizedAssets);
+        assertEq(strategy.realizedYield(),         realizedYield);
+        assertEq(strategy.unrealizedYield(),       unrealizedYield);
+        assertEq(strategy.availableToWithdraw(),   strategyBalance - unrealizedYield);
+        assertEq(strategy.assetsUnderManagement(), strategyBalance - unrealizedYield);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldRealized(tradingAddress, unrealizedAssets, netYieldAmount, delegateFee, protocolFee, 0, "");
+        emit IMapleTradingStrategy.YieldRealized(tradingAddress, unrealizedYield, netYieldAmount, delegateFee, protocolFee, 0, "");
 
         vm.prank(tradingAddress);
         strategy.realizeYield(newYieldAmount, 0, "");
@@ -873,12 +873,12 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(asset.balanceOf(address(strategyDelegate)), delegateFee);
         assertEq(asset.balanceOf(address(mapleTreasury)),    protocolFee);
 
-        assertEq(strategy.scheduledYieldAssets(), unrealizedAssets + netYieldAmount);
+        assertEq(strategy.scheduledYieldAssets(), unrealizedYield + netYieldAmount);
         assertEq(strategy.yieldStart(),           yieldAccruing);
         assertEq(strategy.yieldDeadline(),        yieldAccruing);
 
-        assertEq(strategy.realizedAssets(),        unrealizedAssets + netYieldAmount);
-        assertEq(strategy.unrealizedAssets(),      0);
+        assertEq(strategy.realizedYield(),         unrealizedYield + netYieldAmount);
+        assertEq(strategy.unrealizedYield(),       0);
         assertEq(strategy.availableToWithdraw(),   strategyBalance + netYieldAmount);
         assertEq(strategy.assetsUnderManagement(), strategyBalance + netYieldAmount);
     }
@@ -899,8 +899,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldDeadline);
 
-        assertEq(strategy.realizedAssets(),      scheduledYieldAssets);
-        assertEq(strategy.unrealizedAssets(),    0);
+        assertEq(strategy.realizedYield(),       scheduledYieldAssets);
+        assertEq(strategy.unrealizedYield(),     0);
         assertEq(strategy.availableToWithdraw(), strategyBalance);
 
         vm.expectEmit();
@@ -918,8 +918,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldDeadline);
         assertEq(strategy.yieldDeadline(),        yieldDeadline);
 
-        assertEq(strategy.realizedAssets(),      netYieldAmount);
-        assertEq(strategy.unrealizedAssets(),    0);
+        assertEq(strategy.realizedYield(),       netYieldAmount);
+        assertEq(strategy.unrealizedYield(),     0);
         assertEq(strategy.availableToWithdraw(), strategyBalance + netYieldAmount);
     }
 
@@ -939,8 +939,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldDeadline);
 
-        assertEq(strategy.realizedAssets(),        scheduledYieldAssets);
-        assertEq(strategy.unrealizedAssets(),      0);
+        assertEq(strategy.realizedYield(),         scheduledYieldAssets);
+        assertEq(strategy.unrealizedYield(),       0);
         assertEq(strategy.availableToWithdraw(),   strategyBalance);
         assertEq(strategy.assetsUnderManagement(), strategyBalance);
 
@@ -959,8 +959,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldFinished);
         assertEq(strategy.yieldDeadline(),        yieldFinished);
 
-        assertEq(strategy.realizedAssets(),        netYieldAmount);
-        assertEq(strategy.unrealizedAssets(),      0);
+        assertEq(strategy.realizedYield(),         netYieldAmount);
+        assertEq(strategy.unrealizedYield(),       0);
         assertEq(strategy.availableToWithdraw(),   strategyBalance + netYieldAmount);
         assertEq(strategy.assetsUnderManagement(), strategyBalance + netYieldAmount);
     }
@@ -982,8 +982,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldStart);
 
-        assertEq(strategy.realizedAssets(),        scheduledYieldAssets);
-        assertEq(strategy.unrealizedAssets(),      0);
+        assertEq(strategy.realizedYield(),         scheduledYieldAssets);
+        assertEq(strategy.unrealizedYield(),       0);
         assertEq(strategy.availableToWithdraw(),   strategyBalance);
         assertEq(strategy.assetsUnderManagement(), strategyBalance);
 
@@ -1002,8 +1002,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldStart);
 
-        assertEq(strategy.realizedAssets(),        tinyYieldAmount);
-        assertEq(strategy.unrealizedAssets(),      0);
+        assertEq(strategy.realizedYield(),         tinyYieldAmount);
+        assertEq(strategy.unrealizedYield(),       0);
         assertEq(strategy.availableToWithdraw(),   strategyBalance + tinyYieldAmount);
         assertEq(strategy.assetsUnderManagement(), strategyBalance + tinyYieldAmount);
     }
@@ -1018,8 +1018,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldDeadline);
 
-        assertEq(strategy.realizedAssets(),        0);
-        assertEq(strategy.unrealizedAssets(),      scheduledYieldAssets);
+        assertEq(strategy.realizedYield(),         0);
+        assertEq(strategy.unrealizedYield(),       scheduledYieldAssets);
         assertEq(strategy.availableToWithdraw(),   strategyBalance - scheduledYieldAssets);
         assertEq(strategy.assetsUnderManagement(), strategyBalance - scheduledYieldAssets);
 
@@ -1038,8 +1038,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldStart);
 
-        assertEq(strategy.realizedAssets(),        scheduledYieldAssets + tinyYieldAmount);
-        assertEq(strategy.unrealizedAssets(),      0);
+        assertEq(strategy.realizedYield(),         scheduledYieldAssets + tinyYieldAmount);
+        assertEq(strategy.unrealizedYield(),       0);
         assertEq(strategy.availableToWithdraw(),   strategyBalance + tinyYieldAmount);
         assertEq(strategy.assetsUnderManagement(), strategyBalance + tinyYieldAmount);
     }
@@ -1048,8 +1048,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         uint256 elapsedDuration  = yieldAccruing - yieldStart;
         uint256 totalDuration    = yieldDeadline - yieldStart;
 
-        uint256 realizedAssets   = scheduledYieldAssets * elapsedDuration / totalDuration;
-        uint256 unrealizedAssets = scheduledYieldAssets - realizedAssets;
+        uint256 realizedYield   = scheduledYieldAssets * elapsedDuration / totalDuration;
+        uint256 unrealizedYield = scheduledYieldAssets - realizedYield;
 
         vm.warp(yieldAccruing);
 
@@ -1062,13 +1062,13 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldDeadline);
 
-        assertEq(strategy.realizedAssets(),        realizedAssets);
-        assertEq(strategy.unrealizedAssets(),      unrealizedAssets);
-        assertEq(strategy.availableToWithdraw(),   strategyBalance - unrealizedAssets);
-        assertEq(strategy.assetsUnderManagement(), strategyBalance - unrealizedAssets);
+        assertEq(strategy.realizedYield(),         realizedYield);
+        assertEq(strategy.unrealizedYield(),       unrealizedYield);
+        assertEq(strategy.availableToWithdraw(),   strategyBalance - unrealizedYield);
+        assertEq(strategy.assetsUnderManagement(), strategyBalance - unrealizedYield);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldRealized(tradingAddress, unrealizedAssets, tinyYieldAmount, 0, 0, 0, "");
+        emit IMapleTradingStrategy.YieldRealized(tradingAddress, unrealizedYield, tinyYieldAmount, 0, 0, 0, "");
 
         vm.prank(tradingAddress);
         strategy.realizeYield(tinyYieldAmount, 0, "");
@@ -1078,12 +1078,12 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
-        assertEq(strategy.scheduledYieldAssets(), unrealizedAssets + tinyYieldAmount);
+        assertEq(strategy.scheduledYieldAssets(), unrealizedYield + tinyYieldAmount);
         assertEq(strategy.yieldStart(),           yieldAccruing);
         assertEq(strategy.yieldDeadline(),        yieldAccruing);
 
-        assertEq(strategy.realizedAssets(),        unrealizedAssets + tinyYieldAmount);
-        assertEq(strategy.unrealizedAssets(),      0);
+        assertEq(strategy.realizedYield(),         unrealizedYield + tinyYieldAmount);
+        assertEq(strategy.unrealizedYield(),       0);
         assertEq(strategy.availableToWithdraw(),   strategyBalance + tinyYieldAmount);
         assertEq(strategy.assetsUnderManagement(), strategyBalance + tinyYieldAmount);
     }
@@ -1100,8 +1100,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldDeadline);
 
-        assertEq(strategy.realizedAssets(),      scheduledYieldAssets);
-        assertEq(strategy.unrealizedAssets(),    0);
+        assertEq(strategy.realizedYield(),       scheduledYieldAssets);
+        assertEq(strategy.unrealizedYield(),     0);
         assertEq(strategy.availableToWithdraw(), strategyBalance);
 
         vm.expectEmit();
@@ -1119,8 +1119,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldDeadline);
         assertEq(strategy.yieldDeadline(),        yieldDeadline);
 
-        assertEq(strategy.realizedAssets(),      tinyYieldAmount);
-        assertEq(strategy.unrealizedAssets(),    0);
+        assertEq(strategy.realizedYield(),       tinyYieldAmount);
+        assertEq(strategy.unrealizedYield(),     0);
         assertEq(strategy.availableToWithdraw(), strategyBalance + tinyYieldAmount);
     }
 
@@ -1136,8 +1136,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldDeadline);
 
-        assertEq(strategy.realizedAssets(),        scheduledYieldAssets);
-        assertEq(strategy.unrealizedAssets(),      0);
+        assertEq(strategy.realizedYield(),         scheduledYieldAssets);
+        assertEq(strategy.unrealizedYield(),       0);
         assertEq(strategy.availableToWithdraw(),   strategyBalance);
         assertEq(strategy.assetsUnderManagement(), strategyBalance);
 
@@ -1156,8 +1156,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldFinished);
         assertEq(strategy.yieldDeadline(),        yieldFinished);
 
-        assertEq(strategy.realizedAssets(),        tinyYieldAmount);
-        assertEq(strategy.unrealizedAssets(),      0);
+        assertEq(strategy.realizedYield(),         tinyYieldAmount);
+        assertEq(strategy.unrealizedYield(),       0);
         assertEq(strategy.availableToWithdraw(),   strategyBalance + tinyYieldAmount);
         assertEq(strategy.assetsUnderManagement(), strategyBalance + tinyYieldAmount);
     }
@@ -1181,8 +1181,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldStart);
 
-        assertEq(strategy.realizedAssets(),        scheduledYieldAssets);
-        assertEq(strategy.unrealizedAssets(),      0);
+        assertEq(strategy.realizedYield(),         scheduledYieldAssets);
+        assertEq(strategy.unrealizedYield(),       0);
         assertEq(strategy.availableToWithdraw(),   strategyBalance);
         assertEq(strategy.assetsUnderManagement(), strategyBalance);
 
@@ -1201,8 +1201,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldStart + newYieldDuration);
 
-        assertEq(strategy.realizedAssets(),        0);
-        assertEq(strategy.unrealizedAssets(),      newYieldAmount);
+        assertEq(strategy.realizedYield(),         0);
+        assertEq(strategy.unrealizedYield(),       newYieldAmount);
         assertEq(strategy.availableToWithdraw(),   strategyBalance);
         assertEq(strategy.assetsUnderManagement(), strategyBalance);
     }
@@ -1219,8 +1219,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldDeadline);
 
-        assertEq(strategy.realizedAssets(),        0);
-        assertEq(strategy.unrealizedAssets(),      scheduledYieldAssets);
+        assertEq(strategy.realizedYield(),         0);
+        assertEq(strategy.unrealizedYield(),       scheduledYieldAssets);
         assertEq(strategy.availableToWithdraw(),   strategyBalance - scheduledYieldAssets);
         assertEq(strategy.assetsUnderManagement(), strategyBalance - scheduledYieldAssets);
 
@@ -1239,8 +1239,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldStart + newYieldDuration);
 
-        assertEq(strategy.realizedAssets(),        0);
-        assertEq(strategy.unrealizedAssets(),      scheduledYieldAssets + newYieldAmount);
+        assertEq(strategy.realizedYield(),         0);
+        assertEq(strategy.unrealizedYield(),       scheduledYieldAssets + newYieldAmount);
         assertEq(strategy.availableToWithdraw(),   strategyBalance - scheduledYieldAssets);
         assertEq(strategy.assetsUnderManagement(), strategyBalance - scheduledYieldAssets);
     }
@@ -1251,8 +1251,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         uint256 elapsedDuration  = yieldAccruing - yieldStart;
         uint256 totalDuration    = yieldDeadline - yieldStart;
 
-        uint256 realizedAssets   = scheduledYieldAssets * elapsedDuration / totalDuration;
-        uint256 unrealizedAssets = scheduledYieldAssets - realizedAssets;
+        uint256 realizedYield   = scheduledYieldAssets * elapsedDuration / totalDuration;
+        uint256 unrealizedYield = scheduledYieldAssets - realizedYield;
 
         vm.warp(yieldAccruing);
 
@@ -1265,13 +1265,13 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldDeadline);
 
-        assertEq(strategy.realizedAssets(),        realizedAssets);
-        assertEq(strategy.unrealizedAssets(),      unrealizedAssets);
-        assertEq(strategy.availableToWithdraw(),   strategyBalance - unrealizedAssets);
-        assertEq(strategy.assetsUnderManagement(), strategyBalance - unrealizedAssets);
+        assertEq(strategy.realizedYield(),         realizedYield);
+        assertEq(strategy.unrealizedYield(),       unrealizedYield);
+        assertEq(strategy.availableToWithdraw(),   strategyBalance - unrealizedYield);
+        assertEq(strategy.assetsUnderManagement(), strategyBalance - unrealizedYield);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldRealized(tradingAddress, unrealizedAssets, newYieldAmount, 0, 0, newYieldDuration, "");
+        emit IMapleTradingStrategy.YieldRealized(tradingAddress, unrealizedYield, newYieldAmount, 0, 0, newYieldDuration, "");
 
         vm.prank(tradingAddress);
         strategy.realizeYield(newYieldAmount, newYieldDuration, "");
@@ -1281,14 +1281,14 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
-        assertEq(strategy.scheduledYieldAssets(), unrealizedAssets + newYieldAmount);
+        assertEq(strategy.scheduledYieldAssets(), unrealizedYield + newYieldAmount);
         assertEq(strategy.yieldStart(),           yieldAccruing);
         assertEq(strategy.yieldDeadline(),        yieldAccruing + newYieldDuration);
 
-        assertEq(strategy.realizedAssets(),        0);
-        assertEq(strategy.unrealizedAssets(),      unrealizedAssets + newYieldAmount);
-        assertEq(strategy.availableToWithdraw(),   strategyBalance - unrealizedAssets);
-        assertEq(strategy.assetsUnderManagement(), strategyBalance - unrealizedAssets);
+        assertEq(strategy.realizedYield(),         0);
+        assertEq(strategy.unrealizedYield(),       unrealizedYield + newYieldAmount);
+        assertEq(strategy.availableToWithdraw(),   strategyBalance - unrealizedYield);
+        assertEq(strategy.assetsUnderManagement(), strategyBalance - unrealizedYield);
     }
 
     function test_realizeYield_success_nonZeroYield_nonZeroDuration_noFees_bufferAtDeadline() external {
@@ -1305,8 +1305,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldDeadline);
 
-        assertEq(strategy.realizedAssets(),      scheduledYieldAssets);
-        assertEq(strategy.unrealizedAssets(),    0);
+        assertEq(strategy.realizedYield(),       scheduledYieldAssets);
+        assertEq(strategy.unrealizedYield(),     0);
         assertEq(strategy.availableToWithdraw(), strategyBalance);
 
         vm.expectEmit();
@@ -1324,8 +1324,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldDeadline);
         assertEq(strategy.yieldDeadline(),        yieldDeadline + newYieldDuration);
 
-        assertEq(strategy.realizedAssets(),      0);
-        assertEq(strategy.unrealizedAssets(),    newYieldAmount);
+        assertEq(strategy.realizedYield(),       0);
+        assertEq(strategy.unrealizedYield(),     newYieldAmount);
         assertEq(strategy.availableToWithdraw(), strategyBalance);
     }
 
@@ -1343,8 +1343,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldDeadline);
 
-        assertEq(strategy.realizedAssets(),        scheduledYieldAssets);
-        assertEq(strategy.unrealizedAssets(),      0);
+        assertEq(strategy.realizedYield(),         scheduledYieldAssets);
+        assertEq(strategy.unrealizedYield(),       0);
         assertEq(strategy.availableToWithdraw(),   strategyBalance);
         assertEq(strategy.assetsUnderManagement(), strategyBalance);
 
@@ -1363,8 +1363,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldFinished);
         assertEq(strategy.yieldDeadline(),        yieldFinished + newYieldDuration);
 
-        assertEq(strategy.realizedAssets(),        0);
-        assertEq(strategy.unrealizedAssets(),      newYieldAmount);
+        assertEq(strategy.realizedYield(),         0);
+        assertEq(strategy.unrealizedYield(),       newYieldAmount);
         assertEq(strategy.availableToWithdraw(),   strategyBalance);
         assertEq(strategy.assetsUnderManagement(), strategyBalance);
     }
@@ -1390,8 +1390,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldStart);
 
-        assertEq(strategy.realizedAssets(),        scheduledYieldAssets);
-        assertEq(strategy.unrealizedAssets(),      0);
+        assertEq(strategy.realizedYield(),         scheduledYieldAssets);
+        assertEq(strategy.unrealizedYield(),       0);
         assertEq(strategy.availableToWithdraw(),   strategyBalance);
         assertEq(strategy.assetsUnderManagement(), strategyBalance);
 
@@ -1410,8 +1410,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldStart + newYieldDuration);
 
-        assertEq(strategy.realizedAssets(),        0);
-        assertEq(strategy.unrealizedAssets(),      netYieldAmount);
+        assertEq(strategy.realizedYield(),         0);
+        assertEq(strategy.unrealizedYield(),       netYieldAmount);
         assertEq(strategy.availableToWithdraw(),   strategyBalance);
         assertEq(strategy.assetsUnderManagement(), strategyBalance);
     }
@@ -1430,8 +1430,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldDeadline);
 
-        assertEq(strategy.realizedAssets(),        0);
-        assertEq(strategy.unrealizedAssets(),      scheduledYieldAssets);
+        assertEq(strategy.realizedYield(),         0);
+        assertEq(strategy.unrealizedYield(),       scheduledYieldAssets);
         assertEq(strategy.availableToWithdraw(),   strategyBalance - scheduledYieldAssets);
         assertEq(strategy.assetsUnderManagement(), strategyBalance - scheduledYieldAssets);
 
@@ -1458,8 +1458,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldStart + newYieldDuration);
 
-        assertEq(strategy.realizedAssets(),        0);
-        assertEq(strategy.unrealizedAssets(),      scheduledYieldAssets + netYieldAmount);
+        assertEq(strategy.realizedYield(),         0);
+        assertEq(strategy.unrealizedYield(),       scheduledYieldAssets + netYieldAmount);
         assertEq(strategy.availableToWithdraw(),   strategyBalance - scheduledYieldAssets);
         assertEq(strategy.assetsUnderManagement(), strategyBalance - scheduledYieldAssets);
     }
@@ -1468,8 +1468,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         uint256 elapsedDuration  = yieldAccruing - yieldStart;
         uint256 totalDuration    = yieldDeadline - yieldStart;
 
-        uint256 realizedAssets   = scheduledYieldAssets * elapsedDuration / totalDuration;
-        uint256 unrealizedAssets = scheduledYieldAssets - realizedAssets;
+        uint256 realizedYield   = scheduledYieldAssets * elapsedDuration / totalDuration;
+        uint256 unrealizedYield = scheduledYieldAssets - realizedYield;
 
         uint256 delegateFee    = newYieldAmount * delegateFeeRate / 1e6;
         uint256 protocolFee    = newYieldAmount * protocolFeeRate / 1e6;
@@ -1486,15 +1486,15 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldDeadline);
 
-        assertEq(strategy.realizedAssets(),        realizedAssets);
-        assertEq(strategy.unrealizedAssets(),      unrealizedAssets);
-        assertEq(strategy.availableToWithdraw(),   strategyBalance - unrealizedAssets);
-        assertEq(strategy.assetsUnderManagement(), strategyBalance - unrealizedAssets);
+        assertEq(strategy.realizedYield(),         realizedYield);
+        assertEq(strategy.unrealizedYield(),       unrealizedYield);
+        assertEq(strategy.availableToWithdraw(),   strategyBalance - unrealizedYield);
+        assertEq(strategy.assetsUnderManagement(), strategyBalance - unrealizedYield);
 
         vm.expectEmit();
         emit IMapleTradingStrategy.YieldRealized(
             tradingAddress,
-            unrealizedAssets,
+            unrealizedYield,
             netYieldAmount,
             delegateFee,
             protocolFee,
@@ -1510,14 +1510,14 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(asset.balanceOf(address(strategyDelegate)), delegateFee);
         assertEq(asset.balanceOf(address(mapleTreasury)),    protocolFee);
 
-        assertEq(strategy.scheduledYieldAssets(), unrealizedAssets + netYieldAmount);
+        assertEq(strategy.scheduledYieldAssets(), unrealizedYield + netYieldAmount);
         assertEq(strategy.yieldStart(),           yieldAccruing);
         assertEq(strategy.yieldDeadline(),        yieldAccruing + newYieldDuration);
 
-        assertEq(strategy.realizedAssets(),        0);
-        assertEq(strategy.unrealizedAssets(),      unrealizedAssets + netYieldAmount);
-        assertEq(strategy.availableToWithdraw(),   strategyBalance - unrealizedAssets);
-        assertEq(strategy.assetsUnderManagement(), strategyBalance - unrealizedAssets);
+        assertEq(strategy.realizedYield(),         0);
+        assertEq(strategy.unrealizedYield(),       unrealizedYield + netYieldAmount);
+        assertEq(strategy.availableToWithdraw(),   strategyBalance - unrealizedYield);
+        assertEq(strategy.assetsUnderManagement(), strategyBalance - unrealizedYield);
     }
 
     function test_realizeYield_success_nonZeroYield_nonZeroDuration_withFees_bufferAtDeadline() external {
@@ -1536,8 +1536,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldDeadline);
 
-        assertEq(strategy.realizedAssets(),      scheduledYieldAssets);
-        assertEq(strategy.unrealizedAssets(),    0);
+        assertEq(strategy.realizedYield(),       scheduledYieldAssets);
+        assertEq(strategy.unrealizedYield(),     0);
         assertEq(strategy.availableToWithdraw(), strategyBalance);
 
         vm.expectEmit();
@@ -1555,8 +1555,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldDeadline);
         assertEq(strategy.yieldDeadline(),        yieldDeadline + newYieldDuration);
 
-        assertEq(strategy.realizedAssets(),      0);
-        assertEq(strategy.unrealizedAssets(),    netYieldAmount);
+        assertEq(strategy.realizedYield(),       0);
+        assertEq(strategy.unrealizedYield(),     netYieldAmount);
         assertEq(strategy.availableToWithdraw(), strategyBalance);
     }
 
@@ -1576,8 +1576,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldDeadline);
 
-        assertEq(strategy.realizedAssets(),        scheduledYieldAssets);
-        assertEq(strategy.unrealizedAssets(),      0);
+        assertEq(strategy.realizedYield(),         scheduledYieldAssets);
+        assertEq(strategy.unrealizedYield(),       0);
         assertEq(strategy.availableToWithdraw(),   strategyBalance);
         assertEq(strategy.assetsUnderManagement(), strategyBalance);
 
@@ -1596,8 +1596,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldFinished);
         assertEq(strategy.yieldDeadline(),        yieldFinished + newYieldDuration);
 
-        assertEq(strategy.realizedAssets(),        0);
-        assertEq(strategy.unrealizedAssets(),      netYieldAmount);
+        assertEq(strategy.realizedYield(),         0);
+        assertEq(strategy.unrealizedYield(),       netYieldAmount);
         assertEq(strategy.availableToWithdraw(),   strategyBalance);
         assertEq(strategy.assetsUnderManagement(), strategyBalance);
     }
@@ -1619,8 +1619,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldStart);
 
-        assertEq(strategy.realizedAssets(),        scheduledYieldAssets);
-        assertEq(strategy.unrealizedAssets(),      0);
+        assertEq(strategy.realizedYield(),         scheduledYieldAssets);
+        assertEq(strategy.unrealizedYield(),       0);
         assertEq(strategy.availableToWithdraw(),   strategyBalance);
         assertEq(strategy.assetsUnderManagement(), strategyBalance);
 
@@ -1639,8 +1639,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldStart + newYieldDuration);
 
-        assertEq(strategy.realizedAssets(),        0);
-        assertEq(strategy.unrealizedAssets(),      tinyYieldAmount);
+        assertEq(strategy.realizedYield(),         0);
+        assertEq(strategy.unrealizedYield(),       tinyYieldAmount);
         assertEq(strategy.availableToWithdraw(),   strategyBalance);
         assertEq(strategy.assetsUnderManagement(), strategyBalance);
     }
@@ -1655,8 +1655,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldDeadline);
 
-        assertEq(strategy.realizedAssets(),        0);
-        assertEq(strategy.unrealizedAssets(),      scheduledYieldAssets);
+        assertEq(strategy.realizedYield(),         0);
+        assertEq(strategy.unrealizedYield(),       scheduledYieldAssets);
         assertEq(strategy.availableToWithdraw(),   strategyBalance - scheduledYieldAssets);
         assertEq(strategy.assetsUnderManagement(), strategyBalance - scheduledYieldAssets);
 
@@ -1675,8 +1675,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldStart + newYieldDuration);
 
-        assertEq(strategy.realizedAssets(),        0);
-        assertEq(strategy.unrealizedAssets(),      scheduledYieldAssets + tinyYieldAmount);
+        assertEq(strategy.realizedYield(),         0);
+        assertEq(strategy.unrealizedYield(),       scheduledYieldAssets + tinyYieldAmount);
         assertEq(strategy.availableToWithdraw(),   strategyBalance - scheduledYieldAssets);
         assertEq(strategy.assetsUnderManagement(), strategyBalance - scheduledYieldAssets);
     }
@@ -1685,8 +1685,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         uint256 elapsedDuration  = yieldAccruing - yieldStart;
         uint256 totalDuration    = yieldDeadline - yieldStart;
 
-        uint256 realizedAssets   = scheduledYieldAssets * elapsedDuration / totalDuration;
-        uint256 unrealizedAssets = scheduledYieldAssets - realizedAssets;
+        uint256 realizedYield   = scheduledYieldAssets * elapsedDuration / totalDuration;
+        uint256 unrealizedYield = scheduledYieldAssets - realizedYield;
 
         vm.warp(yieldAccruing);
 
@@ -1699,13 +1699,13 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldDeadline);
 
-        assertEq(strategy.realizedAssets(),        realizedAssets);
-        assertEq(strategy.unrealizedAssets(),      unrealizedAssets);
-        assertEq(strategy.availableToWithdraw(),   strategyBalance - unrealizedAssets);
-        assertEq(strategy.assetsUnderManagement(), strategyBalance - unrealizedAssets);
+        assertEq(strategy.realizedYield(),         realizedYield);
+        assertEq(strategy.unrealizedYield(),       unrealizedYield);
+        assertEq(strategy.availableToWithdraw(),   strategyBalance - unrealizedYield);
+        assertEq(strategy.assetsUnderManagement(), strategyBalance - unrealizedYield);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldRealized(tradingAddress, unrealizedAssets, tinyYieldAmount, 0, 0, newYieldDuration, "");
+        emit IMapleTradingStrategy.YieldRealized(tradingAddress, unrealizedYield, tinyYieldAmount, 0, 0, newYieldDuration, "");
 
         vm.prank(tradingAddress);
         strategy.realizeYield(tinyYieldAmount, newYieldDuration, "");
@@ -1715,14 +1715,14 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
-        assertEq(strategy.scheduledYieldAssets(), unrealizedAssets + tinyYieldAmount);
+        assertEq(strategy.scheduledYieldAssets(), unrealizedYield + tinyYieldAmount);
         assertEq(strategy.yieldStart(),           yieldAccruing);
         assertEq(strategy.yieldDeadline(),        yieldAccruing + newYieldDuration);
 
-        assertEq(strategy.realizedAssets(),        0);
-        assertEq(strategy.unrealizedAssets(),      unrealizedAssets + tinyYieldAmount);
-        assertEq(strategy.availableToWithdraw(),   strategyBalance - unrealizedAssets);
-        assertEq(strategy.assetsUnderManagement(), strategyBalance - unrealizedAssets);
+        assertEq(strategy.realizedYield(),         0);
+        assertEq(strategy.unrealizedYield(),       unrealizedYield + tinyYieldAmount);
+        assertEq(strategy.availableToWithdraw(),   strategyBalance - unrealizedYield);
+        assertEq(strategy.assetsUnderManagement(), strategyBalance - unrealizedYield);
     }
 
     function test_realizeYield_success_nonZeroYield_nonZeroDuration_feesRoundToZero_bufferAtDeadline() external {
@@ -1737,8 +1737,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldDeadline);
 
-        assertEq(strategy.realizedAssets(),      scheduledYieldAssets);
-        assertEq(strategy.unrealizedAssets(),    0);
+        assertEq(strategy.realizedYield(),       scheduledYieldAssets);
+        assertEq(strategy.unrealizedYield(),     0);
         assertEq(strategy.availableToWithdraw(), strategyBalance);
 
         vm.expectEmit();
@@ -1756,8 +1756,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldDeadline);
         assertEq(strategy.yieldDeadline(),        yieldDeadline + newYieldDuration);
 
-        assertEq(strategy.realizedAssets(),      0);
-        assertEq(strategy.unrealizedAssets(),    tinyYieldAmount);
+        assertEq(strategy.realizedYield(),       0);
+        assertEq(strategy.unrealizedYield(),     tinyYieldAmount);
         assertEq(strategy.availableToWithdraw(), strategyBalance);
     }
 
@@ -1773,8 +1773,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldStart);
         assertEq(strategy.yieldDeadline(),        yieldDeadline);
 
-        assertEq(strategy.realizedAssets(),        scheduledYieldAssets);
-        assertEq(strategy.unrealizedAssets(),      0);
+        assertEq(strategy.realizedYield(),         scheduledYieldAssets);
+        assertEq(strategy.unrealizedYield(),       0);
         assertEq(strategy.availableToWithdraw(),   strategyBalance);
         assertEq(strategy.assetsUnderManagement(), strategyBalance);
 
@@ -1793,8 +1793,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldStart(),           yieldFinished);
         assertEq(strategy.yieldDeadline(),        yieldFinished + newYieldDuration);
 
-        assertEq(strategy.realizedAssets(),        0);
-        assertEq(strategy.unrealizedAssets(),      tinyYieldAmount);
+        assertEq(strategy.realizedYield(),         0);
+        assertEq(strategy.unrealizedYield(),       tinyYieldAmount);
         assertEq(strategy.availableToWithdraw(),   strategyBalance);
         assertEq(strategy.assetsUnderManagement(), strategyBalance);
     }

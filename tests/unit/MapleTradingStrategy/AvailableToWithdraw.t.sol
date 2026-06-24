@@ -43,10 +43,10 @@ contract AvailableToWithdrawTests is TestBase {
 
         vm.warp(startingTime + 2 days);
 
-        uint256 realizedAssets   = yieldAssets * 2 / 3;
-        uint256 unrealizedAssets = yieldAssets - realizedAssets;
+        uint256 realizedYield   = yieldAssets * 2 / 3;
+        uint256 unrealizedYield = yieldAssets - realizedYield;
 
-        assertEq(strategy.availableToWithdraw(), strategyBalance - unrealizedAssets);
+        assertEq(strategy.availableToWithdraw(), strategyBalance - unrealizedYield);
     }
 
     function test_availableToWithdraw_fullyRealized() external {

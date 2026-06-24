@@ -10,8 +10,9 @@ contract MapleTradingStrategyStorage is IMapleTradingStrategyStorage {
     address public override fundsAsset;       // Address of the underlying asset.
     address public override strategyManager;  // Address of the strategy manager.
 
-    uint256 public override totalDeployedAssets;   // Total assets deployed across all trading addresses.
+    uint256 public override impairedAssets;        // Total amount of assets impaired.
     uint256 public override scheduledYieldAssets;  // Total assets in the yield buffer since last update.
+    uint256 public override totalDeployedAssets;   // Total assets deployed across all trading addresses.
 
     uint32 public override yieldDeadline;  // Timestamp when all yield assets are fully realized.
     uint32 public override yieldStart;     // Timestamp when the yield buffer was last updated.

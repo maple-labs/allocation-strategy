@@ -163,7 +163,7 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
 
         ( uint256 netYield_, uint256 delegateFee_, uint256 protocolFee_ ) = _accrueFees(fundsAsset_, yield_);
 
-        uint256 unrealizedYield_ = unrealizedAssets();
+        uint256 unrealizedYield_ = unrealizedYield();
         uint32  yieldStart_      = uint32(block.timestamp);
 
         scheduledYieldAssets = netYield_ + unrealizedYield_;
@@ -180,7 +180,7 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
     // TODO: Revisit ACL, and check if `destination` address should be added.
     // TODO: If we cancel all of the yield, should the `yieldStart` and `yieldDeadline` be cleaned up?
     function cancelYield(uint256 assets_) external override whenNotPaused nonReentrant onlyAdmin {
-        uint256 unrealizedYield_ = unrealizedAssets();
+        uint256 unrealizedYield_ = unrealizedYield();
         uint256 cancelledAssets_ = assets_ == type(uint256).max ? unrealizedYield_ : assets_;
 
         require(cancelledAssets_ != 0,                "MTS:CY:ZERO_ASSETS");
@@ -192,6 +192,23 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
         require(ERC20Helper.transfer(fundsAsset, msg.sender, cancelledAssets_), "MTS:CY:TRANSFER_FAILED");
 
         emit YieldCancelled(msg.sender, cancelledAssets_);
+    }
+
+    function impair(uint256 assets_) external override whenNotPaused onlyAdmin {
+        require(assets_ > 0, "MTS:I:ZERO_ASSETS");
+
+        impairedAssets += assets_;
+
+        emit Impaired(assets_);
+    }
+
+    function removeImpairment(uint256 assets_) external override whenNotPaused onlyAdmin {
+        require(assets_ > 0,               "MTS:RI:ZERO_ASSETS");
+        require(assets_ <= impairedAssets, "MTS:RI:EXCEEDS_IMPAIRMENT");
+
+        impairedAssets -= assets_;
+
+        emit ImpairmentRemoved(assets_);
     }
 
     function recognizeLoss(uint256 assets_, address deployer_) external override whenNotPaused onlyAdmin {
@@ -337,10 +354,10 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
     /**************************************************************************************************************************************/
 
     function availableToWithdraw() public view override returns (uint256 availableAssets_) {
-        availableAssets_ = IERC20Like(fundsAsset).balanceOf(address(this)) - unrealizedAssets();
+        availableAssets_ = IERC20Like(fundsAsset).balanceOf(address(this)) - unrealizedYield();
     }
 
-    function assetsUnderManagement() external view override returns (uint256 assetsUnderManagement_) {
+    function assetsUnderManagement() public view override returns (uint256 assetsUnderManagement_) {
         assetsUnderManagement_ = totalDeployedAssets + availableToWithdraw();
     }
 
@@ -360,7 +377,7 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
         mapleTreasury_ = IGlobalsLike(globals()).mapleTreasury();
     }
 
-    function realizedAssets() public view override returns (uint256 realizedAssets_) {
+    function realizedYield() public view override returns (uint256 realizedYield_) {
         uint256 scheduledYieldAssets_ = scheduledYieldAssets;
         uint256 yieldStart_           = yieldStart;
 
@@ -369,7 +386,7 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
 
         if (totalDuration_ == 0 || elapsedDuration_ >= totalDuration_) return scheduledYieldAssets_;
 
-        realizedAssets_ = scheduledYieldAssets_ * elapsedDuration_ / totalDuration_;
+        realizedYield_ = scheduledYieldAssets_ * elapsedDuration_ / totalDuration_;
     }
 
     function securityAdmin() public view override returns (address securityAdmin_) {
@@ -380,8 +397,12 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
         strategyDelegate_ = IStrategyManagerLike(strategyManager).strategyDelegate();
     }
 
-    function unrealizedAssets() public view override returns (uint256 unrealizedAssets_) {
-        unrealizedAssets_ = scheduledYieldAssets - realizedAssets();
+    function unrealizedLosses() public view override returns (uint256 unrealizedLosses_) {
+        unrealizedLosses_ = _min(impairedAssets, assetsUnderManagement());
+    }
+
+    function unrealizedYield() public view override returns (uint256 unrealizedYield_) {
+        unrealizedYield_ = scheduledYieldAssets - realizedYield();
     }
 
     /**************************************************************************************************************************************/
@@ -409,6 +430,10 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
         if (protocolFee_ != 0) {
             require(ERC20Helper.transfer(fundsAsset_, mapleTreasury(), protocolFee_), "MTS:CF:PROTOCOL_TRANSFER_FAILED");
         }
+    }
+
+    function _min(uint256 a_, uint256 b_) internal pure returns (uint256 min_) {
+        min_ = a_ < b_ ? a_ : b_;
     }
 
 }

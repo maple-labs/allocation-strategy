@@ -80,6 +80,12 @@ interface IMapleTradingStrategyStorage {
     /**************************************************************************************************************************************/
 
     /**
+     *  @dev    Returns the total amount of impaired assets.
+     *  @return impairedAssets Total amount of impairedAssets.
+     */
+    function impairedAssets() external view returns (uint256 impairedAssets);
+
+    /**
      *  @dev    Returns the total amount of assets in the yield buffer since it was last updated.
      *  @return scheduledYieldAssets Total assets in the yield buffer since last update.
      */
