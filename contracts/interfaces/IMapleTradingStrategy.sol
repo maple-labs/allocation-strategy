@@ -109,10 +109,11 @@ interface IMapleTradingStrategy is IMapleTradingStrategyStorage, IMapleProxied {
 
     /**
      *  @dev   Emitted when unrealized yield is cancelled from the yield buffer.
-     *  @param caller Address that cancelled the yield.
-     *  @param assets Amount of unrealized yield cancelled.
+     *  @param caller    Address that cancelled the yield.
+     *  @param recipient Address that received the cancelled yield.
+     *  @param assets    Amount of unrealized yield cancelled.
      */
-    event YieldCancelled(address indexed caller, uint256 assets);
+    event YieldCancelled(address indexed caller, address indexed recipient, uint256 assets);
 
     /**
      *  @dev   Emitted when yield is transferred to the yield buffer.
@@ -178,14 +179,15 @@ interface IMapleTradingStrategy is IMapleTradingStrategyStorage, IMapleProxied {
     /**************************************************************************************************************************************/
 
     /**
-     *  @dev   Cancels unrealized yield from the yield buffer and transfers it to the caller.
+     *  @dev   Cancels unrealized yield from the yield buffer and transfers it to the recipient.
      *         Callable only by the strategy delegate or operational admin.
      *         Already-realized yield cannot be cancelled.
      *         Remaining unrealized yield continues on its original schedule.
-     *  @param assets Amount of unrealized yield to cancel.
-     *                Can use `type(uint256).max` to cancel all remaining unrealized yield.
+     *  @param assets    Amount of unrealized yield to cancel.
+     *                   Can use `type(uint256).max` to cancel all remaining unrealized yield.
+     *  @param recipient Address to receive the cancelled yield. Must be a valid trading address on globals.
      */
-    function cancelYield(uint256 assets) external;
+    function cancelYield(uint256 assets, address recipient) external;
 
     /**
      *  @dev   Increases the amount of impaired assets.

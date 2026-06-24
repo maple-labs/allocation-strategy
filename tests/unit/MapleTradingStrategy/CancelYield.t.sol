@@ -7,6 +7,8 @@ import { TestBase } from "../../utils/TestBase.sol";
 
 contract CancelYieldTestBase is TestBase {
 
+    address recipient = makeAddr("recipient");
+
     uint256 strategyBalance = 35_200e6;  // Total initial balance, includes yieldAssets.
     uint256 yieldAssets     = 10_001e6;  // Net yield assets in the buffer (post-fee).
     uint256 cancelAmount    = 3_000e6;   // Partial cancellation amount used in partial cancel tests.
@@ -27,6 +29,7 @@ contract CancelYieldTestBase is TestBase {
         asset.mint(address(strategy), strategyBalance);
 
         strategy.__setYieldBuffer(yieldAssets, yieldStart, yieldDeadline);
+        globals.__setIsGovernedInstanceOf("TRADING_ADDRESS", recipient, true);
     }
 
 }
@@ -38,7 +41,7 @@ contract CancelYieldFailureTests is CancelYieldTestBase {
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MTS:PAUSED");
-        strategy.cancelYield(yieldAssets);
+        strategy.cancelYield(yieldAssets, recipient);
     }
 
     function test_cancelYield_revert_reentrancy() external {
@@ -46,19 +49,19 @@ contract CancelYieldFailureTests is CancelYieldTestBase {
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MTS:LOCKED");
-        strategy.cancelYield(yieldAssets);
+        strategy.cancelYield(yieldAssets, recipient);
     }
 
     function test_cancelYield_revert_notAuthorized() external {
         vm.prank(makeAddr("notAuthorized"));
         vm.expectRevert("MTS:NOT_AUTHORIZED");
-        strategy.cancelYield(yieldAssets);
+        strategy.cancelYield(yieldAssets, recipient);
     }
 
     function test_cancelYield_revert_zeroAssets() external {
         vm.prank(strategyDelegate);
         vm.expectRevert("MTS:CY:ZERO_ASSETS");
-        strategy.cancelYield(0);
+        strategy.cancelYield(0, recipient);
     }
 
     function test_cancelYield_revert_emptyBuffer_allAssets() external {
@@ -66,7 +69,7 @@ contract CancelYieldFailureTests is CancelYieldTestBase {
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MTS:CY:ZERO_ASSETS");
-        strategy.cancelYield(type(uint256).max);
+        strategy.cancelYield(type(uint256).max, recipient);
     }
 
     function test_cancelYield_revert_atDeadline_allAssets() external {
@@ -74,7 +77,7 @@ contract CancelYieldFailureTests is CancelYieldTestBase {
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MTS:CY:ZERO_ASSETS");
-        strategy.cancelYield(type(uint256).max);
+        strategy.cancelYield(type(uint256).max, recipient);
     }
 
     function test_cancelYield_revert_afterDeadline_allAssets() external {
@@ -82,7 +85,7 @@ contract CancelYieldFailureTests is CancelYieldTestBase {
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MTS:CY:ZERO_ASSETS");
-        strategy.cancelYield(type(uint256).max);
+        strategy.cancelYield(type(uint256).max, recipient);
     }
 
     function test_cancelYield_revert_emptyBuffer() external {
@@ -90,7 +93,7 @@ contract CancelYieldFailureTests is CancelYieldTestBase {
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MTS:CY:EXCEEDS_UNREALIZED");
-        strategy.cancelYield(1);
+        strategy.cancelYield(1, recipient);
     }
 
     function test_cancelYield_revert_atDeadline() external {
@@ -98,7 +101,7 @@ contract CancelYieldFailureTests is CancelYieldTestBase {
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MTS:CY:EXCEEDS_UNREALIZED");
-        strategy.cancelYield(1);
+        strategy.cancelYield(1, recipient);
     }
 
     function test_cancelYield_revert_afterDeadline() external {
@@ -106,7 +109,7 @@ contract CancelYieldFailureTests is CancelYieldTestBase {
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MTS:CY:EXCEEDS_UNREALIZED");
-        strategy.cancelYield(1);
+        strategy.cancelYield(1, recipient);
     }
 
     function test_cancelYield_revert_exceedsRemaining() external {
@@ -117,7 +120,15 @@ contract CancelYieldFailureTests is CancelYieldTestBase {
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MTS:CY:EXCEEDS_UNREALIZED");
-        strategy.cancelYield(unrealizedYield + 1);
+        strategy.cancelYield(unrealizedYield + 1, recipient);
+    }
+
+    function test_cancelYield_revert_invalidRecipient() external {
+        address invalidRecipient = makeAddr("invalidRecipient");
+
+        vm.prank(strategyDelegate);
+        vm.expectRevert("MTS:CY:INVALID_RECIPIENT");
+        strategy.cancelYield(yieldAssets, invalidRecipient);
     }
 
     function test_cancelYield_revert_transferFailed() external {
@@ -125,7 +136,7 @@ contract CancelYieldFailureTests is CancelYieldTestBase {
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MTS:CY:TRANSFER_FAILED");
-        strategy.cancelYield(yieldAssets);
+        strategy.cancelYield(yieldAssets, recipient);
     }
 
 }
@@ -137,8 +148,8 @@ contract CancelYieldSuccessTests is CancelYieldTestBase {
     /**************************************************************************************************************************************/
 
     function test_cancelYield_success_noElapsedTime_partialCancel() external {
-        assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(strategyDelegate)), 0);
+        assertEq(asset.balanceOf(address(strategy)),  strategyBalance);
+        assertEq(asset.balanceOf(address(recipient)), 0);
 
         assertEq(strategy.scheduledYieldAssets(), yieldAssets);
         assertEq(strategy.yieldStart(),           yieldStart);
@@ -150,13 +161,13 @@ contract CancelYieldSuccessTests is CancelYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance - yieldAssets);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldCancelled(strategyDelegate, cancelAmount);
+        emit IMapleTradingStrategy.YieldCancelled(strategyDelegate, recipient, cancelAmount);
 
         vm.prank(strategyDelegate);
-        strategy.cancelYield(cancelAmount);
+        strategy.cancelYield(cancelAmount, recipient);
 
-        assertEq(asset.balanceOf(address(strategy)),         strategyBalance - cancelAmount);
-        assertEq(asset.balanceOf(address(strategyDelegate)), cancelAmount);
+        assertEq(asset.balanceOf(address(strategy)),  strategyBalance - cancelAmount);
+        assertEq(asset.balanceOf(address(recipient)), cancelAmount);
 
         assertEq(strategy.scheduledYieldAssets(), yieldAssets - cancelAmount);
         assertEq(strategy.yieldStart(),           yieldStart);
@@ -169,8 +180,8 @@ contract CancelYieldSuccessTests is CancelYieldTestBase {
     }
 
     function test_cancelYield_success_noElapsedTime_fullCancel_explicit() external {
-        assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(operationalAdmin)), 0);
+        assertEq(asset.balanceOf(address(strategy)),  strategyBalance);
+        assertEq(asset.balanceOf(address(recipient)), 0);
 
         assertEq(strategy.scheduledYieldAssets(), yieldAssets);
         assertEq(strategy.yieldStart(),           yieldStart);
@@ -182,13 +193,13 @@ contract CancelYieldSuccessTests is CancelYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance - yieldAssets);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldCancelled(operationalAdmin, yieldAssets);
+        emit IMapleTradingStrategy.YieldCancelled(operationalAdmin, recipient, yieldAssets);
 
         vm.prank(operationalAdmin);
-        strategy.cancelYield(yieldAssets);
+        strategy.cancelYield(yieldAssets, recipient);
 
-        assertEq(asset.balanceOf(address(strategy)),         strategyBalance - yieldAssets);
-        assertEq(asset.balanceOf(address(operationalAdmin)), yieldAssets);
+        assertEq(asset.balanceOf(address(strategy)),  strategyBalance - yieldAssets);
+        assertEq(asset.balanceOf(address(recipient)), yieldAssets);
 
         assertEq(strategy.scheduledYieldAssets(), 0);
         assertEq(strategy.yieldStart(),           yieldStart);
@@ -201,8 +212,8 @@ contract CancelYieldSuccessTests is CancelYieldTestBase {
     }
 
     function test_cancelYield_success_noElapsedTime_fullCancel_maxUint() external {
-        assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(strategyDelegate)), 0);
+        assertEq(asset.balanceOf(address(strategy)),  strategyBalance);
+        assertEq(asset.balanceOf(address(recipient)), 0);
 
         assertEq(strategy.scheduledYieldAssets(), yieldAssets);
         assertEq(strategy.yieldStart(),           yieldStart);
@@ -214,13 +225,13 @@ contract CancelYieldSuccessTests is CancelYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance - yieldAssets);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldCancelled(strategyDelegate, yieldAssets);
+        emit IMapleTradingStrategy.YieldCancelled(strategyDelegate, recipient, yieldAssets);
 
         vm.prank(strategyDelegate);
-        strategy.cancelYield(type(uint256).max);
+        strategy.cancelYield(type(uint256).max, recipient);
 
-        assertEq(asset.balanceOf(address(strategy)),         strategyBalance - yieldAssets);
-        assertEq(asset.balanceOf(address(strategyDelegate)), yieldAssets);
+        assertEq(asset.balanceOf(address(strategy)),  strategyBalance - yieldAssets);
+        assertEq(asset.balanceOf(address(recipient)), yieldAssets);
 
         assertEq(strategy.scheduledYieldAssets(), 0);
         assertEq(strategy.yieldStart(),           yieldStart);
@@ -242,8 +253,8 @@ contract CancelYieldSuccessTests is CancelYieldTestBase {
         uint256 realizedYield   = yieldAssets * (yieldAccruing - yieldStart) / (yieldDeadline - yieldStart);
         uint256 unrealizedYield = yieldAssets - realizedYield;
 
-        assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(operationalAdmin)), 0);
+        assertEq(asset.balanceOf(address(strategy)),  strategyBalance);
+        assertEq(asset.balanceOf(address(recipient)), 0);
 
         assertEq(strategy.scheduledYieldAssets(), yieldAssets);
         assertEq(strategy.yieldStart(),           yieldStart);
@@ -255,13 +266,13 @@ contract CancelYieldSuccessTests is CancelYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance - unrealizedYield);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldCancelled(operationalAdmin, cancelAmount);
+        emit IMapleTradingStrategy.YieldCancelled(operationalAdmin, recipient, cancelAmount);
 
         vm.prank(operationalAdmin);
-        strategy.cancelYield(cancelAmount);
+        strategy.cancelYield(cancelAmount, recipient);
 
-        assertEq(asset.balanceOf(address(strategy)),         strategyBalance - cancelAmount);
-        assertEq(asset.balanceOf(address(operationalAdmin)), cancelAmount);
+        assertEq(asset.balanceOf(address(strategy)),  strategyBalance - cancelAmount);
+        assertEq(asset.balanceOf(address(recipient)), cancelAmount);
 
         assertEq(strategy.scheduledYieldAssets(), unrealizedYield - cancelAmount);
         assertEq(strategy.yieldStart(),           yieldAccruing);
@@ -274,8 +285,8 @@ contract CancelYieldSuccessTests is CancelYieldTestBase {
 
         vm.warp(yieldDeadline);
 
-        assertEq(asset.balanceOf(address(strategy)),         strategyBalance - cancelAmount);
-        assertEq(asset.balanceOf(address(operationalAdmin)), cancelAmount);
+        assertEq(asset.balanceOf(address(strategy)),  strategyBalance - cancelAmount);
+        assertEq(asset.balanceOf(address(recipient)), cancelAmount);
 
         assertEq(strategy.scheduledYieldAssets(), unrealizedYield - cancelAmount);
         assertEq(strategy.yieldStart(),           yieldAccruing);
@@ -293,8 +304,8 @@ contract CancelYieldSuccessTests is CancelYieldTestBase {
         uint256 realizedYield   = yieldAssets * (yieldAccruing - yieldStart) / (yieldDeadline - yieldStart);
         uint256 unrealizedYield = yieldAssets - realizedYield;
 
-        assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(strategyDelegate)), 0);
+        assertEq(asset.balanceOf(address(strategy)),  strategyBalance);
+        assertEq(asset.balanceOf(address(recipient)), 0);
 
         assertEq(strategy.scheduledYieldAssets(), yieldAssets);
         assertEq(strategy.yieldStart(),           yieldStart);
@@ -306,13 +317,13 @@ contract CancelYieldSuccessTests is CancelYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance - unrealizedYield);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldCancelled(strategyDelegate, unrealizedYield);
+        emit IMapleTradingStrategy.YieldCancelled(strategyDelegate, recipient, unrealizedYield);
 
         vm.prank(strategyDelegate);
-        strategy.cancelYield(unrealizedYield);
+        strategy.cancelYield(unrealizedYield, recipient);
 
-        assertEq(asset.balanceOf(address(strategy)),         strategyBalance - unrealizedYield);
-        assertEq(asset.balanceOf(address(strategyDelegate)), unrealizedYield);
+        assertEq(asset.balanceOf(address(strategy)),  strategyBalance - unrealizedYield);
+        assertEq(asset.balanceOf(address(recipient)), unrealizedYield);
 
         assertEq(strategy.scheduledYieldAssets(), 0);
         assertEq(strategy.yieldStart(),           yieldAccruing);
@@ -330,8 +341,8 @@ contract CancelYieldSuccessTests is CancelYieldTestBase {
         uint256 realizedYield   = yieldAssets * (yieldAccruing - yieldStart) / (yieldDeadline - yieldStart);
         uint256 unrealizedYield = yieldAssets - realizedYield;
 
-        assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(operationalAdmin)), 0);
+        assertEq(asset.balanceOf(address(strategy)),  strategyBalance);
+        assertEq(asset.balanceOf(address(recipient)), 0);
 
         assertEq(strategy.scheduledYieldAssets(), yieldAssets);
         assertEq(strategy.yieldStart(),           yieldStart);
@@ -343,13 +354,13 @@ contract CancelYieldSuccessTests is CancelYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance - unrealizedYield);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldCancelled(operationalAdmin, unrealizedYield);
+        emit IMapleTradingStrategy.YieldCancelled(operationalAdmin, recipient, unrealizedYield);
 
         vm.prank(operationalAdmin);
-        strategy.cancelYield(type(uint256).max);
+        strategy.cancelYield(type(uint256).max, recipient);
 
-        assertEq(asset.balanceOf(address(strategy)),         strategyBalance - unrealizedYield);
-        assertEq(asset.balanceOf(address(operationalAdmin)), unrealizedYield);
+        assertEq(asset.balanceOf(address(strategy)),  strategyBalance - unrealizedYield);
+        assertEq(asset.balanceOf(address(recipient)), unrealizedYield);
 
         assertEq(strategy.scheduledYieldAssets(), 0);
         assertEq(strategy.yieldStart(),           yieldAccruing);

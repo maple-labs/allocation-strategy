@@ -177,21 +177,22 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
     /*** Administrative Functions                                                                                                       ***/
     /**************************************************************************************************************************************/
 
-    // TODO: Revisit ACL, and check if `destination` address should be added.
     // TODO: If we cancel all of the yield, should the `yieldStart` and `yieldDeadline` be cleaned up?
-    function cancelYield(uint256 assets_) external override whenNotPaused nonReentrant onlyAdmin {
+    function cancelYield(uint256 assets_, address recipient_) external override whenNotPaused nonReentrant onlyAdmin {
         uint256 unrealizedYield_ = unrealizedYield();
         uint256 cancelledAssets_ = assets_ == type(uint256).max ? unrealizedYield_ : assets_;
 
         require(cancelledAssets_ != 0,                "MTS:CY:ZERO_ASSETS");
         require(cancelledAssets_ <= unrealizedYield_, "MTS:CY:EXCEEDS_UNREALIZED");
 
+        require(IGlobalsLike(globals()).isGovernedInstanceOf(INSTANCE_KEY, recipient_), "MTS:CY:INVALID_RECIPIENT");
+
         scheduledYieldAssets = unrealizedYield_ - cancelledAssets_;
         yieldStart           = uint32(block.timestamp);
 
-        require(ERC20Helper.transfer(fundsAsset, msg.sender, cancelledAssets_), "MTS:CY:TRANSFER_FAILED");
+        require(ERC20Helper.transfer(fundsAsset, recipient_, cancelledAssets_), "MTS:CY:TRANSFER_FAILED");
 
-        emit YieldCancelled(msg.sender, cancelledAssets_);
+        emit YieldCancelled(msg.sender, recipient_, cancelledAssets_);
     }
 
     function impair(uint256 assets_) external override whenNotPaused onlyAdmin {
