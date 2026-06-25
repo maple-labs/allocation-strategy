@@ -2,25 +2,21 @@
 pragma solidity ^0.8.0;
 
 /**
+ *  @dev   Defines which asset management functions an address is authorized to call.
+ *  @param canDeployAssets True if the address can call deployAssets().
+ *  @param canReturnAssets True if the address can call returnAssets().
+ *  @param canRealizeYield True if the address can call realizeYield().
+ */
+struct Permissions {
+    bool canDeployAssets;
+    bool canReturnAssets;
+    bool canRealizeYield;
+}
+
+/**
  *  @title Defines the storage layout of a Maple trading strategy.
  */
 interface IMapleTradingStrategyStorage {
-
-    /**************************************************************************************************************************************/
-    /*** Structs                                                                                                                        ***/
-    /**************************************************************************************************************************************/
-
-    /**
-     *  @dev   Defines which asset management functions an address is authorized to call.
-     *  @param canDeployAssets True if the address can call deployAssets().
-     *  @param canReturnAssets True if the address can call returnAssets().
-     *  @param canRealizeYield True if the address can call realizeYield().
-     */
-    struct Permissions {
-        bool canDeployAssets;
-        bool canReturnAssets;
-        bool canRealizeYield;
-    }
 
     /**************************************************************************************************************************************/
     /*** Addresses                                                                                                                      ***/

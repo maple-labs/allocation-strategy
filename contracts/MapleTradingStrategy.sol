@@ -6,6 +6,8 @@ import { ERC20Helper } from "../modules/erc20-helper/src/ERC20Helper.sol";
 import { MapleProxiedInternals } from "../modules/proxy-factory/contracts/MapleProxiedInternals.sol";
 
 import { IMapleTradingStrategy } from "./interfaces/IMapleTradingStrategy.sol";
+import { Permissions }           from "./interfaces/IMapleTradingStrategyStorage.sol";
+
 import {
     IERC20Like,
     IGlobalsLike,

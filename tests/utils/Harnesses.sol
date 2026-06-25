@@ -4,6 +4,9 @@ pragma solidity ^0.8.0;
 import { MapleTradingStrategy }            from "../../contracts/MapleTradingStrategy.sol";
 import { MapleTradingStrategyInitializer } from "../../contracts/MapleTradingStrategyInitializer.sol";
 
+import { Parameters }  from "../../contracts/interfaces/IMapleTradingStrategyInitializer.sol";
+import { Permissions } from "../../contracts/interfaces/IMapleTradingStrategyStorage.sol";
+
 contract MapleTradingStrategyHarness is MapleTradingStrategy {
 
     function __setDeployedAssetsOf(address account_, uint256 amount_) external {

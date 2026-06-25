@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import { Test } from "../../modules/forge-std/src/Test.sol";
 
-import { IMapleTradingStrategyInitializer } from "../../contracts/interfaces/IMapleTradingStrategyInitializer.sol";
+import { Parameters } from "../../contracts/interfaces/IMapleTradingStrategyInitializer.sol";
 
 import { MapleTradingStrategyFactory } from "../../contracts/MapleTradingStrategyFactory.sol";
 
@@ -33,7 +33,7 @@ contract TestBase is Test {
 
     uint32 startingTime;
 
-    IMapleTradingStrategyInitializer.Parameters params;
+    Parameters params;
 
     MockAsset           asset          = new MockAsset();
     MockFactory         managerFactory = new MockFactory();
@@ -65,7 +65,7 @@ contract TestBase is Test {
         strategyFactory.setDefaultVersion(100);
         vm.stopPrank();
 
-        params = IMapleTradingStrategyInitializer.Parameters({
+        params = Parameters({
             fundsAsset:              address(asset),
             strategyMetadata:        "MacAttack - 02a",
             strategyDelegateFeeRate: 0.02e6,
