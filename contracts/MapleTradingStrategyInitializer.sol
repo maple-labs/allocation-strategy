@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
-import { IMapleTradingStrategyInitializer, Parameters } from "./interfaces/IMapleTradingStrategyInitializer.sol";
+import { IMapleTradingStrategyInitializer, TradingStrategyInitializerParams } from "./interfaces/IMapleTradingStrategyInitializer.sol";
 
 import {
     IGlobalsLike,
@@ -13,7 +13,7 @@ import { MapleTradingStrategyStorage } from "./MapleTradingStrategyStorage.sol";
 
 contract MapleTradingStrategyInitializer is IMapleTradingStrategyInitializer, MapleTradingStrategyStorage {
 
-    function _initialize(address strategyManager_, Parameters memory params_) internal {
+    function _initialize(address strategyManager_, TradingStrategyInitializerParams memory params_) internal {
         require(strategyManager_ != address(0), "MTSI:I:ZERO_STRATEGY_MANAGER");
 
         address globals_ = IProxyFactoryLike(msg.sender).mapleGlobals();
@@ -39,8 +39,8 @@ contract MapleTradingStrategyInitializer is IMapleTradingStrategyInitializer, Ma
     }
 
     fallback() external {
-        address           strategyManager_ = abi.decode(msg.data[:32], (address));
-        Parameters memory params_          = abi.decode(msg.data[32:], (Parameters));
+        address                          strategyManager_ = abi.decode(msg.data[:32], (address));
+        TradingStrategyInitializerParams memory params_   = abi.decode(msg.data[32:], (TradingStrategyInitializerParams));
 
         _initialize(strategyManager_, params_);
     }

@@ -9,7 +9,7 @@ pragma solidity ^0.8.0;
  *  @param strategyDelegateFeeRate Percentage of yield collected by the strategy delegate.
  *  @param strategyProtocolFeeRate Percentage of yield collected by the Maple treasury.
  */
-struct Parameters {
+struct TradingStrategyInitializerParams {
     address fundsAsset;
     string  strategyMetadata;
     uint32  strategyDelegateFeeRate;
@@ -26,6 +26,6 @@ interface IMapleTradingStrategyInitializer {
      *  @param strategyManager Address of the strategy manager contract.
      *  @param params          Trading strategy parameters set during initialization.
      */
-    event Initialized(address indexed strategyManager, Parameters params);
+    event Initialized(address indexed strategyManager, TradingStrategyInitializerParams params);
 
 }

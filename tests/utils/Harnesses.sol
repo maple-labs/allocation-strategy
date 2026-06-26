@@ -4,8 +4,8 @@ pragma solidity ^0.8.0;
 import { MapleTradingStrategy }            from "../../contracts/MapleTradingStrategy.sol";
 import { MapleTradingStrategyInitializer } from "../../contracts/MapleTradingStrategyInitializer.sol";
 
-import { Parameters }  from "../../contracts/interfaces/IMapleTradingStrategyInitializer.sol";
-import { Permissions } from "../../contracts/interfaces/IMapleTradingStrategyStorage.sol";
+import { Permissions }                       from "../../contracts/interfaces/IMapleTradingStrategyStorage.sol";
+import { TradingStrategyInitializerParams }  from "../../contracts/interfaces/IMapleTradingStrategyInitializer.sol";
 
 contract MapleTradingStrategyHarness is MapleTradingStrategy {
 
@@ -53,7 +53,7 @@ contract MapleTradingStrategyHarness is MapleTradingStrategy {
 
 contract MapleTradingStrategyInitializerHarness is MapleTradingStrategyInitializer {
 
-    function __initialize(address strategyManager_, Parameters memory params_) external {
+    function __initialize(address strategyManager_, TradingStrategyInitializerParams memory params_) external {
         _initialize(strategyManager_, params_);
     }
 
