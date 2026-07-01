@@ -20,7 +20,6 @@ contract MapleTradingStrategyStorage is IMapleTradingStrategyStorage {
     uint32 public override strategyDelegateFeeRate;  // Percentage of yield collected by the strategy delegate.
     uint32 public override strategyProtocolFeeRate;  // Percentage of yield collected by the Maple treasury.
 
-    // TODO: Should `bytes` be used here instead?
     string public override strategyMetadata;  // Optional metadata associated with the trading strategy.
 
     mapping(address => uint256) public override deployedAssetsOf;  // Per-address amount currently deployed.

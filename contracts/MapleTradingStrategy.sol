@@ -85,7 +85,11 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
         _;
     }
 
-    // TODO: Add `onlyTradingAddress` modifier?
+    modifier onlyTradingAddress() {
+        require(IGlobalsLike(globals()).isGovernedInstanceOf(INSTANCE_KEY, msg.sender), "MTS:NOT_TRADING_ADDRESS");
+
+        _;
+    }
 
     modifier whenNotPaused() {
         require(!IGlobalsLike(globals()).isFunctionPaused(msg.sig), "MTS:PAUSED");
@@ -117,9 +121,13 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
     /*** Management Functions                                                                                                           ***/
     /**************************************************************************************************************************************/
 
-    function deployAssets(uint256 assets_, bytes calldata metadata_) external override whenNotPaused nonReentrant {
-        require(IGlobalsLike(globals()).isGovernedInstanceOf(INSTANCE_KEY, msg.sender), "MTS:DA:NOT_TRADING_ADDRESS");
-        require(permissions[msg.sender].canDeployAssets,                                "MTS:DA:NOT_ALLOWED");
+    function deployAssets(
+        uint256 assets_,
+        bytes   calldata metadata_
+    )
+        external override whenNotPaused nonReentrant onlyTradingAddress
+    {
+        require(permissions[msg.sender].canDeployAssets, "MTS:DA:NOT_ALLOWED");
 
         require(assets_ >  0,                     "MTS:DA:ZERO_ASSETS");
         require(assets_ <= availableToWithdraw(), "MTS:DA:INSUFFICIENT_ASSETS");
@@ -136,9 +144,14 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
         emit AssetsDeployed(msg.sender, assets_, metadata_);
     }
 
-    function returnAssets(uint256 assets_, address onBehalfOf_, bytes calldata metadata_) external override whenNotPaused nonReentrant {
-        require(IGlobalsLike(globals()).isGovernedInstanceOf(INSTANCE_KEY, msg.sender), "MTS:RA:NOT_TRADING_ADDRESS");
-        require(permissions[msg.sender].canReturnAssets,                                "MTS:RA:NOT_ALLOWED");
+    function returnAssets(
+        uint256 assets_,
+        address onBehalfOf_,
+        bytes   calldata metadata_
+    )
+        external override whenNotPaused nonReentrant onlyTradingAddress
+    {
+        require(permissions[msg.sender].canReturnAssets, "MTS:RA:NOT_ALLOWED");
 
         require(assets_ != 0,                             "MTS:RA:ZERO_ASSETS");
         require(assets_ <= deployedAssetsOf[onBehalfOf_], "MTS:RA:EXCEEDS_ASSETS");
@@ -151,13 +164,16 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
         emit AssetsReturned(msg.sender, onBehalfOf_, assets_, metadata_);
     }
 
-    // TODO: If the total amount of `scheduledYieldAssets` is zero, should we clean up `yieldStart` and `yieldDeadline`? Should we revert?
-    function realizeYield(uint256 yield_, uint32 duration_, bytes calldata metadata_) external override whenNotPaused nonReentrant {
-        address fundsAsset_ = fundsAsset;
-        address globals_    = globals();
+    function realizeYield(
+        uint256 yield_,
+        uint32  duration_,
+        bytes   calldata metadata_
+    )
+        external override whenNotPaused nonReentrant onlyTradingAddress
+    {
+        require(permissions[msg.sender].canRealizeYield, "MTS:RY:NOT_ALLOWED");
 
-        require(IGlobalsLike(globals_).isGovernedInstanceOf(INSTANCE_KEY, msg.sender), "MTS:RY:NOT_TRADING_ADDRESS");
-        require(permissions[msg.sender].canRealizeYield,                               "MTS:RY:NOT_ALLOWED");
+        address fundsAsset_ = fundsAsset;
 
         if (yield_ != 0) {
             require(ERC20Helper.transferFrom(fundsAsset_, msg.sender, address(this), yield_), "MTS:RY:TRANSFER_FROM_FAILED");
@@ -179,7 +195,6 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
     /*** Administrative Functions                                                                                                       ***/
     /**************************************************************************************************************************************/
 
-    // TODO: If we cancel all of the yield, should the `yieldStart` and `yieldDeadline` be cleaned up?
     function cancelYield(uint256 assets_, address recipient_) external override whenNotPaused nonReentrant onlyAdmin {
         uint256 unrealizedYield_ = unrealizedYield();
         uint256 cancelledAssets_ = assets_ == type(uint256).max ? unrealizedYield_ : assets_;

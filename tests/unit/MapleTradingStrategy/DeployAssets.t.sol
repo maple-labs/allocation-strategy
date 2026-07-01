@@ -52,7 +52,7 @@ contract DeployAssetsFailureTests is DeployAssetsTestBase {
         globals.__setIsGovernedInstanceOf("TRADING_ADDRESS", tradingAddress, false);
 
         vm.prank(tradingAddress);
-        vm.expectRevert("MTS:DA:NOT_TRADING_ADDRESS");
+        vm.expectRevert("MTS:NOT_TRADING_ADDRESS");
         strategy.deployAssets(assetsToDeploy, "");
     }
 

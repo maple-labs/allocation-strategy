@@ -59,7 +59,7 @@ contract ReturnAssetsFailureTests is ReturnAssetsTestBase {
         globals.__setIsGovernedInstanceOf("TRADING_ADDRESS", tradingAddress1, false);
 
         vm.prank(tradingAddress1);
-        vm.expectRevert("MTS:RA:NOT_TRADING_ADDRESS");
+        vm.expectRevert("MTS:NOT_TRADING_ADDRESS");
         strategy.returnAssets(deployedAssets1, tradingAddress1, "");
     }
 

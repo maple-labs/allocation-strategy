@@ -105,7 +105,7 @@ contract RealizeYieldFailureTests is RealizeYieldTestBase {
         globals.__setIsGovernedInstanceOf("TRADING_ADDRESS", tradingAddress, false);
 
         vm.prank(tradingAddress);
-        vm.expectRevert("MTS:RY:NOT_TRADING_ADDRESS");
+        vm.expectRevert("MTS:NOT_TRADING_ADDRESS");
         strategy.realizeYield(newYieldAmount, newYieldDuration, "");
     }
 
