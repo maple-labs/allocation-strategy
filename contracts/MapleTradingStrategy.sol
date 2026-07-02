@@ -144,6 +144,18 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
         emit AssetsDeployed(msg.sender, assets_, metadata_);
     }
 
+    function multicall(bytes[] calldata data_) external override {
+        for (uint256 i = 0; i < data_.length; i++) {
+            ( bool success_, bytes memory returnData_ ) = address(this).delegatecall(data_[i]);
+
+            if (!success_) {
+                assembly ("memory-safe") {
+                    revert(add(32, returnData_), mload(returnData_))
+                }
+            }
+        }
+    }
+
     function returnAssets(
         uint256 assets_,
         address onBehalfOf_,

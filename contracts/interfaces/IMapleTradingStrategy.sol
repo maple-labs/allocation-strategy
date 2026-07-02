@@ -151,6 +151,12 @@ interface IMapleTradingStrategy is IMapleTradingStrategyStorage, IMapleProxied {
     function deployAssets(uint256 assets, bytes calldata metadata) external;
 
     /**
+     *  @dev   Allows EOAs to batch admin calls.
+     *  @param data Array of calldata.
+     */
+    function multicall(bytes[] calldata data) external;
+
+    /**
      *  @dev   Transfers assets from the caller to the strategy.
      *         Caller must be a valid trading address on MapleGlobals.
      *         Caller must have permission to return assets.
