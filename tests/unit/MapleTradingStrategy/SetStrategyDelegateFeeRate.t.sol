@@ -50,6 +50,14 @@ contract SetStrategyDelegateFeeRateFailureTests is TestBase {
         strategy.setStrategyDelegateFeeRate(strategyDelegateFeeRate);
     }
 
+    function test_setStrategyDelegateFeeRate_revert_notStrategyDelegate_operationalAdmin() external {
+        uint32 strategyDelegateFeeRate = 0.04e6;  // 4% delegate fee
+
+        vm.prank(operationalAdmin);
+        vm.expectRevert("MTS:NOT_STRATEGY_DELEGATE");
+        strategy.setStrategyDelegateFeeRate(strategyDelegateFeeRate);
+    }
+
     function test_setStrategyDelegateFeeRate_revert_noChange() external {
         uint32 strategyDelegateFeeRate = 0.04e6;  // 4% delegate fee
         uint32 strategyProtocolFeeRate = 0.03e6;  // 3% protocol fee

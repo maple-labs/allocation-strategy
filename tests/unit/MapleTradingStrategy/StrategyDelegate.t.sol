@@ -9,4 +9,14 @@ contract StrategyDelegateTests is TestBase {
         assertEq(strategy.strategyDelegate(), strategyDelegate);
     }
 
+    function test_strategyDelegate_changed() external {
+        assertEq(strategy.strategyDelegate(), strategyDelegate);
+
+        address newStrategyDelegate = makeAddr("newStrategyDelegate");
+
+        manager.__setStrategyDelegate(newStrategyDelegate);
+
+        assertEq(strategy.strategyDelegate(), newStrategyDelegate);
+    }
+
 }

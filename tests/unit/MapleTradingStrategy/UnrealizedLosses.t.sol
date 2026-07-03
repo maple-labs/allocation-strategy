@@ -3,7 +3,6 @@ pragma solidity ^0.8.0;
 
 import { TestBase } from "../../utils/TestBase.sol";
 
-// TODO: Add tests that include a combination of impairing and recognizing losses.
 contract UnrealizedLossesTests is TestBase {
 
     uint256 partialAssets = 350_000e6;

@@ -159,4 +159,72 @@ contract RecognizeLossSuccessTests is RecognizeLossTestBase {
         assertEq(strategy.assetsUnderManagement(),           deployedAssets2 - 2 * partialLoss);
     }
 
+    function test_recognizeLoss_success_withImpairment_remainsBelowAum() external {
+        uint256 impaired = 500_000e6;
+
+        assertEq(strategy.deployedAssetsOf(tradingAddress1), deployedAssets1);
+        assertEq(strategy.deployedAssetsOf(tradingAddress2), deployedAssets2);
+        assertEq(strategy.totalDeployedAssets(),             deployedAssets1 + deployedAssets2);
+        assertEq(strategy.assetsUnderManagement(),           deployedAssets1 + deployedAssets2);
+        assertEq(strategy.unrealizedLosses(),                0);
+
+        vm.expectEmit();
+        emit IMapleTradingStrategy.Impaired(impaired);
+
+        vm.prank(strategyDelegate);
+        strategy.impair(impaired);
+
+        assertEq(strategy.deployedAssetsOf(tradingAddress1), deployedAssets1);
+        assertEq(strategy.deployedAssetsOf(tradingAddress2), deployedAssets2);
+        assertEq(strategy.totalDeployedAssets(),             deployedAssets1 + deployedAssets2);
+        assertEq(strategy.assetsUnderManagement(),           deployedAssets1 + deployedAssets2);
+        assertEq(strategy.unrealizedLosses(),                impaired);
+
+        vm.expectEmit();
+        emit IMapleTradingStrategy.LossRecognized(strategyDelegate, tradingAddress1, totalLoss);
+
+        vm.prank(strategyDelegate);
+        strategy.recognizeLoss(totalLoss, tradingAddress1);
+
+        assertEq(strategy.deployedAssetsOf(tradingAddress1), 0);
+        assertEq(strategy.deployedAssetsOf(tradingAddress2), deployedAssets2);
+        assertEq(strategy.totalDeployedAssets(),             deployedAssets2);
+        assertEq(strategy.assetsUnderManagement(),           deployedAssets2);
+        assertEq(strategy.unrealizedLosses(),                impaired);
+    }
+
+    function test_recognizeLoss_success_withImpairment_clampsToReducedAum() external {
+        uint256 impaired = 700_000e6;
+
+        assertEq(strategy.deployedAssetsOf(tradingAddress1), deployedAssets1);
+        assertEq(strategy.deployedAssetsOf(tradingAddress2), deployedAssets2);
+        assertEq(strategy.totalDeployedAssets(),             deployedAssets1 + deployedAssets2);
+        assertEq(strategy.assetsUnderManagement(),           deployedAssets1 + deployedAssets2);
+        assertEq(strategy.unrealizedLosses(),                0);
+
+        vm.expectEmit();
+        emit IMapleTradingStrategy.Impaired(impaired);
+
+        vm.prank(strategyDelegate);
+        strategy.impair(impaired);
+
+        assertEq(strategy.deployedAssetsOf(tradingAddress1), deployedAssets1);
+        assertEq(strategy.deployedAssetsOf(tradingAddress2), deployedAssets2);
+        assertEq(strategy.totalDeployedAssets(),             deployedAssets1 + deployedAssets2);
+        assertEq(strategy.assetsUnderManagement(),           deployedAssets1 + deployedAssets2);
+        assertEq(strategy.unrealizedLosses(),                impaired);
+
+        vm.expectEmit();
+        emit IMapleTradingStrategy.LossRecognized(strategyDelegate, tradingAddress1, deployedAssets1);
+
+        vm.prank(strategyDelegate);
+        strategy.recognizeLoss(deployedAssets1, tradingAddress1);
+
+        assertEq(strategy.deployedAssetsOf(tradingAddress1), 0);
+        assertEq(strategy.deployedAssetsOf(tradingAddress2), deployedAssets2);
+        assertEq(strategy.totalDeployedAssets(),             deployedAssets2);
+        assertEq(strategy.assetsUnderManagement(),           deployedAssets2);
+        assertEq(strategy.unrealizedLosses(),                deployedAssets2);
+    }
+
 }

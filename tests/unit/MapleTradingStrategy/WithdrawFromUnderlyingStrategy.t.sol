@@ -102,4 +102,86 @@ contract WithdrawFromUnderlyingStrategyTests is TestBase {
         assertEq(strategy.assetsUnderManagement(), 0);
     }
 
+    function test_withdrawFromUnderlyingStrategy_success_partialWithdrawal_bufferAccruing() external {
+        uint256 bufferAmount     = 400e6;
+        uint256 withdrawalAmount = 250e6;
+
+        uint32 yieldStart    = startingTime;
+        uint32 yieldAccruing = startingTime + 6 hours;
+        uint32 yieldDeadline = startingTime + 1 days;
+
+        strategy.__setYieldBuffer(bufferAmount, yieldStart, yieldDeadline);
+
+        uint256 elapsedDuration = yieldAccruing - yieldStart;
+        uint256 totalDuration   = yieldDeadline - yieldStart;
+
+        uint256 realizedYield   = bufferAmount * elapsedDuration / totalDuration;
+        uint256 unrealizedYield = bufferAmount - realizedYield;
+
+        vm.warp(yieldAccruing);
+
+        assertEq(asset.balanceOf(address(strategy)), assets);
+        assertEq(asset.balanceOf(destination),       0);
+
+        assertEq(strategy.realizedYield(),         realizedYield);
+        assertEq(strategy.unrealizedYield(),       unrealizedYield);
+        assertEq(strategy.availableToWithdraw(),   assets - unrealizedYield);
+        assertEq(strategy.assetsUnderManagement(), assets - unrealizedYield);
+
+        vm.expectEmit();
+        emit IMapleTradingStrategy.StrategyWithdrawn(address(manager), destination, withdrawalAmount);
+
+        vm.prank(address(manager));
+        strategy.withdrawFromUnderlyingStrategy(destination, withdrawalAmount, "");
+
+        assertEq(asset.balanceOf(address(strategy)), assets - withdrawalAmount);
+        assertEq(asset.balanceOf(destination),       withdrawalAmount);
+
+        assertEq(strategy.realizedYield(),         realizedYield);
+        assertEq(strategy.unrealizedYield(),       unrealizedYield);
+        assertEq(strategy.availableToWithdraw(),   assets - unrealizedYield - withdrawalAmount);
+        assertEq(strategy.assetsUnderManagement(), assets - unrealizedYield - withdrawalAmount);
+    }
+
+    function test_withdrawFromUnderlyingStrategy_success_fullWithdrawal_bufferAccruing() external {
+        uint256 bufferAmount = 400e6;
+
+        uint32 yieldStart    = startingTime;
+        uint32 yieldAccruing = startingTime + 6 hours;
+        uint32 yieldDeadline = startingTime + 1 days;
+
+        strategy.__setYieldBuffer(bufferAmount, yieldStart, yieldDeadline);
+
+        uint256 elapsedDuration = yieldAccruing - yieldStart;
+        uint256 totalDuration   = yieldDeadline - yieldStart;
+
+        uint256 realizedYield    = bufferAmount * elapsedDuration / totalDuration;
+        uint256 unrealizedYield  = bufferAmount - realizedYield;
+        uint256 withdrawalAmount = assets - unrealizedYield;
+
+        vm.warp(yieldAccruing);
+
+        assertEq(asset.balanceOf(address(strategy)), assets);
+        assertEq(asset.balanceOf(destination),       0);
+
+        assertEq(strategy.realizedYield(),         realizedYield);
+        assertEq(strategy.unrealizedYield(),       unrealizedYield);
+        assertEq(strategy.availableToWithdraw(),   withdrawalAmount);
+        assertEq(strategy.assetsUnderManagement(), withdrawalAmount);
+
+        vm.expectEmit();
+        emit IMapleTradingStrategy.StrategyWithdrawn(address(manager), destination, withdrawalAmount);
+
+        vm.prank(address(manager));
+        strategy.withdrawFromUnderlyingStrategy(destination, withdrawalAmount, "");
+
+        assertEq(asset.balanceOf(address(strategy)), unrealizedYield);
+        assertEq(asset.balanceOf(destination),       withdrawalAmount);
+
+        assertEq(strategy.realizedYield(),         realizedYield);
+        assertEq(strategy.unrealizedYield(),       unrealizedYield);
+        assertEq(strategy.availableToWithdraw(),   0);
+        assertEq(strategy.assetsUnderManagement(), 0);
+    }
+
 }
