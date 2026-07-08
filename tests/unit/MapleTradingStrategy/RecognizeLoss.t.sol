@@ -36,6 +36,14 @@ contract RecognizeLossFailureTests is RecognizeLossTestBase {
         strategy.recognizeLoss(deployedAssets1, tradingAddress1);
     }
 
+    function test_recognizeLoss_revert_reentrancy() external {
+        strategy.__setLocked(2);
+
+        vm.prank(strategyDelegate);
+        vm.expectRevert("MTS:LOCKED");
+        strategy.recognizeLoss(deployedAssets1, tradingAddress1);
+    }
+
     function test_recognizeLoss_revert_notAuthorized() external {
         vm.expectRevert("MTS:NOT_AUTHORIZED");
         strategy.recognizeLoss(deployedAssets1, tradingAddress1);

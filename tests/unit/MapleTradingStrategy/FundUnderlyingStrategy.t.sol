@@ -19,6 +19,14 @@ contract FundUnderlyingStrategyTests is TestBase {
         strategy.fundUnderlyingStrategy(assetsIn, "");
     }
 
+    function test_fundUnderlyingStrategy_revert_reentrancy() external {
+        strategy.__setLocked(2);
+
+        vm.prank(address(manager));
+        vm.expectRevert("MTS:LOCKED");
+        strategy.fundUnderlyingStrategy(assetsIn, "");
+    }
+
     function test_fundUnderlyingStrategy_revert_notStrategyManager() external {
         vm.expectRevert("MTS:NOT_STRATEGY_MANAGER");
         strategy.fundUnderlyingStrategy(assetsIn, "");

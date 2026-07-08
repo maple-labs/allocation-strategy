@@ -28,6 +28,14 @@ contract ImpairFailureTests is ImpairTestBase {
         strategy.impair(partialAssets);
     }
 
+    function test_impair_revert_reentrancy() external {
+        strategy.__setLocked(2);
+
+        vm.prank(strategyDelegate);
+        vm.expectRevert("MTS:LOCKED");
+        strategy.impair(partialAssets);
+    }
+
     function test_impair_revert_notAuthorized() external {
         vm.prank(governor);
         vm.expectRevert("MTS:NOT_AUTHORIZED");

@@ -30,6 +30,14 @@ contract RemoveImpairmentFailureTests is RemoveImpairmentTestBase {
         strategy.removeImpairment(assetsToUnimpair);
     }
 
+    function test_removeImpairment_revert_reentrancy() external {
+        strategy.__setLocked(2);
+
+        vm.prank(strategyDelegate);
+        vm.expectRevert("MTS:LOCKED");
+        strategy.removeImpairment(assetsToUnimpair);
+    }
+
     function test_removeImpairment_revert_notAuthorized() external {
         vm.prank(governor);
         vm.expectRevert("MTS:NOT_AUTHORIZED");

@@ -18,6 +18,14 @@ contract SetPermissionsFailureTests is TestBase {
         strategy.setPermissions(new address[](0), new bool[](0), new bool[](0), new bool[](0));
     }
 
+    function test_setPermissions_revert_reentrancy() external {
+        strategy.__setLocked(2);
+
+        vm.prank(strategyDelegate);
+        vm.expectRevert("MTS:LOCKED");
+        strategy.setPermissions(new address[](0), new bool[](0), new bool[](0), new bool[](0));
+    }
+
     function test_setPermissions_revert_notAuthorized() external {
         vm.expectRevert("MTS:NOT_AUTHORIZED");
         strategy.setPermissions(new address[](0), new bool[](0), new bool[](0), new bool[](0));

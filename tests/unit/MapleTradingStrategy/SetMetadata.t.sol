@@ -17,6 +17,14 @@ contract SetMetadataFailureTests is TestBase {
         strategy.setMetadata("abc");
     }
 
+    function test_setMetadata_revert_reentrancy() external {
+        strategy.__setLocked(2);
+
+        vm.prank(strategyDelegate);
+        vm.expectRevert("MTS:LOCKED");
+        strategy.setMetadata("abc");
+    }
+
     function test_setMetadata_revert_notAuthorized() external {
         vm.expectRevert("MTS:NOT_AUTHORIZED");
         strategy.setMetadata("abc");

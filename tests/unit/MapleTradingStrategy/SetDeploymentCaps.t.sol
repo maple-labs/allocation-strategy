@@ -17,6 +17,14 @@ contract SetDeploymentCapsFailureTests is TestBase {
         strategy.setDeploymentCaps(new address[](0), new uint256[](0));
     }
 
+    function test_setDeploymentCaps_revert_reentrancy() external {
+        strategy.__setLocked(2);
+
+        vm.prank(strategyDelegate);
+        vm.expectRevert("MTS:LOCKED");
+        strategy.setDeploymentCaps(new address[](0), new uint256[](0));
+    }
+
     function test_setDeploymentCaps_revert_notAuthorized() external {
         vm.expectRevert("MTS:NOT_AUTHORIZED");
         strategy.setDeploymentCaps(new address[](0), new uint256[](0));

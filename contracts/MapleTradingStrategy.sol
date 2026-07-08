@@ -224,7 +224,7 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
         emit YieldCancelled(msg.sender, recipient_, cancelledAssets_);
     }
 
-    function impair(uint256 assets_) external override whenNotPaused onlyAdmin {
+    function impair(uint256 assets_) external override whenNotPaused nonReentrant onlyAdmin {
         require(assets_ > 0, "MTS:I:ZERO_ASSETS");
 
         impairedAssets += assets_;
@@ -232,7 +232,7 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
         emit Impaired(assets_);
     }
 
-    function removeImpairment(uint256 assets_) external override whenNotPaused onlyAdmin {
+    function removeImpairment(uint256 assets_) external override whenNotPaused nonReentrant onlyAdmin {
         require(assets_ > 0,               "MTS:RI:ZERO_ASSETS");
         require(assets_ <= impairedAssets, "MTS:RI:EXCEEDS_IMPAIRMENT");
 
@@ -241,7 +241,7 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
         emit ImpairmentRemoved(assets_);
     }
 
-    function recognizeLoss(uint256 assets_, address deployer_) external override whenNotPaused onlyAdmin {
+    function recognizeLoss(uint256 assets_, address deployer_) external override whenNotPaused nonReentrant onlyAdmin {
         require(assets_ != 0,                           "MTS:RL:ZERO_ASSETS");
         require(assets_ <= deployedAssetsOf[deployer_], "MTS:RL:EXCEEDS_DEPLOYED");
 
@@ -251,7 +251,12 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
         emit LossRecognized(msg.sender, deployer_, assets_);
     }
 
-    function setDeploymentCaps(address[] calldata accounts_, uint256[] calldata amounts_) external override whenNotPaused onlyAdmin {
+    function setDeploymentCaps(
+        address[] calldata accounts_,
+        uint256[] calldata amounts_
+    )
+        external override whenNotPaused nonReentrant onlyAdmin
+    {
         require(accounts_.length != 0,               "MTS:SDC:ZERO_LENGTH");
         require(accounts_.length == amounts_.length, "MTS:SDC:LENGTH_MISMATCH");
 
@@ -274,7 +279,7 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
         }
     }
 
-    function setMetadata(string calldata metadata_) external override whenNotPaused onlyAdmin {
+    function setMetadata(string calldata metadata_) external override whenNotPaused nonReentrant onlyAdmin {
         require(keccak256(bytes(metadata_)) != keccak256(bytes(strategyMetadata)), "MTS:SM:NO_CHANGE");
 
         strategyMetadata = metadata_;
@@ -288,7 +293,7 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
         bool[]    calldata canReturnAssets_,
         bool[]    calldata canRealizeYield_
     )
-        external override whenNotPaused onlyAdmin
+        external override whenNotPaused nonReentrant onlyAdmin
     {
         uint256 length_ = accounts_.length;
 
@@ -359,7 +364,7 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
         uint256 assetsIn_,
         bytes calldata /* data_ */
     )
-        external override whenNotPaused onlyStrategyManager returns (uint256 assetsOut_)
+        external override whenNotPaused nonReentrant onlyStrategyManager returns (uint256 assetsOut_)
     {
         assetsOut_ = assetsIn_;
 
