@@ -13,9 +13,9 @@ contract RecognizeLossTestBase is TestBase {
 
     uint256 deployedAssets1 = 1_250_000e6;
     uint256 deployedAssets2 = 600_000e6;
+    uint256 impairedAssets  = 900_333e6;
 
     uint256 partialLoss = 165_000e6;
-    uint256 totalLoss   = 1_250_000e6;
 
     function setUp() public virtual override {
         super.setUp();
@@ -73,7 +73,7 @@ contract RecognizeLossFailureTests is RecognizeLossTestBase {
 
 contract RecognizeLossSuccessTests is RecognizeLossTestBase {
 
-    function test_recognizeLoss_success_partialLoss_strategyDelegate() external {
+    function test_recognizeLoss_partialLoss_strategyDelegate() external {
         assertEq(strategy.deployedAssetsOf(tradingAddress1), deployedAssets1);
         assertEq(strategy.deployedAssetsOf(tradingAddress2), deployedAssets2);
         assertEq(strategy.totalDeployedAssets(),             deployedAssets1 + deployedAssets2);
@@ -91,7 +91,7 @@ contract RecognizeLossSuccessTests is RecognizeLossTestBase {
         assertEq(strategy.assetsUnderManagement(),           deployedAssets1 + deployedAssets2 - partialLoss);
     }
 
-    function test_recognizeLoss_success_partialLoss_operationalAdmin() external {
+    function test_recognizeLoss_partialLoss_operationalAdmin() external {
         assertEq(strategy.deployedAssetsOf(tradingAddress1), deployedAssets1);
         assertEq(strategy.deployedAssetsOf(tradingAddress2), deployedAssets2);
         assertEq(strategy.totalDeployedAssets(),             deployedAssets1 + deployedAssets2);
@@ -109,17 +109,17 @@ contract RecognizeLossSuccessTests is RecognizeLossTestBase {
         assertEq(strategy.assetsUnderManagement(),           deployedAssets1 + deployedAssets2 - partialLoss);
     }
 
-    function test_recognizeLoss_success_totalLoss() external {
+    function test_recognizeLoss_totalLoss() external {
         assertEq(strategy.deployedAssetsOf(tradingAddress1), deployedAssets1);
         assertEq(strategy.deployedAssetsOf(tradingAddress2), deployedAssets2);
         assertEq(strategy.totalDeployedAssets(),             deployedAssets1 + deployedAssets2);
         assertEq(strategy.assetsUnderManagement(),           deployedAssets1 + deployedAssets2);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.LossRecognized(strategyDelegate, tradingAddress1, totalLoss);
+        emit IMapleTradingStrategy.LossRecognized(strategyDelegate, tradingAddress1, deployedAssets1);
 
         vm.prank(strategyDelegate);
-        strategy.recognizeLoss(totalLoss, tradingAddress1);
+        strategy.recognizeLoss(deployedAssets1, tradingAddress1);
 
         assertEq(strategy.deployedAssetsOf(tradingAddress1), 0);
         assertEq(strategy.deployedAssetsOf(tradingAddress2), deployedAssets2);
@@ -127,17 +127,69 @@ contract RecognizeLossSuccessTests is RecognizeLossTestBase {
         assertEq(strategy.assetsUnderManagement(),           deployedAssets2);
     }
 
-    function test_recognizeLoss_success_multipleLosses() external {
+    function test_recognizeLoss_withImpairment() external {
+        strategy.__setImpairedAssets(impairedAssets);
+
+        assertEq(strategy.deployedAssetsOf(tradingAddress1), deployedAssets1);
+        assertEq(strategy.deployedAssetsOf(tradingAddress2), deployedAssets2);
+        assertEq(strategy.totalDeployedAssets(),             deployedAssets1 + deployedAssets2);
+        assertEq(strategy.assetsUnderManagement(),           deployedAssets1 + deployedAssets2);
+
+        assertEq(strategy.impairedAssets(),   impairedAssets);
+        assertEq(strategy.unrealizedLosses(), impairedAssets);
+
+        vm.expectEmit();
+        emit IMapleTradingStrategy.LossRecognized(strategyDelegate, tradingAddress2, deployedAssets2);
+
+        vm.prank(strategyDelegate);
+        strategy.recognizeLoss(deployedAssets2, tradingAddress2);
+
+        assertEq(strategy.deployedAssetsOf(tradingAddress1), deployedAssets1);
+        assertEq(strategy.deployedAssetsOf(tradingAddress2), 0);
+        assertEq(strategy.totalDeployedAssets(),             deployedAssets1);
+        assertEq(strategy.assetsUnderManagement(),           deployedAssets1);
+
+        assertEq(strategy.impairedAssets(),   impairedAssets);
+        assertEq(strategy.unrealizedLosses(), impairedAssets);
+    }
+
+    function test_recognizeLoss_clampedImpairment() external {
+        strategy.__setImpairedAssets(impairedAssets);
+
+        assertEq(strategy.deployedAssetsOf(tradingAddress1), deployedAssets1);
+        assertEq(strategy.deployedAssetsOf(tradingAddress2), deployedAssets2);
+        assertEq(strategy.totalDeployedAssets(),             deployedAssets1 + deployedAssets2);
+        assertEq(strategy.assetsUnderManagement(),           deployedAssets1 + deployedAssets2);
+
+        assertEq(strategy.impairedAssets(),   impairedAssets);
+        assertEq(strategy.unrealizedLosses(), impairedAssets);
+
+        vm.expectEmit();
+        emit IMapleTradingStrategy.LossRecognized(strategyDelegate, tradingAddress1, deployedAssets1);
+
+        vm.prank(strategyDelegate);
+        strategy.recognizeLoss(deployedAssets1, tradingAddress1);
+
+        assertEq(strategy.deployedAssetsOf(tradingAddress1), 0);
+        assertEq(strategy.deployedAssetsOf(tradingAddress2), deployedAssets2);
+        assertEq(strategy.totalDeployedAssets(),             deployedAssets2);
+        assertEq(strategy.assetsUnderManagement(),           deployedAssets2);
+
+        assertEq(strategy.impairedAssets(),   impairedAssets);
+        assertEq(strategy.unrealizedLosses(), deployedAssets2);
+    }
+
+    function test_recognizeLoss_multipleLosses() external {
         assertEq(strategy.deployedAssetsOf(tradingAddress1), deployedAssets1);
         assertEq(strategy.deployedAssetsOf(tradingAddress2), deployedAssets2);
         assertEq(strategy.totalDeployedAssets(),             deployedAssets1 + deployedAssets2);
         assertEq(strategy.assetsUnderManagement(),           deployedAssets1 + deployedAssets2);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.LossRecognized(strategyDelegate, tradingAddress1, totalLoss);
+        emit IMapleTradingStrategy.LossRecognized(strategyDelegate, tradingAddress1, deployedAssets1);
 
         vm.prank(strategyDelegate);
-        strategy.recognizeLoss(totalLoss, tradingAddress1);
+        strategy.recognizeLoss(deployedAssets1, tradingAddress1);
 
         assertEq(strategy.deployedAssetsOf(tradingAddress1), 0);
         assertEq(strategy.deployedAssetsOf(tradingAddress2), deployedAssets2);
@@ -165,74 +217,6 @@ contract RecognizeLossSuccessTests is RecognizeLossTestBase {
         assertEq(strategy.deployedAssetsOf(tradingAddress2), deployedAssets2 - 2 * partialLoss);
         assertEq(strategy.totalDeployedAssets(),             deployedAssets2 - 2 * partialLoss);
         assertEq(strategy.assetsUnderManagement(),           deployedAssets2 - 2 * partialLoss);
-    }
-
-    function test_recognizeLoss_success_withImpairment_remainsBelowAum() external {
-        uint256 impaired = 500_000e6;
-
-        assertEq(strategy.deployedAssetsOf(tradingAddress1), deployedAssets1);
-        assertEq(strategy.deployedAssetsOf(tradingAddress2), deployedAssets2);
-        assertEq(strategy.totalDeployedAssets(),             deployedAssets1 + deployedAssets2);
-        assertEq(strategy.assetsUnderManagement(),           deployedAssets1 + deployedAssets2);
-        assertEq(strategy.unrealizedLosses(),                0);
-
-        vm.expectEmit();
-        emit IMapleTradingStrategy.Impaired(impaired);
-
-        vm.prank(strategyDelegate);
-        strategy.impair(impaired);
-
-        assertEq(strategy.deployedAssetsOf(tradingAddress1), deployedAssets1);
-        assertEq(strategy.deployedAssetsOf(tradingAddress2), deployedAssets2);
-        assertEq(strategy.totalDeployedAssets(),             deployedAssets1 + deployedAssets2);
-        assertEq(strategy.assetsUnderManagement(),           deployedAssets1 + deployedAssets2);
-        assertEq(strategy.unrealizedLosses(),                impaired);
-
-        vm.expectEmit();
-        emit IMapleTradingStrategy.LossRecognized(strategyDelegate, tradingAddress1, totalLoss);
-
-        vm.prank(strategyDelegate);
-        strategy.recognizeLoss(totalLoss, tradingAddress1);
-
-        assertEq(strategy.deployedAssetsOf(tradingAddress1), 0);
-        assertEq(strategy.deployedAssetsOf(tradingAddress2), deployedAssets2);
-        assertEq(strategy.totalDeployedAssets(),             deployedAssets2);
-        assertEq(strategy.assetsUnderManagement(),           deployedAssets2);
-        assertEq(strategy.unrealizedLosses(),                impaired);
-    }
-
-    function test_recognizeLoss_success_withImpairment_clampsToReducedAum() external {
-        uint256 impaired = 700_000e6;
-
-        assertEq(strategy.deployedAssetsOf(tradingAddress1), deployedAssets1);
-        assertEq(strategy.deployedAssetsOf(tradingAddress2), deployedAssets2);
-        assertEq(strategy.totalDeployedAssets(),             deployedAssets1 + deployedAssets2);
-        assertEq(strategy.assetsUnderManagement(),           deployedAssets1 + deployedAssets2);
-        assertEq(strategy.unrealizedLosses(),                0);
-
-        vm.expectEmit();
-        emit IMapleTradingStrategy.Impaired(impaired);
-
-        vm.prank(strategyDelegate);
-        strategy.impair(impaired);
-
-        assertEq(strategy.deployedAssetsOf(tradingAddress1), deployedAssets1);
-        assertEq(strategy.deployedAssetsOf(tradingAddress2), deployedAssets2);
-        assertEq(strategy.totalDeployedAssets(),             deployedAssets1 + deployedAssets2);
-        assertEq(strategy.assetsUnderManagement(),           deployedAssets1 + deployedAssets2);
-        assertEq(strategy.unrealizedLosses(),                impaired);
-
-        vm.expectEmit();
-        emit IMapleTradingStrategy.LossRecognized(strategyDelegate, tradingAddress1, deployedAssets1);
-
-        vm.prank(strategyDelegate);
-        strategy.recognizeLoss(deployedAssets1, tradingAddress1);
-
-        assertEq(strategy.deployedAssetsOf(tradingAddress1), 0);
-        assertEq(strategy.deployedAssetsOf(tradingAddress2), deployedAssets2);
-        assertEq(strategy.totalDeployedAssets(),             deployedAssets2);
-        assertEq(strategy.assetsUnderManagement(),           deployedAssets2);
-        assertEq(strategy.unrealizedLosses(),                deployedAssets2);
     }
 
 }

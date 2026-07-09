@@ -197,14 +197,14 @@ interface IMapleTradingStrategy is IMapleTradingStrategyStorage, IMapleProxied {
 
     /**
      *  @dev   Increases the amount of impaired assets.
-     *         Callable only by protocol admins.
+     *         Callable only by the strategy delegate or operational admin.
      *  @param assets Amount of assets to impair.
      */
     function impair(uint256 assets) external;
 
     /**
      *  @dev   Decreases the amount of impaired assets.
-     *         Callable only by protocol admins.
+     *         Callable only by the strategy delegate or operational admin.
      *  @param assets Amount of assets to unimpair.
      */
     function removeImpairment(uint256 assets) external;
@@ -217,6 +217,16 @@ interface IMapleTradingStrategy is IMapleTradingStrategyStorage, IMapleProxied {
      *  @param deployer Address of the deployer the loss is attributed to.
      */
     function recognizeLoss(uint256 assets, address deployer) external;
+
+    /**
+     *  @dev   Recognizes a loss and reduces an impairment simultaneously.
+     *         Callable only by the strategy delegate or operational admin.
+     *         Cannot exceed the deployer's currently deployed amount.
+     *  @param assetsLost       Amount of assets to recognize as lost.
+     *  @param assetsUnimpaired Amount of assets to unimpair.
+     *  @param deployer         Address of the deployer the loss is attributed to.
+     */
+    function recognizeLossAndRemoveImpairment(uint256 assetsLost, uint256 assetsUnimpaired, address deployer) external;
 
     /**
      *  @dev   Sets the deployment cap for a list of trading addresses.

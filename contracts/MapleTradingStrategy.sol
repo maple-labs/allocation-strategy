@@ -232,23 +232,23 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
         emit Impaired(assets_);
     }
 
-    function removeImpairment(uint256 assets_) external override whenNotPaused nonReentrant onlyAdmin {
-        require(assets_ > 0,               "MTS:RI:ZERO_ASSETS");
-        require(assets_ <= impairedAssets, "MTS:RI:EXCEEDS_IMPAIRMENT");
-
-        impairedAssets -= assets_;
-
-        emit ImpairmentRemoved(assets_);
+    function removeImpairment(uint256 assets_) public override whenNotPaused nonReentrant onlyAdmin {
+        _removeImpairment(assets_);
     }
 
-    function recognizeLoss(uint256 assets_, address deployer_) external override whenNotPaused nonReentrant onlyAdmin {
-        require(assets_ != 0,                           "MTS:RL:ZERO_ASSETS");
-        require(assets_ <= deployedAssetsOf[deployer_], "MTS:RL:EXCEEDS_DEPLOYED");
+    function recognizeLoss(uint256 assets_, address deployer_) public override whenNotPaused nonReentrant onlyAdmin {
+        _recognizeLoss(assets_, deployer_);
+    }
 
-        totalDeployedAssets         -= assets_;
-        deployedAssetsOf[deployer_] -= assets_;
-
-        emit LossRecognized(msg.sender, deployer_, assets_);
+    function recognizeLossAndRemoveImpairment(
+        uint256 assetsLost_,
+        uint256 assetsUnimpaired_,
+        address deployer_
+    )
+        external override whenNotPaused nonReentrant onlyAdmin
+    {
+        _recognizeLoss(assetsLost_, deployer_);
+        _removeImpairment(assetsUnimpaired_);
     }
 
     function setDeploymentCaps(
@@ -469,6 +469,25 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
 
     function _min(uint256 a_, uint256 b_) internal pure returns (uint256 min_) {
         min_ = a_ < b_ ? a_ : b_;
+    }
+
+    function _removeImpairment(uint256 assets_) internal {
+        require(assets_ > 0,               "MTS:RI:ZERO_ASSETS");
+        require(assets_ <= impairedAssets, "MTS:RI:EXCEEDS_IMPAIRMENT");
+
+        impairedAssets -= assets_;
+
+        emit ImpairmentRemoved(assets_);
+    }
+
+    function _recognizeLoss(uint256 assets_, address deployer_) internal {
+        require(assets_ != 0,                           "MTS:RL:ZERO_ASSETS");
+        require(assets_ <= deployedAssetsOf[deployer_], "MTS:RL:EXCEEDS_DEPLOYED");
+
+        totalDeployedAssets         -= assets_;
+        deployedAssetsOf[deployer_] -= assets_;
+
+        emit LossRecognized(msg.sender, deployer_, assets_);
     }
 
 }
