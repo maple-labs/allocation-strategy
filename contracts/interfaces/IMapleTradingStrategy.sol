@@ -116,6 +116,12 @@ interface IMapleTradingStrategy is IMapleTradingStrategyStorage, IMapleProxied {
     event YieldCancelled(address indexed caller, address indexed recipient, uint256 assets);
 
     /**
+     *  @dev   Emitted when the yield cap is set.
+     *  @param yieldCap Maximum amount of assets that can be realized as yield in a single call.
+     */
+    event YieldCapSet(uint256 yieldCap);
+
+    /**
      *  @dev   Emitted when yield is transferred to the yield buffer.
      *  @param caller          Address that transferred the yield.
      *  @param unrealizedYield Amount of unrealized yield carried over.
@@ -174,6 +180,7 @@ interface IMapleTradingStrategy is IMapleTradingStrategyStorage, IMapleProxied {
      *         Caller must have permission to realize yield.
      *         Zero assets is valid and only updates the duration of the yield buffer.
      *         Zero duration is valid and causes all yield to be realized immediately.
+     *         Cannot realize more assets than allowed by the yield cap.
      *  @param assets   Amount of assets to realize as yield.
      *  @param duration Duration over which to realize assets in seconds.
      *  @param metadata Optional metadata associated with the yield.
@@ -276,6 +283,13 @@ interface IMapleTradingStrategy is IMapleTradingStrategyStorage, IMapleProxied {
      *                                 of precision (1e6 == 100%).
      */
     function setStrategyProtocolFeeRate(uint32 strategyProtocolFeeRate) external;
+
+    /**
+     *  @dev   Sets the maximum amount of assets that can be supplied as the `assets` parameter of realizeYield().
+     *         Callable only by the strategy delegate or operational admin.
+     *  @param yieldCap Maximum amount of assets that can be realized as yield in a single call.
+     */
+    function setYieldCap(uint256 yieldCap) external;
 
     /**************************************************************************************************************************************/
     /*** Liquidity Functions                                                                                                            ***/

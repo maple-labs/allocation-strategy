@@ -76,6 +76,7 @@ contract InitializeTests is TestBase {
         assertEq(proxy.strategyProtocolFeeRate(), 0.03e6);
         assertEq(proxy.strategyManager(),         address(manager));
         assertEq(proxy.strategyMetadata(),        "MacAttack - 02a");
+        assertEq(proxy.yieldCap(),                1_000_000e6);
     }
 
 }

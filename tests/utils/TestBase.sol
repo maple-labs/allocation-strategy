@@ -69,7 +69,8 @@ contract TestBase is Test {
             fundsAsset:              address(asset),
             strategyMetadata:        "MacAttack - 02a",
             strategyDelegateFeeRate: 0.02e6,
-            strategyProtocolFeeRate: 0.03e6
+            strategyProtocolFeeRate: 0.03e6,
+            yieldCap:                1_000_000e6
         });
 
         manager.__setStrategyDelegate(strategyDelegate);

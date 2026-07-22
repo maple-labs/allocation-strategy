@@ -8,12 +8,14 @@ pragma solidity ^0.8.0;
  *  @param strategyMetadata        Optional metadata associated with the trading strategy.
  *  @param strategyDelegateFeeRate Percentage of yield collected by the strategy delegate.
  *  @param strategyProtocolFeeRate Percentage of yield collected by the Maple treasury.
+ *  @param yieldCap                Maximum amount of assets that can be realized as yield in a single call.
  */
 struct TradingStrategyInitializerParams {
     address fundsAsset;
     string  strategyMetadata;
     uint32  strategyDelegateFeeRate;
     uint32  strategyProtocolFeeRate;
+    uint256 yieldCap;
 }
 
 /**

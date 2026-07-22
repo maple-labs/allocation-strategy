@@ -117,6 +117,22 @@ contract RealizeYieldFailureTests is RealizeYieldTestBase {
         strategy.realizeYield(newYieldAmount, newYieldDuration, "");
     }
 
+    function test_realizeYield_revert_zeroCap() external {
+        strategy.__setYieldCap(0);
+
+        vm.prank(tradingAddress);
+        vm.expectRevert("MTS:RY:CAP_EXCEEDED");
+        strategy.realizeYield(1, 0, "");
+    }
+
+    function test_realizeYield_revert_capExceeded() external {
+        strategy.__setYieldCap(newYieldAmount - 1);
+
+        vm.prank(tradingAddress);
+        vm.expectRevert("MTS:RY:CAP_EXCEEDED");
+        strategy.realizeYield(newYieldAmount, newYieldDuration, "");
+    }
+
     function test_realizeYield_revert_transferFromFailed() external {
         asset.__setTransferFromReverts(true);
 
@@ -1894,6 +1910,136 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.unrealizedYield(),       tinyYieldAmount);
         assertEq(strategy.availableToWithdraw(),   strategyBalance);
         assertEq(strategy.assetsUnderManagement(), strategyBalance);
+    }
+
+    /**************************************************************************************************************************************/
+    /*** With Yield Cap                                                                                                                 ***/
+    /**************************************************************************************************************************************/
+
+    function test_realizeYield_success_atYieldCap() external {
+        uint256 delegateFee    = newYieldAmount * delegateFeeRate / 1e6;
+        uint256 protocolFee    = newYieldAmount * protocolFeeRate / 1e6;
+        uint256 netYieldAmount = newYieldAmount - delegateFee - protocolFee;
+
+        strategy.__setYieldCap(newYieldAmount);
+
+        assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
+        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(strategyDelegate)), 0);
+        assertEq(asset.balanceOf(address(mapleTreasury)),    0);
+
+        assertEq(strategy.scheduledYieldAssets(), scheduledYieldAssets);
+        assertEq(strategy.yieldStart(),           yieldStart);
+        assertEq(strategy.yieldDeadline(),        yieldDeadline);
+
+        assertEq(strategy.realizedYield(),         0);
+        assertEq(strategy.unrealizedYield(),       scheduledYieldAssets);
+        assertEq(strategy.availableToWithdraw(),   strategyBalance - scheduledYieldAssets);
+        assertEq(strategy.assetsUnderManagement(), strategyBalance - scheduledYieldAssets);
+
+        vm.expectEmit();
+        emit IMapleTradingStrategy.YieldRealized(
+            tradingAddress,
+            scheduledYieldAssets,
+            netYieldAmount,
+            delegateFee,
+            protocolFee,
+            newYieldDuration,
+            ""
+        );
+
+        vm.prank(tradingAddress);
+        strategy.realizeYield(newYieldAmount, newYieldDuration, "");
+
+        assertEq(asset.balanceOf(address(strategy)),         strategyBalance + netYieldAmount);
+        assertEq(asset.balanceOf(address(tradingAddress)),   0);
+        assertEq(asset.balanceOf(address(strategyDelegate)), delegateFee);
+        assertEq(asset.balanceOf(address(mapleTreasury)),    protocolFee);
+
+        assertEq(strategy.scheduledYieldAssets(), scheduledYieldAssets + netYieldAmount);
+        assertEq(strategy.yieldStart(),           yieldStart);
+        assertEq(strategy.yieldDeadline(),        yieldStart + newYieldDuration);
+
+        assertEq(strategy.realizedYield(),         0);
+        assertEq(strategy.unrealizedYield(),       scheduledYieldAssets + netYieldAmount);
+        assertEq(strategy.availableToWithdraw(),   strategyBalance - scheduledYieldAssets);
+        assertEq(strategy.assetsUnderManagement(), strategyBalance - scheduledYieldAssets);
+    }
+
+    function test_realizeYield_success_zeroYield_zeroYieldCap() external {
+        strategy.__setYieldCap(0);
+
+        assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
+        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(strategyDelegate)), 0);
+        assertEq(asset.balanceOf(address(mapleTreasury)),    0);
+
+        assertEq(strategy.scheduledYieldAssets(), scheduledYieldAssets);
+        assertEq(strategy.yieldStart(),           yieldStart);
+        assertEq(strategy.yieldDeadline(),        yieldDeadline);
+
+        assertEq(strategy.realizedYield(),         0);
+        assertEq(strategy.unrealizedYield(),       scheduledYieldAssets);
+        assertEq(strategy.availableToWithdraw(),   strategyBalance - scheduledYieldAssets);
+        assertEq(strategy.assetsUnderManagement(), strategyBalance - scheduledYieldAssets);
+
+        vm.expectEmit();
+        emit IMapleTradingStrategy.YieldRealized(tradingAddress, scheduledYieldAssets, 0, 0, 0, newYieldDuration, "");
+
+        vm.prank(tradingAddress);
+        strategy.realizeYield(0, newYieldDuration, "");
+
+        assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
+        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(strategyDelegate)), 0);
+        assertEq(asset.balanceOf(address(mapleTreasury)),    0);
+
+        assertEq(strategy.scheduledYieldAssets(), scheduledYieldAssets);
+        assertEq(strategy.yieldStart(),           yieldStart);
+        assertEq(strategy.yieldDeadline(),        yieldStart + newYieldDuration);
+
+        assertEq(strategy.realizedYield(),         0);
+        assertEq(strategy.unrealizedYield(),       scheduledYieldAssets);
+        assertEq(strategy.availableToWithdraw(),   strategyBalance - scheduledYieldAssets);
+        assertEq(strategy.assetsUnderManagement(), strategyBalance - scheduledYieldAssets);
+    }
+
+    function test_realizeYield_success_zeroYield_capBelowScheduledBuffer() external {
+        strategy.__setYieldCap(scheduledYieldAssets - 1);
+
+        assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
+        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(strategyDelegate)), 0);
+        assertEq(asset.balanceOf(address(mapleTreasury)),    0);
+
+        assertEq(strategy.scheduledYieldAssets(), scheduledYieldAssets);
+        assertEq(strategy.yieldStart(),           yieldStart);
+        assertEq(strategy.yieldDeadline(),        yieldDeadline);
+
+        assertEq(strategy.realizedYield(),         0);
+        assertEq(strategy.unrealizedYield(),       scheduledYieldAssets);
+        assertEq(strategy.availableToWithdraw(),   strategyBalance - scheduledYieldAssets);
+        assertEq(strategy.assetsUnderManagement(), strategyBalance - scheduledYieldAssets);
+
+        vm.expectEmit();
+        emit IMapleTradingStrategy.YieldRealized(tradingAddress, scheduledYieldAssets, 0, 0, 0, newYieldDuration, "");
+
+        vm.prank(tradingAddress);
+        strategy.realizeYield(0, newYieldDuration, "");
+
+        assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
+        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(strategyDelegate)), 0);
+        assertEq(asset.balanceOf(address(mapleTreasury)),    0);
+
+        assertEq(strategy.scheduledYieldAssets(), scheduledYieldAssets);
+        assertEq(strategy.yieldStart(),           yieldStart);
+        assertEq(strategy.yieldDeadline(),        yieldStart + newYieldDuration);
+
+        assertEq(strategy.realizedYield(),         0);
+        assertEq(strategy.unrealizedYield(),       scheduledYieldAssets);
+        assertEq(strategy.availableToWithdraw(),   strategyBalance - scheduledYieldAssets);
+        assertEq(strategy.assetsUnderManagement(), strategyBalance - scheduledYieldAssets);
     }
 
 }

@@ -32,6 +32,7 @@ contract MapleTradingStrategyInitializer is IMapleTradingStrategyInitializer, Ma
         strategyMetadata        = params_.strategyMetadata;
         strategyDelegateFeeRate = params_.strategyDelegateFeeRate;
         strategyProtocolFeeRate = params_.strategyProtocolFeeRate;
+        yieldCap                = params_.yieldCap;
 
         _locked = 1;
 

@@ -45,6 +45,10 @@ contract MapleTradingStrategyHarness is MapleTradingStrategy {
         yieldDeadline        = yieldDeadline_;
     }
 
+    function __setYieldCap(uint256 yieldCap_) external {
+        yieldCap = yieldCap_;
+    }
+
     function locked() external view returns (uint256 locked_) {
         locked_ = _locked;
     }

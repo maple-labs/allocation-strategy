@@ -71,6 +71,12 @@ interface IMapleTradingStrategyStorage {
      */
     function deploymentCapOf(address account) external view returns (uint256 deploymentCap);
 
+    /**
+     *  @dev    Returns the maximum amount of assets that can be supplied as the `assets` parameter of realizeYield().
+     *  @return yieldCap Maximum amount of assets that can be realized as yield in a single call.
+     */
+    function yieldCap() external view returns (uint256 yieldCap);
+
     /**************************************************************************************************************************************/
     /*** Accounting                                                                                                                     ***/
     /**************************************************************************************************************************************/

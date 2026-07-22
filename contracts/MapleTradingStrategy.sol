@@ -184,6 +184,7 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
         external override whenNotPaused nonReentrant onlyTradingAddress
     {
         require(permissions[msg.sender].canRealizeYield, "MTS:RY:NOT_ALLOWED");
+        require(yield_ <= yieldCap,                      "MTS:RY:CAP_EXCEEDED");
 
         address fundsAsset_ = fundsAsset;
 
@@ -353,6 +354,14 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
         strategyProtocolFeeRate = strategyProtocolFeeRate_;
 
         emit StrategyProtocolFeeRateSet(strategyProtocolFeeRate_);
+    }
+
+    function setYieldCap(uint256 yieldCap_) external override whenNotPaused nonReentrant onlyAdmin {
+        require(yieldCap_ != yieldCap, "MTS:SYC:NO_CHANGE");
+
+        yieldCap = yieldCap_;
+
+        emit YieldCapSet(yieldCap_);
     }
 
     /**************************************************************************************************************************************/

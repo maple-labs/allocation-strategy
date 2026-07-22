@@ -85,6 +85,7 @@ contract CreateInstanceTests is TestBase {
         assertEq(strategy.strategyManager(),         address(manager));
         assertEq(strategy.strategyMetadata(),        "MacAttack - 02a");
         assertEq(strategy.strategyProtocolFeeRate(), 0.03e6);
+        assertEq(strategy.yieldCap(),                1_000_000e6);
     }
 
 }
