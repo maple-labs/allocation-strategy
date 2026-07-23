@@ -96,7 +96,7 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
         _;
     }
 
-    modifier onlyTradingAddress() {
+    modifier onlyManagedWallet() {
         require(IGlobalsLike(globals()).isInstanceOf(INSTANCE_KEY, msg.sender), "MTS:NOT_MAPLE_MANAGED_WALLET");
 
         _;
@@ -136,7 +136,7 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
         uint256 assets_,
         bytes   calldata metadata_
     )
-        external override whenNotPaused nonReentrant onlyTradingAddress
+        external override whenNotPaused nonReentrant onlyManagedWallet
     {
         require(permissions[msg.sender].canDeployAssets, "MTS:DA:NOT_ALLOWED");
 
@@ -172,7 +172,7 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
         address onBehalfOf_,
         bytes   calldata metadata_
     )
-        external override whenNotPaused nonReentrant onlyTradingAddress
+        external override whenNotPaused nonReentrant onlyManagedWallet
     {
         require(permissions[msg.sender].canReturnAssets, "MTS:RA:NOT_ALLOWED");
 
@@ -192,7 +192,7 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
         uint32  duration_,
         bytes   calldata metadata_
     )
-        external override whenNotPaused nonReentrant onlyTradingAddress
+        external override whenNotPaused nonReentrant onlyManagedWallet
     {
         require(permissions[msg.sender].canRealizeYield, "MTS:RY:NOT_ALLOWED");
         require(yield_ <= yieldCap,                      "MTS:RY:CAP_EXCEEDED");
