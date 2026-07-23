@@ -27,7 +27,8 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
 
     string public constant STRATEGY_TYPE = "TRADING";
 
-    uint256 internal constant HUNDRED_PERCENT = 1e6;
+    uint256 internal constant HUNDRED_PERCENT        = 1e6;
+    uint256 internal constant REALIZE_YIELD_COOLDOWN = 1 hours;
 
     /**************************************************************************************************************************************/
     /*** Modifiers                                                                                                                      ***/
@@ -185,6 +186,7 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
     {
         require(permissions[msg.sender].canRealizeYield, "MTS:RY:NOT_ALLOWED");
         require(yield_ <= yieldCap,                      "MTS:RY:CAP_EXCEEDED");
+        require(yieldCooldown() == 0,                    "MTS:RY:COOLDOWN");
 
         address fundsAsset_ = fundsAsset;
 
@@ -194,12 +196,14 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
 
         ( uint256 netYield_, uint256 delegateFee_, uint256 protocolFee_ ) = _accrueFees(fundsAsset_, yield_);
 
-        uint256 unrealizedYield_ = unrealizedYield();
-        uint32  yieldStart_      = uint32(block.timestamp);
+        uint256 unrealizedYield_  = unrealizedYield();
+        uint32  currentTimestamp_ = uint32(block.timestamp);
 
         scheduledYieldAssets = netYield_ + unrealizedYield_;
-        yieldStart           = yieldStart_;
-        yieldDeadline        = yieldStart_ + duration_;
+
+        yieldLastRealized = currentTimestamp_;
+        yieldStart        = currentTimestamp_;
+        yieldDeadline     = currentTimestamp_ + duration_;
 
         emit YieldRealized(msg.sender, unrealizedYield_, netYield_, delegateFee_, protocolFee_, duration_, metadata_);
     }
@@ -447,6 +451,12 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
 
     function unrealizedYield() public view override returns (uint256 unrealizedYield_) {
         unrealizedYield_ = scheduledYieldAssets - realizedYield();
+    }
+
+    function yieldCooldown() public view override returns (uint256 cooldown_) {
+        uint256 cooldownEnd_ = yieldLastRealized + REALIZE_YIELD_COOLDOWN;
+
+        if (block.timestamp < cooldownEnd_) cooldown_ = cooldownEnd_ - block.timestamp;
     }
 
     /**************************************************************************************************************************************/

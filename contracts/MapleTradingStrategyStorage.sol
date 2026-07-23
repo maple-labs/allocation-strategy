@@ -15,8 +15,9 @@ contract MapleTradingStrategyStorage is IMapleTradingStrategyStorage {
     uint256 public override totalDeployedAssets;   // Total assets deployed across all trading addresses.
     uint256 public override yieldCap;              // Maximum amount of assets that can be realized as yield in a single call.
 
-    uint32 public override yieldDeadline;  // Timestamp when all yield assets are fully realized.
-    uint32 public override yieldStart;     // Timestamp when the yield buffer was last updated.
+    uint32 public override yieldDeadline;      // Timestamp when all yield assets are fully realized.
+    uint32 public override yieldLastRealized;  // Timestamp of the last successful yield realization.
+    uint32 public override yieldStart;         // Timestamp when the yield buffer was last updated.
 
     uint32 public override strategyDelegateFeeRate;  // Percentage of yield collected by the strategy delegate.
     uint32 public override strategyProtocolFeeRate;  // Percentage of yield collected by the Maple treasury.

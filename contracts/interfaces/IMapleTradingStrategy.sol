@@ -178,6 +178,7 @@ interface IMapleTradingStrategy is IMapleTradingStrategyStorage, IMapleProxied {
      *  @dev   Transfers assets from the caller to the yield buffer.
      *         Caller must be a valid trading address on MapleGlobals.
      *         Caller must have permission to realize yield.
+     *         Can only be called once per hour across all trading addresses.
      *         Zero assets is valid and only updates the duration of the yield buffer.
      *         Zero duration is valid and causes all yield to be realized immediately.
      *         Cannot realize more assets than allowed by the yield cap.
@@ -376,5 +377,11 @@ interface IMapleTradingStrategy is IMapleTradingStrategyStorage, IMapleProxied {
      *  @return unrealizedYield Amount of yield assets not yet realized.
      */
     function unrealizedYield() external view returns (uint256 unrealizedYield);
+
+    /**
+     *  @dev    Returns the number of seconds remaining until yield can be realized again.
+     *  @return cooldown Number of seconds remaining in the yield cooldown period.
+     */
+    function yieldCooldown() external view returns (uint256 cooldown);
 
 }

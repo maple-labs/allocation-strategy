@@ -106,6 +106,12 @@ interface IMapleTradingStrategyStorage {
     function yieldDeadline() external view returns (uint32 yieldDeadline);
 
     /**
+     *  @dev    Returns the timestamp of the last successful yield realization.
+     *  @return yieldLastRealized Timestamp of the last successful yield realization.
+     */
+    function yieldLastRealized() external view returns (uint32 yieldLastRealized);
+
+    /**
      *  @dev    Returns the timestamp when the yield buffer was last updated.
      *  @return yieldStart Timestamp when the current yield buffer was last updated.
      */

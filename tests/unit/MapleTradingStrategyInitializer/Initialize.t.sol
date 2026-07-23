@@ -70,13 +70,14 @@ contract InitializeTests is TestBase {
         vm.prank(address(strategyFactory));
         proxy.__initialize(address(manager), params);
 
-        assertEq(proxy.fundsAsset(),              address(asset));
-        assertEq(proxy.locked(),                  1);
-        assertEq(proxy.strategyDelegateFeeRate(), 0.02e6);
-        assertEq(proxy.strategyProtocolFeeRate(), 0.03e6);
-        assertEq(proxy.strategyManager(),         address(manager));
-        assertEq(proxy.strategyMetadata(),        "MacAttack - 02a");
-        assertEq(proxy.yieldCap(),                1_000_000e6);
+        assertEq(proxy.fundsAsset(),                address(asset));
+        assertEq(proxy.yieldLastRealized(),         0);
+        assertEq(proxy.locked(),                    1);
+        assertEq(proxy.strategyDelegateFeeRate(),   0.02e6);
+        assertEq(proxy.strategyProtocolFeeRate(),   0.03e6);
+        assertEq(proxy.strategyManager(),           address(manager));
+        assertEq(proxy.strategyMetadata(),          "MacAttack - 02a");
+        assertEq(proxy.yieldCap(),                  1_000_000e6);
     }
 
 }
