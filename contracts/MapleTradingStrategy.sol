@@ -23,7 +23,7 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
     /*** Constants                                                                                                                      ***/
     /**************************************************************************************************************************************/
 
-    bytes32 internal constant INSTANCE_KEY = "TRADING_ADDRESS";
+    bytes32 internal constant INSTANCE_KEY = "MAPLE_MANAGED_WALLET";
 
     string public constant STRATEGY_TYPE = "TRADING";
 
@@ -74,6 +74,16 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
         _;
     }
 
+    modifier onlySecurityAdminOrStrategyDelegate() {
+        require(
+            msg.sender == strategyDelegate() ||
+            msg.sender == securityAdmin(),
+            "MTS:NOT_AUTHORIZED"
+        );
+
+        _;
+    }
+
     modifier onlyStrategyDelegate() {
         require(msg.sender == strategyDelegate(), "MTS:NOT_STRATEGY_DELEGATE");
 
@@ -87,7 +97,7 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
     }
 
     modifier onlyTradingAddress() {
-        require(IGlobalsLike(globals()).isGovernedInstanceOf(INSTANCE_KEY, msg.sender), "MTS:NOT_TRADING_ADDRESS");
+        require(IGlobalsLike(globals()).isInstanceOf(INSTANCE_KEY, msg.sender), "MTS:NOT_MAPLE_MANAGED_WALLET");
 
         _;
     }
@@ -219,7 +229,7 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
         require(cancelledAssets_ != 0,                "MTS:CY:ZERO_ASSETS");
         require(cancelledAssets_ <= unrealizedYield_, "MTS:CY:EXCEEDS_UNREALIZED");
 
-        require(IGlobalsLike(globals()).isGovernedInstanceOf(INSTANCE_KEY, recipient_), "MTS:CY:INVALID_RECIPIENT");
+        require(IGlobalsLike(globals()).isInstanceOf(INSTANCE_KEY, recipient_), "MTS:CY:INVALID_RECIPIENT");
 
         scheduledYieldAssets = unrealizedYield_ - cancelledAssets_;
         yieldStart           = uint32(block.timestamp);
@@ -272,8 +282,8 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
             uint256 cap_     = amounts_[i_];
 
             require(
-                IGlobalsLike(globals_).isGovernedInstanceOf(INSTANCE_KEY, account_) || cap_ == 0,
-                "MTS:SDC:NOT_TRADING_ADDRESS"
+                IGlobalsLike(globals_).isInstanceOf(INSTANCE_KEY, account_) || cap_ == 0,
+                "MTS:SDC:NOT_MAPLE_MANAGED_WALLET"
             );
 
             require(deploymentCapOf[account_] != cap_, "MTS:SDC:NO_CHANGE");
@@ -298,7 +308,7 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
         bool[]    calldata canReturnAssets_,
         bool[]    calldata canRealizeYield_
     )
-        external override whenNotPaused nonReentrant onlyAdmin
+        external override whenNotPaused nonReentrant onlySecurityAdminOrStrategyDelegate
     {
         uint256 length_ = accounts_.length;
 
@@ -319,7 +329,7 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
             bool    canRealizeYieldFlag_ = canRealizeYield_[i_];
             bool    isTotalRevoke_       = !canDeployAssetsFlag_ && !canReturnAssetsFlag_ && !canRealizeYieldFlag_;
 
-            require(IGlobalsLike(globals_).isGovernedInstanceOf(INSTANCE_KEY, account_) || isTotalRevoke_, "MTS:SP:NOT_TRADING_ADDRESS");
+            require(IGlobalsLike(globals_).isInstanceOf(INSTANCE_KEY, account_) || isTotalRevoke_, "MTS:SP:NOT_MAPLE_MANAGED_WALLET");
 
             Permissions memory currentPermissions_ = permissions[account_];
 

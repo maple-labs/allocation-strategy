@@ -29,7 +29,7 @@ contract CancelYieldTestBase is TestBase {
         asset.mint(address(strategy), strategyBalance);
 
         strategy.__setYieldBuffer(yieldAssets, yieldStart, yieldDeadline);
-        globals.__setIsGovernedInstanceOf("TRADING_ADDRESS", recipient, true);
+        globals.__setIsInstanceOf("MAPLE_MANAGED_WALLET", recipient, true);
     }
 
 }

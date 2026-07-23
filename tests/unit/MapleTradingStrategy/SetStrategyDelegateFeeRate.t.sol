@@ -92,7 +92,7 @@ contract SetStrategyDelegateFeeRateFailureTests is TestBase {
 
 contract SetStrategyDelegateFeeRateSuccessTests is TestBase {
 
-    address tradingAddress = makeAddr("tradingAddress");
+    address managedWallet = makeAddr("managedWallet");
 
     function setUp() public override {
         super.setUp();
@@ -237,26 +237,26 @@ contract SetStrategyDelegateFeeRateSuccessTests is TestBase {
         uint256 protocolFee = 3_000e6;
         uint256 netYield    = 93_000e6;
 
-        globals.__setIsGovernedInstanceOf("TRADING_ADDRESS", tradingAddress, true);
-        strategy.__setPermissions(tradingAddress, true);
+        globals.__setIsInstanceOf("MAPLE_MANAGED_WALLET", managedWallet, true);
+        strategy.__setPermissions(managedWallet, true);
         strategy.__setFeeRates(0, strategyProtocolFeeRate);
 
-        asset.mint(tradingAddress, yieldAmount);
+        asset.mint(managedWallet, yieldAmount);
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         asset.approve(address(strategy), type(uint256).max);
 
         vm.prank(strategyDelegate);
         strategy.setStrategyDelegateFeeRate(strategyDelegateFeeRate);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldRealized(tradingAddress, 0, netYield, delegateFee, protocolFee, yieldDuration, "SETTER");
+        emit IMapleTradingStrategy.YieldRealized(managedWallet, 0, netYield, delegateFee, protocolFee, yieldDuration, "SETTER");
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(yieldAmount, yieldDuration, "SETTER");
 
         assertEq(asset.balanceOf(address(strategy)),         netYield);
-        assertEq(asset.balanceOf(address(tradingAddress)),   0);
+        assertEq(asset.balanceOf(address(managedWallet)),    0);
         assertEq(asset.balanceOf(address(strategyDelegate)), delegateFee);
         assertEq(asset.balanceOf(address(mapleTreasury)),    protocolFee);
 

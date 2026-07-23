@@ -7,8 +7,8 @@ import { TestBase } from "../../utils/TestBase.sol";
 
 contract SetPermissionsFailureTests is TestBase {
 
-    address tradingAddress1 = makeAddr("tradingAddress1");
-    address tradingAddress2 = makeAddr("tradingAddress2");
+    address managedWallet1 = makeAddr("managedWallet1");
+    address managedWallet2 = makeAddr("managedWallet2");
 
     function test_setPermissions_revert_functionPaused() external {
         globals.__setIsFunctionPaused(IMapleTradingStrategy.setPermissions.selector, true);
@@ -27,6 +27,12 @@ contract SetPermissionsFailureTests is TestBase {
     }
 
     function test_setPermissions_revert_notAuthorized() external {
+        vm.expectRevert("MTS:NOT_AUTHORIZED");
+        strategy.setPermissions(new address[](0), new bool[](0), new bool[](0), new bool[](0));
+    }
+
+    function test_setPermissions_revert_notAuthorized_operationalAdmin() external {
+        vm.prank(operationalAdmin);
         vm.expectRevert("MTS:NOT_AUTHORIZED");
         strategy.setPermissions(new address[](0), new bool[](0), new bool[](0), new bool[](0));
     }
@@ -51,27 +57,27 @@ contract SetPermissionsFailureTests is TestBase {
         strategy.setPermissions(new address[](2), new bool[](2), new bool[](2), new bool[](1));
     }
 
-    function test_setPermissions_revert_invalidTradingAddress() external {
-        address invalidTradingAddress = makeAddr("invalidTradingAddress");
+    function test_setPermissions_revert_invalidManagedWallet() external {
+        address invalidWallet = makeAddr("invalidWallet");
 
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTS:SP:NOT_TRADING_ADDRESS");
+        vm.expectRevert("MTS:SP:NOT_MAPLE_MANAGED_WALLET");
         strategy.setPermissions(
-            array(invalidTradingAddress),
+            array(invalidWallet),
             array(true),
             array(true),
             array(true)
         );
     }
 
-    function test_setPermissions_revert_invalidTradingAddress_batch() external {
-        globals.__setIsGovernedInstanceOf("TRADING_ADDRESS", tradingAddress1, true);
-        globals.__setIsGovernedInstanceOf("TRADING_ADDRESS", tradingAddress2, false);
+    function test_setPermissions_revert_invalidManagedWallet_batch() external {
+        globals.__setIsInstanceOf("MAPLE_MANAGED_WALLET", managedWallet1, true);
+        globals.__setIsInstanceOf("MAPLE_MANAGED_WALLET", managedWallet2, false);
 
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTS:SP:NOT_TRADING_ADDRESS");
+        vm.expectRevert("MTS:SP:NOT_MAPLE_MANAGED_WALLET");
         strategy.setPermissions(
-            array(tradingAddress1, tradingAddress2),
+            array(managedWallet1, managedWallet2),
             array(true,            true),
             array(false,           false),
             array(false,           false)
@@ -79,12 +85,12 @@ contract SetPermissionsFailureTests is TestBase {
     }
 
     function test_setPermissions_revert_noChange_defaultFalse() external {
-        address tradingAddress = makeAddr("tradingAddress");
+        address managedWallet = makeAddr("managedWallet");
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MTS:SP:NO_CHANGE");
         strategy.setPermissions(
-            array(tradingAddress),
+            array(managedWallet),
             array(false),
             array(false),
             array(false)
@@ -92,22 +98,22 @@ contract SetPermissionsFailureTests is TestBase {
     }
 
     function test_setPermissions_revert_noChange_existingPermissions() external {
-        globals.__setIsGovernedInstanceOf("TRADING_ADDRESS", tradingAddress1, true);
+        globals.__setIsInstanceOf("MAPLE_MANAGED_WALLET", managedWallet1, true);
 
         vm.prank(strategyDelegate);
         strategy.setPermissions(
-            array(tradingAddress1),
+            array(managedWallet1),
             array(true),
             array(false),
             array(true)
         );
 
-        assertPermissions(tradingAddress1, true, false, true);
+        assertPermissions(managedWallet1, true, false, true);
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MTS:SP:NO_CHANGE");
         strategy.setPermissions(
-            array(tradingAddress1),
+            array(managedWallet1),
             array(true),
             array(false),
             array(true)
@@ -118,116 +124,116 @@ contract SetPermissionsFailureTests is TestBase {
 
 contract SetPermissionsSuccessTests is TestBase {
 
-    address tradingAddress1 = makeAddr("tradingAddress1");
-    address tradingAddress2 = makeAddr("tradingAddress2");
-    address tradingAddress3 = makeAddr("tradingAddress3");
+    address managedWallet1 = makeAddr("managedWallet1");
+    address managedWallet2 = makeAddr("managedWallet2");
+    address managedWallet3 = makeAddr("managedWallet3");
 
     function setUp() public override {
         super.setUp();
 
-        globals.__setIsGovernedInstanceOf("TRADING_ADDRESS", tradingAddress1, true);
-        globals.__setIsGovernedInstanceOf("TRADING_ADDRESS", tradingAddress2, true);
-        globals.__setIsGovernedInstanceOf("TRADING_ADDRESS", tradingAddress3, true);
+        globals.__setIsInstanceOf("MAPLE_MANAGED_WALLET", managedWallet1, true);
+        globals.__setIsInstanceOf("MAPLE_MANAGED_WALLET", managedWallet2, true);
+        globals.__setIsInstanceOf("MAPLE_MANAGED_WALLET", managedWallet3, true);
     }
 
     function test_setPermissions_success_singleAddress() external {
-        assertPermissions(tradingAddress1, false, false, false);
+        assertPermissions(managedWallet1, false, false, false);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.PermissionSet(tradingAddress1, true, false, true);
+        emit IMapleTradingStrategy.PermissionSet(managedWallet1, true, false, true);
 
         vm.prank(strategyDelegate);
         strategy.setPermissions(
-            array(tradingAddress1),
+            array(managedWallet1),
             array(true),
             array(false),
             array(true)
         );
 
-        assertPermissions(tradingAddress1, true, false, true);
+        assertPermissions(managedWallet1, true, false, true);
     }
 
     function test_setPermissions_success_multipleAddresses() external {
         vm.expectEmit();
-        emit IMapleTradingStrategy.PermissionSet(tradingAddress1, true, false, false);
+        emit IMapleTradingStrategy.PermissionSet(managedWallet1, true, false, false);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.PermissionSet(tradingAddress2, false, true, false);
+        emit IMapleTradingStrategy.PermissionSet(managedWallet2, false, true, false);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.PermissionSet(tradingAddress3, false, false, true);
+        emit IMapleTradingStrategy.PermissionSet(managedWallet3, false, false, true);
 
         vm.prank(strategyDelegate);
         strategy.setPermissions(
-            array(tradingAddress1, tradingAddress2, tradingAddress3),
+            array(managedWallet1, managedWallet2, managedWallet3),
             array(true,            false,           false),
             array(false,           true,            false),
             array(false,           false,           true)
         );
 
-        assertPermissions(tradingAddress1, true,  false, false);
-        assertPermissions(tradingAddress2, false, true,  false);
-        assertPermissions(tradingAddress3, false, false, true);
+        assertPermissions(managedWallet1, true,  false, false);
+        assertPermissions(managedWallet2, false, true,  false);
+        assertPermissions(managedWallet3, false, false, true);
     }
 
     function test_setPermissions_success_duplicateAddress() external {
         vm.expectEmit();
-        emit IMapleTradingStrategy.PermissionSet(tradingAddress1, true, false, false);
+        emit IMapleTradingStrategy.PermissionSet(managedWallet1, true, false, false);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.PermissionSet(tradingAddress1, false, true, true);
+        emit IMapleTradingStrategy.PermissionSet(managedWallet1, false, true, true);
 
         vm.prank(strategyDelegate);
         strategy.setPermissions(
-            array(tradingAddress1, tradingAddress1),
+            array(managedWallet1, managedWallet1),
             array(true,            false),
             array(false,           true),
             array(false,           true)
         );
 
-        assertPermissions(tradingAddress1, false, true, true);
+        assertPermissions(managedWallet1, false, true, true);
     }
 
-    function test_setPermissions_success_calledByOperationalAdmin() external {
+    function test_setPermissions_success_calledBySecurityAdmin() external {
         vm.expectEmit();
-        emit IMapleTradingStrategy.PermissionSet(tradingAddress1, false, true, false);
+        emit IMapleTradingStrategy.PermissionSet(managedWallet1, false, true, false);
 
-        vm.prank(operationalAdmin);
+        vm.prank(securityAdmin);
         strategy.setPermissions(
-            array(tradingAddress1),
+            array(managedWallet1),
             array(false),
             array(true),
             array(false)
         );
 
-        assertPermissions(tradingAddress1, false, true, false);
+        assertPermissions(managedWallet1, false, true, false);
     }
 
     function test_setPermissions_success_revokeAfterGlobalsApprovalRemoved() external {
         vm.prank(strategyDelegate);
         strategy.setPermissions(
-            array(tradingAddress1),
+            array(managedWallet1),
             array(true),
             array(true),
             array(true)
         );
 
-        assertPermissions(tradingAddress1, true, true, true);
+        assertPermissions(managedWallet1, true, true, true);
 
-        globals.__setIsGovernedInstanceOf("TRADING_ADDRESS", tradingAddress1, false);
+        globals.__setIsInstanceOf("MAPLE_MANAGED_WALLET", managedWallet1, false);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.PermissionSet(tradingAddress1, false, false, false);
+        emit IMapleTradingStrategy.PermissionSet(managedWallet1, false, false, false);
 
         vm.prank(strategyDelegate);
         strategy.setPermissions(
-            array(tradingAddress1),
+            array(managedWallet1),
             array(false),
             array(false),
             array(false)
         );
 
-        assertPermissions(tradingAddress1, false, false, false);
+        assertPermissions(managedWallet1, false, false, false);
     }
 
 }

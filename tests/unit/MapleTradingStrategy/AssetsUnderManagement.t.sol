@@ -7,7 +7,7 @@ import { TestBase } from "../../utils/TestBase.sol";
 
 contract AssetsUnderManagementTests is TestBase {
 
-    address tradingAddress = makeAddr("tradingAddress");
+    address managedWallet = makeAddr("managedWallet");
 
     uint256 deployedAssets  = 2_500_000e6;
     uint256 strategyBalance = 1_000_000e6;
@@ -30,7 +30,7 @@ contract AssetsUnderManagementTests is TestBase {
     }
 
     function test_assetsUnderManagement_noYield_nonZeroDeployed_zeroBalance() external {
-        strategy.__setDeployedAssetsOf(tradingAddress, deployedAssets);
+        strategy.__setDeployedAssetsOf(managedWallet, deployedAssets);
 
         assertEq(strategy.assetsUnderManagement(), deployedAssets);
     }
@@ -38,7 +38,7 @@ contract AssetsUnderManagementTests is TestBase {
     function test_assetsUnderManagement_noYield_nonZeroDeployed_nonZeroBalance() external {
         asset.mint(address(strategy), strategyBalance);
 
-        strategy.__setDeployedAssetsOf(tradingAddress, deployedAssets);
+        strategy.__setDeployedAssetsOf(managedWallet, deployedAssets);
 
         assertEq(strategy.assetsUnderManagement(), deployedAssets + strategyBalance);
     }
@@ -65,7 +65,7 @@ contract AssetsUnderManagementTests is TestBase {
 
     // NOTE: Unreachable since yield can't be withdrawn before it realizes.
     function test_assetsUnderManagement_yieldBuffer_elapsedZero_nonZeroDeployed_zeroBalance() external {
-        strategy.__setDeployedAssetsOf(tradingAddress, deployedAssets);
+        strategy.__setDeployedAssetsOf(managedWallet, deployedAssets);
         strategy.__setYieldBuffer(yieldAssets, startingTime, startingTime + yieldDuration);
 
         vm.expectRevert(stdError.arithmeticError);
@@ -75,7 +75,7 @@ contract AssetsUnderManagementTests is TestBase {
     function test_assetsUnderManagement_yieldBuffer_elapsedZero_nonZeroDeployed_nonZeroBalance() external {
         asset.mint(address(strategy), strategyBalance);
 
-        strategy.__setDeployedAssetsOf(tradingAddress, deployedAssets);
+        strategy.__setDeployedAssetsOf(managedWallet, deployedAssets);
         strategy.__setYieldBuffer(yieldAssets, startingTime, startingTime + yieldDuration);
 
         assertEq(strategy.assetsUnderManagement(), deployedAssets + strategyBalance - yieldAssets);
@@ -110,7 +110,7 @@ contract AssetsUnderManagementTests is TestBase {
 
     // NOTE: Unreachable since yield can't be withdrawn before it realizes.
     function test_assetsUnderManagement_yieldBuffer_partialElapsed_nonZeroDeployed_zeroBalance() external {
-        strategy.__setDeployedAssetsOf(tradingAddress, deployedAssets);
+        strategy.__setDeployedAssetsOf(managedWallet, deployedAssets);
         strategy.__setYieldBuffer(yieldAssets, startingTime, startingTime + yieldDuration);
 
         vm.warp(startingTime + yieldDuration / 3);
@@ -122,7 +122,7 @@ contract AssetsUnderManagementTests is TestBase {
     function test_assetsUnderManagement_yieldBuffer_partialElapsed_nonZeroDeployed_nonZeroBalance() external {
         asset.mint(address(strategy), strategyBalance);
 
-        strategy.__setDeployedAssetsOf(tradingAddress, deployedAssets);
+        strategy.__setDeployedAssetsOf(managedWallet, deployedAssets);
         strategy.__setYieldBuffer(yieldAssets, startingTime, startingTime + yieldDuration);
 
         vm.warp(startingTime + yieldDuration / 3);
@@ -156,7 +156,7 @@ contract AssetsUnderManagementTests is TestBase {
     }
 
     function test_assetsUnderManagement_yieldBuffer_fullyElapsed_nonZeroDeployed_zeroBalance() external {
-        strategy.__setDeployedAssetsOf(tradingAddress, deployedAssets);
+        strategy.__setDeployedAssetsOf(managedWallet, deployedAssets);
         strategy.__setYieldBuffer(yieldAssets, startingTime, startingTime + yieldDuration);
 
         vm.warp(startingTime + yieldDuration);
@@ -167,7 +167,7 @@ contract AssetsUnderManagementTests is TestBase {
     function test_assetsUnderManagement_yieldBuffer_fullyElapsed_nonZeroDeployed_nonZeroBalance() external {
         asset.mint(address(strategy), strategyBalance);
 
-        strategy.__setDeployedAssetsOf(tradingAddress, deployedAssets);
+        strategy.__setDeployedAssetsOf(managedWallet, deployedAssets);
         strategy.__setYieldBuffer(yieldAssets, startingTime, startingTime + yieldDuration);
 
         vm.warp(startingTime + yieldDuration);
@@ -178,7 +178,7 @@ contract AssetsUnderManagementTests is TestBase {
     function test_assetsUnderManagement_yieldBuffer_pastDeadline_nonZeroDeployed_nonZeroBalance() external {
         asset.mint(address(strategy), strategyBalance);
 
-        strategy.__setDeployedAssetsOf(tradingAddress, deployedAssets);
+        strategy.__setDeployedAssetsOf(managedWallet, deployedAssets);
         strategy.__setYieldBuffer(yieldAssets, startingTime, startingTime + yieldDuration);
 
         vm.warp(startingTime + yieldDuration + 1 days);
@@ -205,7 +205,7 @@ contract AssetsUnderManagementTests is TestBase {
     }
 
     function test_assetsUnderManagement_yieldBuffer_zeroDuration_nonZeroDeployed_zeroBalance() external {
-        strategy.__setDeployedAssetsOf(tradingAddress, deployedAssets);
+        strategy.__setDeployedAssetsOf(managedWallet, deployedAssets);
         strategy.__setYieldBuffer(yieldAssets, startingTime, startingTime);
 
         assertEq(strategy.assetsUnderManagement(), deployedAssets);
@@ -214,7 +214,7 @@ contract AssetsUnderManagementTests is TestBase {
     function test_assetsUnderManagement_yieldBuffer_zeroDuration_nonZeroDeployed_nonZeroBalance() external {
         asset.mint(address(strategy), strategyBalance);
 
-        strategy.__setDeployedAssetsOf(tradingAddress, deployedAssets);
+        strategy.__setDeployedAssetsOf(managedWallet, deployedAssets);
         strategy.__setYieldBuffer(yieldAssets, startingTime, startingTime);
 
         assertEq(strategy.assetsUnderManagement(), deployedAssets + strategyBalance);

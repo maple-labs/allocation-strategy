@@ -7,7 +7,7 @@ import { TestBase } from "../../utils/TestBase.sol";
 
 contract RealizeYieldTestBase is TestBase {
 
-    address tradingAddress = makeAddr("tradingAddress");
+    address managedWallet = makeAddr("managedWallet");
 
     uint256 newYieldAmount       = 75_000e6;  // Amount of yield to realize during the test.
     uint256 strategyBalance      = 30_000e6;  // Amount of cash sitting in the strategy initially.
@@ -28,9 +28,9 @@ contract RealizeYieldTestBase is TestBase {
     function setUp() public override {
         super.setUp();
 
-        // Whitelist the trading address.
-        globals.__setIsGovernedInstanceOf("TRADING_ADDRESS", tradingAddress, true);
-        strategy.__setPermissions(tradingAddress, true);
+        // Whitelist the managed wallet.
+        globals.__setIsInstanceOf("MAPLE_MANAGED_WALLET", managedWallet, true);
+        strategy.__setPermissions(managedWallet, true);
 
         // Set the initial yield buffer to accrue over 3 days.
         yieldStart    = startingTime;
@@ -40,7 +40,7 @@ contract RealizeYieldTestBase is TestBase {
 
         // Assert initial state.
         assertEq(asset.balanceOf(address(strategy)),         0);
-        assertEq(asset.balanceOf(address(tradingAddress)),   0);
+        assertEq(asset.balanceOf(address(managedWallet)),    0);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -53,17 +53,17 @@ contract RealizeYieldTestBase is TestBase {
         assertEq(strategy.unrealizedYield(),     0);
         assertEq(strategy.availableToWithdraw(), 0);
 
-        // Prepare assets for the trading address and the strategy.
+        // Prepare assets for the managed wallet and the strategy.
         asset.mint(address(strategy),       strategyBalance - scheduledYieldAssets);
-        asset.mint(address(tradingAddress), scheduledYieldAssets + newYieldAmount);
+        asset.mint(address(managedWallet), scheduledYieldAssets + newYieldAmount);
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         asset.approve(address(strategy), type(uint256).max);
 
         // Set up the initial yield buffer without fees.
         strategy.__setFeeRates(0, 0);
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(scheduledYieldAssets, yieldDuration, "GG");
         strategy.__setFeeRates(delegateFeeRate, protocolFeeRate);
 
@@ -72,7 +72,7 @@ contract RealizeYieldTestBase is TestBase {
 
         // Assert state after setup.
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -93,7 +93,7 @@ contract RealizeYieldFailureTests is RealizeYieldTestBase {
     function test_realizeYield_revert_functionPaused() external {
         globals.__setIsFunctionPaused(IMapleTradingStrategy.realizeYield.selector, true);
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         vm.expectRevert("MTS:PAUSED");
         strategy.realizeYield(newYieldAmount, newYieldDuration, "");
     }
@@ -101,23 +101,23 @@ contract RealizeYieldFailureTests is RealizeYieldTestBase {
     function test_realizeYield_revert_reentrancy() external {
         strategy.__setLocked(2);
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         vm.expectRevert("MTS:LOCKED");
         strategy.realizeYield(newYieldAmount, newYieldDuration, "");
     }
 
-    function test_realizeYield_revert_notTradingAddress() external {
-        globals.__setIsGovernedInstanceOf("TRADING_ADDRESS", tradingAddress, false);
+    function test_realizeYield_revert_notManagedWallet() external {
+        globals.__setIsInstanceOf("MAPLE_MANAGED_WALLET", managedWallet, false);
 
-        vm.prank(tradingAddress);
-        vm.expectRevert("MTS:NOT_TRADING_ADDRESS");
+        vm.prank(managedWallet);
+        vm.expectRevert("MTS:NOT_MAPLE_MANAGED_WALLET");
         strategy.realizeYield(newYieldAmount, newYieldDuration, "");
     }
 
     function test_realizeYield_revert_notAllowed() external {
-        strategy.__setPermissions(tradingAddress, false);
+        strategy.__setPermissions(managedWallet, false);
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         vm.expectRevert("MTS:RY:NOT_ALLOWED");
         strategy.realizeYield(newYieldAmount, newYieldDuration, "");
     }
@@ -125,7 +125,7 @@ contract RealizeYieldFailureTests is RealizeYieldTestBase {
     function test_realizeYield_revert_zeroCap() external {
         strategy.__setYieldCap(0);
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         vm.expectRevert("MTS:RY:CAP_EXCEEDED");
         strategy.realizeYield(1, 0, "");
     }
@@ -133,36 +133,36 @@ contract RealizeYieldFailureTests is RealizeYieldTestBase {
     function test_realizeYield_revert_capExceeded() external {
         strategy.__setYieldCap(newYieldAmount - 1);
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         vm.expectRevert("MTS:RY:CAP_EXCEEDED");
         strategy.realizeYield(newYieldAmount, newYieldDuration, "");
     }
 
     function test_realizeYield_revert_cooldown() external {
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(0, 0, "");
 
         vm.warp(yieldStart + 1 hours - 1);
 
         assertEq(strategy.yieldCooldown(), 1 seconds);
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         vm.expectRevert("MTS:RY:COOLDOWN");
         strategy.realizeYield(0, 0, "");
     }
 
-    function test_realizeYield_revert_cooldown_differentTradingAddress() external {
-        address secondTradingAddress = makeAddr("secondTradingAddress");
+    function test_realizeYield_revert_cooldown_differentManagedWallet() external {
+        address secondManagedWallet = makeAddr("secondManagedWallet");
 
-        globals.__setIsGovernedInstanceOf("TRADING_ADDRESS", secondTradingAddress, true);
-        strategy.__setPermissions(secondTradingAddress, true);
+        globals.__setIsInstanceOf("MAPLE_MANAGED_WALLET", secondManagedWallet, true);
+        strategy.__setPermissions(secondManagedWallet, true);
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(0, 0, "");
 
         assertEq(strategy.yieldCooldown(), 1 hours);
 
-        vm.prank(secondTradingAddress);
+        vm.prank(secondManagedWallet);
         vm.expectRevert("MTS:RY:COOLDOWN");
         strategy.realizeYield(0, 0, "");
     }
@@ -170,7 +170,7 @@ contract RealizeYieldFailureTests is RealizeYieldTestBase {
     function test_realizeYield_revert_transferFromFailed() external {
         asset.__setTransferFromReverts(true);
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         vm.expectRevert("MTS:RY:TRANSFER_FROM_FAILED");
         strategy.realizeYield(newYieldAmount, newYieldDuration, "");
     }
@@ -179,7 +179,7 @@ contract RealizeYieldFailureTests is RealizeYieldTestBase {
         strategy.__setFeeRates(delegateFeeRate, 0);
         asset.__setTransferReverts(true);
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         vm.expectRevert("MTS:CF:DELEGATE_TRANSFER_FAILED");
         strategy.realizeYield(newYieldAmount, newYieldDuration, "");
     }
@@ -188,7 +188,7 @@ contract RealizeYieldFailureTests is RealizeYieldTestBase {
         strategy.__setFeeRates(0, protocolFeeRate);
         asset.__setTransferReverts(true);
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         vm.expectRevert("MTS:CF:PROTOCOL_TRANSFER_FAILED");
         strategy.realizeYield(newYieldAmount, newYieldDuration, "");
     }
@@ -201,7 +201,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldLastRealized(), yieldStart - 1 hours);
         assertEq(strategy.yieldCooldown(),     0);
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(0, 0, "");
 
         assertEq(strategy.yieldLastRealized(), yieldStart);
@@ -211,7 +211,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
 
         assertEq(strategy.yieldCooldown(), 0);
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(0, 0, "");
 
         assertEq(strategy.yieldLastRealized(), yieldStart + 1 hours);
@@ -223,7 +223,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.yieldLastRealized(), 0);
         assertEq(strategy.yieldCooldown(),     0);
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(0, 0, "");
 
         assertEq(strategy.yieldCooldown(),     1 hours);
@@ -235,11 +235,11 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
     /**************************************************************************************************************************************/
 
     function test_realizeYield_success_zeroYield_zeroDuration_withFees_noBuffer() external {
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(0, 0, "FLUSH");
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -255,13 +255,13 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         vm.warp(yieldStart + 2 hours);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldRealized(tradingAddress, 0, 0, 0, 0, 0, "");
+        emit IMapleTradingStrategy.YieldRealized(managedWallet, 0, 0, 0, 0, 0, "");
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(0, 0, "");
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -277,7 +277,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
 
     function test_realizeYield_success_zeroYield_zeroDuration_withFees_bufferAtStart() external {
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -291,13 +291,13 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance - scheduledYieldAssets);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldRealized(tradingAddress, scheduledYieldAssets, 0, 0, 0, 0, "");
+        emit IMapleTradingStrategy.YieldRealized(managedWallet, scheduledYieldAssets, 0, 0, 0, 0, "");
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(0, 0, "");
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -321,7 +321,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         vm.warp(yieldAccruing);
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -335,13 +335,13 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance - unrealizedYield);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldRealized(tradingAddress, unrealizedYield, 0, 0, 0, 0, "");
+        emit IMapleTradingStrategy.YieldRealized(managedWallet, unrealizedYield, 0, 0, 0, 0, "");
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(0, 0, "");
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -359,7 +359,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         vm.warp(yieldDeadline);
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -372,13 +372,13 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.availableToWithdraw(), strategyBalance);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldRealized(tradingAddress, 0, 0, 0, 0, 0, "");
+        emit IMapleTradingStrategy.YieldRealized(managedWallet, 0, 0, 0, 0, 0, "");
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(0, 0, "");
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -395,7 +395,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         vm.warp(yieldFinished);
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -409,13 +409,13 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldRealized(tradingAddress, 0, 0, 0, 0, 0, "");
+        emit IMapleTradingStrategy.YieldRealized(managedWallet, 0, 0, 0, 0, 0, "");
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(0, 0, "");
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -434,11 +434,11 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
     /**************************************************************************************************************************************/
 
     function test_realizeYield_success_zeroYield_nonZeroDuration_withFees_noBuffer() external {
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(0, 0, "FLUSH");
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -454,13 +454,13 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         vm.warp(yieldStart + 2 hours);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldRealized(tradingAddress, 0, 0, 0, 0, newYieldDuration, "");
+        emit IMapleTradingStrategy.YieldRealized(managedWallet, 0, 0, 0, 0, newYieldDuration, "");
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(0, newYieldDuration, "");
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -476,7 +476,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
 
     function test_realizeYield_success_zeroYield_nonZeroDuration_withFees_bufferAtStart() external {
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -490,13 +490,13 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance - scheduledYieldAssets);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldRealized(tradingAddress, scheduledYieldAssets, 0, 0, 0, newYieldDuration, "");
+        emit IMapleTradingStrategy.YieldRealized(managedWallet, scheduledYieldAssets, 0, 0, 0, newYieldDuration, "");
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(0, newYieldDuration, "");
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -520,7 +520,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         vm.warp(yieldAccruing);
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -534,13 +534,13 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance - unrealizedYield);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldRealized(tradingAddress, unrealizedYield, 0, 0, 0, newYieldDuration, "");
+        emit IMapleTradingStrategy.YieldRealized(managedWallet, unrealizedYield, 0, 0, 0, newYieldDuration, "");
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(0, newYieldDuration, "");
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -558,7 +558,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         vm.warp(yieldDeadline);
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -571,13 +571,13 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.availableToWithdraw(), strategyBalance);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldRealized(tradingAddress, 0, 0, 0, 0, newYieldDuration, "");
+        emit IMapleTradingStrategy.YieldRealized(managedWallet, 0, 0, 0, 0, newYieldDuration, "");
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(0, newYieldDuration, "");
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -594,7 +594,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         vm.warp(yieldFinished);
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -608,13 +608,13 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldRealized(tradingAddress, 0, 0, 0, 0, newYieldDuration, "");
+        emit IMapleTradingStrategy.YieldRealized(managedWallet, 0, 0, 0, 0, newYieldDuration, "");
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(0, newYieldDuration, "");
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -635,11 +635,11 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
     function test_realizeYield_success_nonZeroYield_zeroDuration_noFees_noBuffer() external {
         strategy.__setFeeRates(0, 0);
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(0, 0, "FLUSH");
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -655,13 +655,13 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         vm.warp(yieldStart + 2 hours);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldRealized(tradingAddress, 0, newYieldAmount, 0, 0, 0, "");
+        emit IMapleTradingStrategy.YieldRealized(managedWallet, 0, newYieldAmount, 0, 0, 0, "");
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(newYieldAmount, 0, "");
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance + newYieldAmount);
-        assertEq(asset.balanceOf(address(tradingAddress)),   0);
+        assertEq(asset.balanceOf(address(managedWallet)),    0);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -679,7 +679,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         strategy.__setFeeRates(0, 0);
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -693,13 +693,13 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance - scheduledYieldAssets);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldRealized(tradingAddress, scheduledYieldAssets, newYieldAmount, 0, 0, 0, "");
+        emit IMapleTradingStrategy.YieldRealized(managedWallet, scheduledYieldAssets, newYieldAmount, 0, 0, 0, "");
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(newYieldAmount, 0, "");
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance + newYieldAmount);
-        assertEq(asset.balanceOf(address(tradingAddress)),   0);
+        assertEq(asset.balanceOf(address(managedWallet)),    0);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -725,7 +725,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         vm.warp(yieldAccruing);
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -739,13 +739,13 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance - unrealizedYield);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldRealized(tradingAddress, unrealizedYield, newYieldAmount, 0, 0, 0, "");
+        emit IMapleTradingStrategy.YieldRealized(managedWallet, unrealizedYield, newYieldAmount, 0, 0, 0, "");
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(newYieldAmount, 0, "");
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance + newYieldAmount);
-        assertEq(asset.balanceOf(address(tradingAddress)),   0);
+        assertEq(asset.balanceOf(address(managedWallet)),    0);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -765,7 +765,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         vm.warp(yieldDeadline);
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -778,13 +778,13 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.availableToWithdraw(), strategyBalance);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldRealized(tradingAddress, 0, newYieldAmount, 0, 0, 0, "");
+        emit IMapleTradingStrategy.YieldRealized(managedWallet, 0, newYieldAmount, 0, 0, 0, "");
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(newYieldAmount, 0, "");
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance + newYieldAmount);
-        assertEq(asset.balanceOf(address(tradingAddress)),   0);
+        assertEq(asset.balanceOf(address(managedWallet)),    0);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -803,7 +803,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         vm.warp(yieldFinished);
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -817,13 +817,13 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldRealized(tradingAddress, 0, newYieldAmount, 0, 0, 0, "");
+        emit IMapleTradingStrategy.YieldRealized(managedWallet, 0, newYieldAmount, 0, 0, 0, "");
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(newYieldAmount, 0, "");
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance + newYieldAmount);
-        assertEq(asset.balanceOf(address(tradingAddress)),   0);
+        assertEq(asset.balanceOf(address(managedWallet)),    0);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -842,7 +842,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
     /**************************************************************************************************************************************/
 
     function test_realizeYield_success_nonZeroYield_zeroDuration_withFees_noBuffer() external {
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(0, 0, "FLUSH");
 
         uint256 delegateFee    = newYieldAmount * delegateFeeRate / 1e6;
@@ -850,7 +850,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         uint256 netYieldAmount = newYieldAmount - delegateFee - protocolFee;
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -866,13 +866,13 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         vm.warp(yieldStart + 2 hours);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldRealized(tradingAddress, 0, netYieldAmount, delegateFee, protocolFee, 0, "");
+        emit IMapleTradingStrategy.YieldRealized(managedWallet, 0, netYieldAmount, delegateFee, protocolFee, 0, "");
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(newYieldAmount, 0, "");
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance + netYieldAmount);
-        assertEq(asset.balanceOf(address(tradingAddress)),   0);
+        assertEq(asset.balanceOf(address(managedWallet)),    0);
         assertEq(asset.balanceOf(address(strategyDelegate)), delegateFee);
         assertEq(asset.balanceOf(address(mapleTreasury)),    protocolFee);
 
@@ -892,7 +892,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         uint256 netYieldAmount = newYieldAmount - delegateFee - protocolFee;
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -906,21 +906,13 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance - scheduledYieldAssets);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldRealized(
-            tradingAddress,
-            scheduledYieldAssets,
-            netYieldAmount,
-            delegateFee,
-            protocolFee,
-            0,
-            ""
-        );
+        emit IMapleTradingStrategy.YieldRealized(managedWallet, scheduledYieldAssets, netYieldAmount, delegateFee, protocolFee, 0, "");
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(newYieldAmount, 0, "");
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance + netYieldAmount);
-        assertEq(asset.balanceOf(address(tradingAddress)),   0);
+        assertEq(asset.balanceOf(address(managedWallet)),    0);
         assertEq(asset.balanceOf(address(strategyDelegate)), delegateFee);
         assertEq(asset.balanceOf(address(mapleTreasury)),    protocolFee);
 
@@ -948,7 +940,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         vm.warp(yieldAccruing);
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -962,13 +954,13 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance - unrealizedYield);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldRealized(tradingAddress, unrealizedYield, netYieldAmount, delegateFee, protocolFee, 0, "");
+        emit IMapleTradingStrategy.YieldRealized(managedWallet, unrealizedYield, netYieldAmount, delegateFee, protocolFee, 0, "");
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(newYieldAmount, 0, "");
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance + netYieldAmount);
-        assertEq(asset.balanceOf(address(tradingAddress)),   0);
+        assertEq(asset.balanceOf(address(managedWallet)),    0);
         assertEq(asset.balanceOf(address(strategyDelegate)), delegateFee);
         assertEq(asset.balanceOf(address(mapleTreasury)),    protocolFee);
 
@@ -990,7 +982,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         vm.warp(yieldDeadline);
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -1003,13 +995,13 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.availableToWithdraw(), strategyBalance);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldRealized(tradingAddress, 0, netYieldAmount, delegateFee, protocolFee, 0, "");
+        emit IMapleTradingStrategy.YieldRealized(managedWallet, 0, netYieldAmount, delegateFee, protocolFee, 0, "");
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(newYieldAmount, 0, "");
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance + netYieldAmount);
-        assertEq(asset.balanceOf(address(tradingAddress)),   0);
+        assertEq(asset.balanceOf(address(managedWallet)),    0);
         assertEq(asset.balanceOf(address(strategyDelegate)), delegateFee);
         assertEq(asset.balanceOf(address(mapleTreasury)),    protocolFee);
 
@@ -1030,7 +1022,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         vm.warp(yieldFinished);
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -1044,13 +1036,13 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldRealized(tradingAddress, 0, netYieldAmount, delegateFee, protocolFee, 0, "");
+        emit IMapleTradingStrategy.YieldRealized(managedWallet, 0, netYieldAmount, delegateFee, protocolFee, 0, "");
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(newYieldAmount, 0, "");
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance + netYieldAmount);
-        assertEq(asset.balanceOf(address(tradingAddress)),   0);
+        assertEq(asset.balanceOf(address(managedWallet)),    0);
         assertEq(asset.balanceOf(address(strategyDelegate)), delegateFee);
         assertEq(asset.balanceOf(address(mapleTreasury)),    protocolFee);
 
@@ -1069,11 +1061,11 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
     /**************************************************************************************************************************************/
 
     function test_realizeYield_success_nonZeroYield_zeroDuration_feesRoundToZero_noBuffer() external {
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(0, 0, "FLUSH");
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -1089,13 +1081,13 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         vm.warp(yieldStart + 2 hours);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldRealized(tradingAddress, 0, tinyYieldAmount, 0, 0, 0, "");
+        emit IMapleTradingStrategy.YieldRealized(managedWallet, 0, tinyYieldAmount, 0, 0, 0, "");
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(tinyYieldAmount, 0, "");
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance + tinyYieldAmount);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount - tinyYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount - tinyYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -1111,7 +1103,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
 
     function test_realizeYield_success_nonZeroYield_zeroDuration_feesRoundToZero_bufferAtStart() external {
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -1125,13 +1117,13 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance - scheduledYieldAssets);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldRealized(tradingAddress, scheduledYieldAssets, tinyYieldAmount, 0, 0, 0, "");
+        emit IMapleTradingStrategy.YieldRealized(managedWallet, scheduledYieldAssets, tinyYieldAmount, 0, 0, 0, "");
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(tinyYieldAmount, 0, "");
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance + tinyYieldAmount);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount - tinyYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount - tinyYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -1155,7 +1147,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         vm.warp(yieldAccruing);
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -1169,13 +1161,13 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance - unrealizedYield);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldRealized(tradingAddress, unrealizedYield, tinyYieldAmount, 0, 0, 0, "");
+        emit IMapleTradingStrategy.YieldRealized(managedWallet, unrealizedYield, tinyYieldAmount, 0, 0, 0, "");
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(tinyYieldAmount, 0, "");
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance + tinyYieldAmount);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount - tinyYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount - tinyYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -1193,7 +1185,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         vm.warp(yieldDeadline);
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -1206,13 +1198,13 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.availableToWithdraw(), strategyBalance);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldRealized(tradingAddress, 0, tinyYieldAmount, 0, 0, 0, "");
+        emit IMapleTradingStrategy.YieldRealized(managedWallet, 0, tinyYieldAmount, 0, 0, 0, "");
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(tinyYieldAmount, 0, "");
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance + tinyYieldAmount);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount - tinyYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount - tinyYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -1229,7 +1221,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         vm.warp(yieldFinished);
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -1243,13 +1235,13 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldRealized(tradingAddress, 0, tinyYieldAmount, 0, 0, 0, "");
+        emit IMapleTradingStrategy.YieldRealized(managedWallet, 0, tinyYieldAmount, 0, 0, 0, "");
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(tinyYieldAmount, 0, "");
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance + tinyYieldAmount);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount - tinyYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount - tinyYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -1269,14 +1261,14 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
 
         strategy.__setFeeRates(fullDelegateFeeRate, fullProtocolFeeRate);
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(0, 0, "FLUSH");
 
         uint256 delegateFee = newYieldAmount * fullDelegateFeeRate / 1e6;
         uint256 protocolFee = newYieldAmount * fullProtocolFeeRate / 1e6;
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -1292,13 +1284,13 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         vm.warp(yieldStart + 2 hours);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldRealized(tradingAddress, 0, 0, delegateFee, protocolFee, 0, "");
+        emit IMapleTradingStrategy.YieldRealized(managedWallet, 0, 0, delegateFee, protocolFee, 0, "");
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(newYieldAmount, 0, "");
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   0);
+        assertEq(asset.balanceOf(address(managedWallet)),    0);
         assertEq(asset.balanceOf(address(strategyDelegate)), delegateFee);
         assertEq(asset.balanceOf(address(mapleTreasury)),    protocolFee);
 
@@ -1318,7 +1310,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
 
         strategy.__setFeeRates(fullDelegateFeeRate, fullProtocolFeeRate);
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(0, 0, "FLUSH");
 
         uint256 delegateFee    = tinyYieldAmount * fullDelegateFeeRate / 1e6;
@@ -1328,7 +1320,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertGt(netYieldAmount, 0);
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -1344,13 +1336,13 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         vm.warp(yieldStart + 2 hours);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldRealized(tradingAddress, 0, netYieldAmount, delegateFee, protocolFee, 0, "");
+        emit IMapleTradingStrategy.YieldRealized(managedWallet, 0, netYieldAmount, delegateFee, protocolFee, 0, "");
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(tinyYieldAmount, 0, "");
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance + netYieldAmount);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount - tinyYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount - tinyYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), delegateFee);
         assertEq(asset.balanceOf(address(mapleTreasury)),    protocolFee);
 
@@ -1371,11 +1363,11 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
     function test_realizeYield_success_nonZeroYield_nonZeroDuration_noFees_noBuffer() external {
         strategy.__setFeeRates(0, 0);
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(0, 0, "FLUSH");
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -1391,13 +1383,13 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         vm.warp(yieldStart + 2 hours);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldRealized(tradingAddress, 0, newYieldAmount, 0, 0, newYieldDuration, "");
+        emit IMapleTradingStrategy.YieldRealized(managedWallet, 0, newYieldAmount, 0, 0, newYieldDuration, "");
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(newYieldAmount, newYieldDuration, "");
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance + newYieldAmount);
-        assertEq(asset.balanceOf(address(tradingAddress)),   0);
+        assertEq(asset.balanceOf(address(managedWallet)),    0);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -1415,7 +1407,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         strategy.__setFeeRates(0, 0);
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -1429,21 +1421,13 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance - scheduledYieldAssets);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldRealized(
-            tradingAddress,
-            scheduledYieldAssets,
-            newYieldAmount,
-            0,
-            0,
-            newYieldDuration,
-            ""
-        );
+        emit IMapleTradingStrategy.YieldRealized(managedWallet, scheduledYieldAssets, newYieldAmount, 0, 0, newYieldDuration, "");
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(newYieldAmount, newYieldDuration, "");
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance + newYieldAmount);
-        assertEq(asset.balanceOf(address(tradingAddress)),   0);
+        assertEq(asset.balanceOf(address(managedWallet)),    0);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -1469,7 +1453,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         vm.warp(yieldAccruing);
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -1483,13 +1467,13 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance - unrealizedYield);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldRealized(tradingAddress, unrealizedYield, newYieldAmount, 0, 0, newYieldDuration, "");
+        emit IMapleTradingStrategy.YieldRealized(managedWallet, unrealizedYield, newYieldAmount, 0, 0, newYieldDuration, "");
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(newYieldAmount, newYieldDuration, "");
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance + newYieldAmount);
-        assertEq(asset.balanceOf(address(tradingAddress)),   0);
+        assertEq(asset.balanceOf(address(managedWallet)),    0);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -1509,7 +1493,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         vm.warp(yieldDeadline);
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -1522,13 +1506,13 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.availableToWithdraw(), strategyBalance);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldRealized(tradingAddress, 0, newYieldAmount, 0, 0, newYieldDuration, "");
+        emit IMapleTradingStrategy.YieldRealized(managedWallet, 0, newYieldAmount, 0, 0, newYieldDuration, "");
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(newYieldAmount, newYieldDuration, "");
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance + newYieldAmount);
-        assertEq(asset.balanceOf(address(tradingAddress)),   0);
+        assertEq(asset.balanceOf(address(managedWallet)),    0);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -1547,7 +1531,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         vm.warp(yieldFinished);
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -1561,13 +1545,13 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldRealized(tradingAddress, 0, newYieldAmount, 0, 0, newYieldDuration, "");
+        emit IMapleTradingStrategy.YieldRealized(managedWallet, 0, newYieldAmount, 0, 0, newYieldDuration, "");
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(newYieldAmount, newYieldDuration, "");
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance + newYieldAmount);
-        assertEq(asset.balanceOf(address(tradingAddress)),   0);
+        assertEq(asset.balanceOf(address(managedWallet)),    0);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -1586,7 +1570,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
     /**************************************************************************************************************************************/
 
     function test_realizeYield_success_nonZeroYield_nonZeroDuration_withFees_noBuffer() external {
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(0, 0, "FLUSH");
 
         uint256 delegateFee    = newYieldAmount * delegateFeeRate / 1e6;
@@ -1594,7 +1578,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         uint256 netYieldAmount = newYieldAmount - delegateFee - protocolFee;
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -1610,13 +1594,13 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         vm.warp(yieldStart + 2 hours);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldRealized(tradingAddress, 0, netYieldAmount, delegateFee, protocolFee, newYieldDuration, "");
+        emit IMapleTradingStrategy.YieldRealized(managedWallet, 0, netYieldAmount, delegateFee, protocolFee, newYieldDuration, "");
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(newYieldAmount, newYieldDuration, "");
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance + netYieldAmount);
-        assertEq(asset.balanceOf(address(tradingAddress)),   0);
+        assertEq(asset.balanceOf(address(managedWallet)),    0);
         assertEq(asset.balanceOf(address(strategyDelegate)), delegateFee);
         assertEq(asset.balanceOf(address(mapleTreasury)),    protocolFee);
 
@@ -1636,7 +1620,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         uint256 netYieldAmount = newYieldAmount - delegateFee - protocolFee;
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -1651,7 +1635,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
 
         vm.expectEmit();
         emit IMapleTradingStrategy.YieldRealized(
-            tradingAddress,
+            managedWallet,
             scheduledYieldAssets,
             netYieldAmount,
             delegateFee,
@@ -1660,11 +1644,11 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
             ""
         );
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(newYieldAmount, newYieldDuration, "");
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance + netYieldAmount);
-        assertEq(asset.balanceOf(address(tradingAddress)),   0);
+        assertEq(asset.balanceOf(address(managedWallet)),    0);
         assertEq(asset.balanceOf(address(strategyDelegate)), delegateFee);
         assertEq(asset.balanceOf(address(mapleTreasury)),    protocolFee);
 
@@ -1692,7 +1676,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         vm.warp(yieldAccruing);
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -1707,7 +1691,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
 
         vm.expectEmit();
         emit IMapleTradingStrategy.YieldRealized(
-            tradingAddress,
+            managedWallet,
             unrealizedYield,
             netYieldAmount,
             delegateFee,
@@ -1716,11 +1700,11 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
             ""
         );
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(newYieldAmount, newYieldDuration, "");
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance + netYieldAmount);
-        assertEq(asset.balanceOf(address(tradingAddress)),   0);
+        assertEq(asset.balanceOf(address(managedWallet)),    0);
         assertEq(asset.balanceOf(address(strategyDelegate)), delegateFee);
         assertEq(asset.balanceOf(address(mapleTreasury)),    protocolFee);
 
@@ -1742,7 +1726,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         vm.warp(yieldDeadline);
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -1755,13 +1739,13 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.availableToWithdraw(), strategyBalance);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldRealized(tradingAddress, 0, netYieldAmount, delegateFee, protocolFee, newYieldDuration, "");
+        emit IMapleTradingStrategy.YieldRealized(managedWallet, 0, netYieldAmount, delegateFee, protocolFee, newYieldDuration, "");
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(newYieldAmount, newYieldDuration, "");
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance + netYieldAmount);
-        assertEq(asset.balanceOf(address(tradingAddress)),   0);
+        assertEq(asset.balanceOf(address(managedWallet)),    0);
         assertEq(asset.balanceOf(address(strategyDelegate)), delegateFee);
         assertEq(asset.balanceOf(address(mapleTreasury)),    protocolFee);
 
@@ -1782,7 +1766,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         vm.warp(yieldFinished);
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -1796,13 +1780,13 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldRealized(tradingAddress, 0, netYieldAmount, delegateFee, protocolFee, newYieldDuration, "");
+        emit IMapleTradingStrategy.YieldRealized(managedWallet, 0, netYieldAmount, delegateFee, protocolFee, newYieldDuration, "");
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(newYieldAmount, newYieldDuration, "");
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance + netYieldAmount);
-        assertEq(asset.balanceOf(address(tradingAddress)),   0);
+        assertEq(asset.balanceOf(address(managedWallet)),    0);
         assertEq(asset.balanceOf(address(strategyDelegate)), delegateFee);
         assertEq(asset.balanceOf(address(mapleTreasury)),    protocolFee);
 
@@ -1821,11 +1805,11 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
     /**************************************************************************************************************************************/
 
     function test_realizeYield_success_nonZeroYield_nonZeroDuration_feesRoundToZero_noBuffer() external {
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(0, 0, "FLUSH");
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -1841,13 +1825,13 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         vm.warp(yieldStart + 2 hours);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldRealized(tradingAddress, 0, tinyYieldAmount, 0, 0, newYieldDuration, "");
+        emit IMapleTradingStrategy.YieldRealized(managedWallet, 0, tinyYieldAmount, 0, 0, newYieldDuration, "");
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(tinyYieldAmount, newYieldDuration, "");
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance + tinyYieldAmount);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount - tinyYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount - tinyYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -1863,7 +1847,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
 
     function test_realizeYield_success_nonZeroYield_nonZeroDuration_feesRoundToZero_bufferAtStart() external {
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -1877,21 +1861,13 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance - scheduledYieldAssets);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldRealized(
-            tradingAddress,
-            scheduledYieldAssets,
-            tinyYieldAmount,
-            0,
-            0,
-            newYieldDuration,
-            ""
-        );
+        emit IMapleTradingStrategy.YieldRealized(managedWallet, scheduledYieldAssets, tinyYieldAmount, 0, 0, newYieldDuration, "");
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(tinyYieldAmount, newYieldDuration, "");
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance + tinyYieldAmount);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount - tinyYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount - tinyYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -1915,7 +1891,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         vm.warp(yieldAccruing);
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -1929,13 +1905,13 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance - unrealizedYield);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldRealized(tradingAddress, unrealizedYield, tinyYieldAmount, 0, 0, newYieldDuration, "");
+        emit IMapleTradingStrategy.YieldRealized(managedWallet, unrealizedYield, tinyYieldAmount, 0, 0, newYieldDuration, "");
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(tinyYieldAmount, newYieldDuration, "");
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance + tinyYieldAmount);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount - tinyYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount - tinyYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -1953,7 +1929,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         vm.warp(yieldDeadline);
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -1966,13 +1942,13 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.availableToWithdraw(), strategyBalance);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldRealized(tradingAddress, 0, tinyYieldAmount, 0, 0, newYieldDuration, "");
+        emit IMapleTradingStrategy.YieldRealized(managedWallet, 0, tinyYieldAmount, 0, 0, newYieldDuration, "");
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(tinyYieldAmount, newYieldDuration, "");
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance + tinyYieldAmount);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount - tinyYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount - tinyYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -1989,7 +1965,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         vm.warp(yieldFinished);
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -2003,13 +1979,13 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldRealized(tradingAddress, 0, tinyYieldAmount, 0, 0, newYieldDuration, "");
+        emit IMapleTradingStrategy.YieldRealized(managedWallet, 0, tinyYieldAmount, 0, 0, newYieldDuration, "");
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(tinyYieldAmount, newYieldDuration, "");
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance + tinyYieldAmount);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount - tinyYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount - tinyYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -2035,7 +2011,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         strategy.__setYieldCap(newYieldAmount);
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -2050,7 +2026,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
 
         vm.expectEmit();
         emit IMapleTradingStrategy.YieldRealized(
-            tradingAddress,
+            managedWallet,
             scheduledYieldAssets,
             netYieldAmount,
             delegateFee,
@@ -2059,11 +2035,11 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
             ""
         );
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(newYieldAmount, newYieldDuration, "");
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance + netYieldAmount);
-        assertEq(asset.balanceOf(address(tradingAddress)),   0);
+        assertEq(asset.balanceOf(address(managedWallet)),    0);
         assertEq(asset.balanceOf(address(strategyDelegate)), delegateFee);
         assertEq(asset.balanceOf(address(mapleTreasury)),    protocolFee);
 
@@ -2081,7 +2057,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         strategy.__setYieldCap(0);
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -2095,13 +2071,13 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance - scheduledYieldAssets);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldRealized(tradingAddress, scheduledYieldAssets, 0, 0, 0, newYieldDuration, "");
+        emit IMapleTradingStrategy.YieldRealized(managedWallet, scheduledYieldAssets, 0, 0, 0, newYieldDuration, "");
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(0, newYieldDuration, "");
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -2119,7 +2095,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         strategy.__setYieldCap(scheduledYieldAssets - 1);
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -2133,13 +2109,13 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance - scheduledYieldAssets);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldRealized(tradingAddress, scheduledYieldAssets, 0, 0, 0, newYieldDuration, "");
+        emit IMapleTradingStrategy.YieldRealized(managedWallet, scheduledYieldAssets, 0, 0, 0, newYieldDuration, "");
 
-        vm.prank(tradingAddress);
+        vm.prank(managedWallet);
         strategy.realizeYield(0, newYieldDuration, "");
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
-        assertEq(asset.balanceOf(address(tradingAddress)),   newYieldAmount);
+        assertEq(asset.balanceOf(address(managedWallet)),    newYieldAmount);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 

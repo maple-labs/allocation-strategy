@@ -57,7 +57,6 @@ contract MockGlobals {
 
     mapping(bytes4 => bool) public isFunctionPaused;
 
-    mapping(bytes32 => mapping(address => bool)) public isGovernedInstanceOf;
     mapping(bytes32 => mapping(address => bool)) public isInstanceOf;
 
     function __setCanDeploy(address caller_, bool canDeploy_) external {
@@ -82,10 +81,6 @@ contract MockGlobals {
 
     function __setIsPoolAsset(address asset_, bool isPoolAsset_) external {
         isPoolAsset[asset_] = isPoolAsset_;
-    }
-
-    function __setIsGovernedInstanceOf(bytes32 key_, address instance_, bool isGovernedInstanceOf_) external {
-        isGovernedInstanceOf[key_][instance_] = isGovernedInstanceOf_;
     }
 
     function __setOperationalAdmin(address operationalAdmin_) external {
