@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
-import { IMapleTradingStrategy } from "../../../contracts/interfaces/IMapleTradingStrategy.sol";
+import { IMapleAllocationStrategy } from "../../../contracts/interfaces/IMapleAllocationStrategy.sol";
 
-import { MapleTradingStrategy } from "../../../contracts/MapleTradingStrategy.sol";
+import { MapleAllocationStrategy } from "../../../contracts/MapleAllocationStrategy.sol";
 
 import { TestBase } from "../../utils/TestBase.sol";
 
 contract SetDeploymentCapsFailureTests is TestBase {
 
     function test_setDeploymentCaps_revert_functionPaused() external {
-        globals.__setIsFunctionPaused(MapleTradingStrategy.setDeploymentCaps.selector, true);
+        globals.__setIsFunctionPaused(MapleAllocationStrategy.setDeploymentCaps.selector, true);
 
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTS:PAUSED");
+        vm.expectRevert("MAS:PAUSED");
         strategy.setDeploymentCaps(new address[](0), new uint256[](0));
     }
 
@@ -21,28 +21,28 @@ contract SetDeploymentCapsFailureTests is TestBase {
         strategy.__setLocked(2);
 
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTS:LOCKED");
+        vm.expectRevert("MAS:LOCKED");
         strategy.setDeploymentCaps(new address[](0), new uint256[](0));
     }
 
     function test_setDeploymentCaps_revert_notAuthorized() external {
-        vm.expectRevert("MTS:NOT_AUTHORIZED");
+        vm.expectRevert("MAS:NOT_AUTHORIZED");
         strategy.setDeploymentCaps(new address[](0), new uint256[](0));
     }
 
     function test_setDeploymentCaps_revert_zeroLength() external {
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTS:SDC:ZERO_LENGTH");
+        vm.expectRevert("MAS:SDC:ZERO_LENGTH");
         strategy.setDeploymentCaps(new address[](0), new uint256[](0));
     }
 
     function test_setDeploymentCaps_revert_lengthMismatch() external {
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTS:SDC:LENGTH_MISMATCH");
+        vm.expectRevert("MAS:SDC:LENGTH_MISMATCH");
         strategy.setDeploymentCaps(new address[](2), new uint256[](1));
 
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTS:SDC:LENGTH_MISMATCH");
+        vm.expectRevert("MAS:SDC:LENGTH_MISMATCH");
         strategy.setDeploymentCaps(new address[](1), new uint256[](2));
     }
 
@@ -55,7 +55,7 @@ contract SetDeploymentCapsFailureTests is TestBase {
         globals.__setIsInstanceOf("MAPLE_MANAGED_WALLET", validDeployer2, true);
 
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTS:SDC:NOT_MAPLE_MANAGED_WALLET");
+        vm.expectRevert("MAS:SDC:NOT_MAPLE_MANAGED_WALLET");
         strategy.setDeploymentCaps(
             array(validDeployer1, validDeployer2, invalidDeployer),
             array(100e6,          200e6,          300e6)
@@ -81,7 +81,7 @@ contract SetDeploymentCapsFailureTests is TestBase {
         globals.__setIsInstanceOf("MAPLE_MANAGED_WALLET", deployer, false);
 
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTS:SDC:NOT_MAPLE_MANAGED_WALLET");
+        vm.expectRevert("MAS:SDC:NOT_MAPLE_MANAGED_WALLET");
         strategy.setDeploymentCaps(array(deployer), array(50e6));
 
         assertEq(strategy.deploymentCapOf(deployer), 100e6);
@@ -98,7 +98,7 @@ contract SetDeploymentCapsFailureTests is TestBase {
         assertEq(strategy.deploymentCapOf(deployer), 100e6);
 
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTS:SDC:NO_CHANGE");
+        vm.expectRevert("MAS:SDC:NO_CHANGE");
         strategy.setDeploymentCaps(array(deployer), array(100e6));
     }
 
@@ -112,11 +112,11 @@ contract SetDeploymentCapsFailureTests is TestBase {
         assertEq(strategy.deploymentCapOf(blacklistedDeployer), 0);
 
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTS:SDC:NO_CHANGE");
+        vm.expectRevert("MAS:SDC:NO_CHANGE");
         strategy.setDeploymentCaps(array(whitelistedDeployer), array(uint256(0)));
 
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTS:SDC:NO_CHANGE");
+        vm.expectRevert("MAS:SDC:NO_CHANGE");
         strategy.setDeploymentCaps(array(blacklistedDeployer), array(uint256(0)));
     }
 
@@ -143,7 +143,7 @@ contract SetDeploymentCapsSuccessTests is TestBase {
         assertEq(strategy.deploymentCapOf(deployer2), 0);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.DeploymentCapSet(deployer1, cap);
+        emit IMapleAllocationStrategy.DeploymentCapSet(deployer1, cap);
 
         vm.prank(strategyDelegate);
         strategy.setDeploymentCaps(array(deployer1), array(cap));
@@ -162,13 +162,13 @@ contract SetDeploymentCapsSuccessTests is TestBase {
         assertEq(strategy.deploymentCapOf(deployer3), 0);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.DeploymentCapSet(deployer1, cap1);
+        emit IMapleAllocationStrategy.DeploymentCapSet(deployer1, cap1);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.DeploymentCapSet(deployer2, cap2);
+        emit IMapleAllocationStrategy.DeploymentCapSet(deployer2, cap2);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.DeploymentCapSet(deployer3, cap3);
+        emit IMapleAllocationStrategy.DeploymentCapSet(deployer3, cap3);
 
         vm.prank(strategyDelegate);
         strategy.setDeploymentCaps(array(deployer1, deployer2, deployer3), array(cap1, cap2, cap3));
@@ -185,10 +185,10 @@ contract SetDeploymentCapsSuccessTests is TestBase {
         assertEq(strategy.deploymentCapOf(deployer1), 0);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.DeploymentCapSet(deployer1, cap1);
+        emit IMapleAllocationStrategy.DeploymentCapSet(deployer1, cap1);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.DeploymentCapSet(deployer1, cap2);
+        emit IMapleAllocationStrategy.DeploymentCapSet(deployer1, cap2);
 
         vm.prank(strategyDelegate);
         strategy.setDeploymentCaps(array(deployer1, deployer1), array(cap1, cap2));
@@ -207,7 +207,7 @@ contract SetDeploymentCapsSuccessTests is TestBase {
         uint256 updatedCap = 250e6;
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.DeploymentCapSet(deployer1, updatedCap);
+        emit IMapleAllocationStrategy.DeploymentCapSet(deployer1, updatedCap);
 
         vm.prank(strategyDelegate);
         strategy.setDeploymentCaps(array(deployer1), array(updatedCap));
@@ -226,7 +226,7 @@ contract SetDeploymentCapsSuccessTests is TestBase {
         uint256 updatedCap = 100e6;
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.DeploymentCapSet(deployer1, updatedCap);
+        emit IMapleAllocationStrategy.DeploymentCapSet(deployer1, updatedCap);
 
         vm.prank(strategyDelegate);
         strategy.setDeploymentCaps(array(deployer1), array(updatedCap));
@@ -240,7 +240,7 @@ contract SetDeploymentCapsSuccessTests is TestBase {
         assertEq(strategy.deploymentCapOf(deployer1), 0);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.DeploymentCapSet(deployer1, cap);
+        emit IMapleAllocationStrategy.DeploymentCapSet(deployer1, cap);
 
         vm.prank(operationalAdmin);
         strategy.setDeploymentCaps(array(deployer1), array(cap));
@@ -259,7 +259,7 @@ contract SetDeploymentCapsSuccessTests is TestBase {
         assertEq(strategy.deploymentCapOf(deployer1), initialCap);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.DeploymentCapSet(deployer1, 0);
+        emit IMapleAllocationStrategy.DeploymentCapSet(deployer1, 0);
 
         vm.prank(strategyDelegate);
         strategy.setDeploymentCaps(array(deployer1), array(uint256(0)));
@@ -282,7 +282,7 @@ contract SetDeploymentCapsSuccessTests is TestBase {
         globals.__setIsInstanceOf("MAPLE_MANAGED_WALLET", revokedDeployer, false);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.DeploymentCapSet(revokedDeployer, 0);
+        emit IMapleAllocationStrategy.DeploymentCapSet(revokedDeployer, 0);
 
         vm.prank(strategyDelegate);
         strategy.setDeploymentCaps(array(revokedDeployer), array(uint256(0)));

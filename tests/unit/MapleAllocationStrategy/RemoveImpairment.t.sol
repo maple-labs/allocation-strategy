@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
-import { IMapleTradingStrategy } from "../../../contracts/interfaces/IMapleTradingStrategy.sol";
+import { IMapleAllocationStrategy } from "../../../contracts/interfaces/IMapleAllocationStrategy.sol";
 
 import { TestBase } from "../../utils/TestBase.sol";
 
@@ -23,10 +23,10 @@ contract RemoveImpairmentTestBase is TestBase {
 contract RemoveImpairmentFailureTests is RemoveImpairmentTestBase {
 
     function test_removeImpairment_revert_functionPaused() external {
-        globals.__setIsFunctionPaused(IMapleTradingStrategy.removeImpairment.selector, true);
+        globals.__setIsFunctionPaused(IMapleAllocationStrategy.removeImpairment.selector, true);
 
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTS:PAUSED");
+        vm.expectRevert("MAS:PAUSED");
         strategy.removeImpairment(assetsToUnimpair);
     }
 
@@ -34,19 +34,19 @@ contract RemoveImpairmentFailureTests is RemoveImpairmentTestBase {
         strategy.__setLocked(2);
 
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTS:LOCKED");
+        vm.expectRevert("MAS:LOCKED");
         strategy.removeImpairment(assetsToUnimpair);
     }
 
     function test_removeImpairment_revert_notAuthorized() external {
         vm.prank(governor);
-        vm.expectRevert("MTS:NOT_AUTHORIZED");
+        vm.expectRevert("MAS:NOT_AUTHORIZED");
         strategy.removeImpairment(assetsToUnimpair);
     }
 
     function test_removeImpairment_revert_zeroAssets() external {
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTS:RI:ZERO_ASSETS");
+        vm.expectRevert("MAS:RI:ZERO_ASSETS");
         strategy.removeImpairment(0);
     }
 
@@ -54,13 +54,13 @@ contract RemoveImpairmentFailureTests is RemoveImpairmentTestBase {
         strategy.__setImpairedAssets(0);
 
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTS:RI:EXCEEDS_IMPAIRMENT");
+        vm.expectRevert("MAS:RI:EXCEEDS_IMPAIRMENT");
         strategy.removeImpairment(1);
     }
 
     function test_removeImpairment_revert_exceedsImpairment() external {
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTS:RI:EXCEEDS_IMPAIRMENT");
+        vm.expectRevert("MAS:RI:EXCEEDS_IMPAIRMENT");
         strategy.removeImpairment(impairedAssets + 1);
     }
 
@@ -73,7 +73,7 @@ contract RemoveImpairmentSuccessTests is RemoveImpairmentTestBase {
         assertEq(strategy.unrealizedLosses(), impairedAssets);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.ImpairmentRemoved(assetsToUnimpair);
+        emit IMapleAllocationStrategy.ImpairmentRemoved(assetsToUnimpair);
 
         vm.prank(strategyDelegate);
         strategy.removeImpairment(assetsToUnimpair);
@@ -87,7 +87,7 @@ contract RemoveImpairmentSuccessTests is RemoveImpairmentTestBase {
         assertEq(strategy.unrealizedLosses(), impairedAssets);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.ImpairmentRemoved(impairedAssets);
+        emit IMapleAllocationStrategy.ImpairmentRemoved(impairedAssets);
 
         vm.prank(operationalAdmin);
         strategy.removeImpairment(impairedAssets);
@@ -98,7 +98,7 @@ contract RemoveImpairmentSuccessTests is RemoveImpairmentTestBase {
 
     function test_removeImpairment_success_multiple() external {
         vm.expectEmit();
-        emit IMapleTradingStrategy.ImpairmentRemoved(assetsToUnimpair);
+        emit IMapleAllocationStrategy.ImpairmentRemoved(assetsToUnimpair);
 
         vm.prank(strategyDelegate);
         strategy.removeImpairment(assetsToUnimpair);
@@ -107,7 +107,7 @@ contract RemoveImpairmentSuccessTests is RemoveImpairmentTestBase {
         assertEq(strategy.unrealizedLosses(), impairedAssets - assetsToUnimpair);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.ImpairmentRemoved(assetsToUnimpair);
+        emit IMapleAllocationStrategy.ImpairmentRemoved(assetsToUnimpair);
 
         vm.prank(operationalAdmin);
         strategy.removeImpairment(assetsToUnimpair);
@@ -123,7 +123,7 @@ contract RemoveImpairmentSuccessTests is RemoveImpairmentTestBase {
         assertEq(strategy.unrealizedLosses(), totalAssets);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.ImpairmentRemoved(assetsToUnimpair);
+        emit IMapleAllocationStrategy.ImpairmentRemoved(assetsToUnimpair);
 
         vm.prank(strategyDelegate);
         strategy.removeImpairment(assetsToUnimpair);
@@ -139,7 +139,7 @@ contract RemoveImpairmentSuccessTests is RemoveImpairmentTestBase {
         assertEq(strategy.unrealizedLosses(), totalAssets);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.ImpairmentRemoved(totalAssets + assetsToUnimpair);
+        emit IMapleAllocationStrategy.ImpairmentRemoved(totalAssets + assetsToUnimpair);
 
         vm.prank(strategyDelegate);
         strategy.removeImpairment(totalAssets + assetsToUnimpair);

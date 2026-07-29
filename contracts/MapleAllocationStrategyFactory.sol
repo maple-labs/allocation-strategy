@@ -5,7 +5,7 @@ import { MapleProxyFactory } from "../modules/proxy-factory/contracts/MapleProxy
 
 import { IGlobalsLike } from "./interfaces/Interfaces.sol";
 
-contract MapleTradingStrategyFactory is MapleProxyFactory {
+contract MapleAllocationStrategyFactory is MapleProxyFactory {
 
     constructor(address globals_) MapleProxyFactory(globals_) {}
 
@@ -15,7 +15,7 @@ contract MapleTradingStrategyFactory is MapleProxyFactory {
     )
         public override(MapleProxyFactory) returns (address instance_)
     {
-        require(IGlobalsLike(mapleGlobals).canDeploy(msg.sender), "MTSF:CI:CANNOT_DEPLOY");
+        require(IGlobalsLike(mapleGlobals).canDeploy(msg.sender), "MASF:CI:CANNOT_DEPLOY");
 
         instance_ = super.createInstance(arguments_, salt_);
     }

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
-import { IMapleTradingStrategy } from "../../../contracts/interfaces/IMapleTradingStrategy.sol";
+import { IMapleAllocationStrategy } from "../../../contracts/interfaces/IMapleAllocationStrategy.sol";
 
 import { TestBase } from "../../utils/TestBase.sol";
 
@@ -27,10 +27,10 @@ contract RecognizeLossAndRemoveImpairmentTestBase is TestBase {
 contract RecognizeLossAndRemoveImpairmentFailureTests is RecognizeLossAndRemoveImpairmentTestBase {
 
     function test_recognizeLossAndRemoveImpairment_revert_functionPaused() external {
-        globals.__setIsFunctionPaused(IMapleTradingStrategy.recognizeLossAndRemoveImpairment.selector, true);
+        globals.__setIsFunctionPaused(IMapleAllocationStrategy.recognizeLossAndRemoveImpairment.selector, true);
 
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTS:PAUSED");
+        vm.expectRevert("MAS:PAUSED");
         strategy.recognizeLossAndRemoveImpairment(partialLoss, partialUnimpair, managedWallet1);
     }
 
@@ -38,36 +38,36 @@ contract RecognizeLossAndRemoveImpairmentFailureTests is RecognizeLossAndRemoveI
         strategy.__setLocked(2);
 
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTS:LOCKED");
+        vm.expectRevert("MAS:LOCKED");
         strategy.recognizeLossAndRemoveImpairment(partialLoss, partialUnimpair, managedWallet1);
     }
 
     function test_recognizeLossAndRemoveImpairment_revert_notAuthorized() external {
-        vm.expectRevert("MTS:NOT_AUTHORIZED");
+        vm.expectRevert("MAS:NOT_AUTHORIZED");
         strategy.recognizeLossAndRemoveImpairment(partialLoss, partialUnimpair, managedWallet1);
     }
 
     function test_recognizeLossAndRemoveImpairment_revert_zeroAssetsLost() external {
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTS:RL:ZERO_ASSETS");
+        vm.expectRevert("MAS:RL:ZERO_ASSETS");
         strategy.recognizeLossAndRemoveImpairment(0, partialUnimpair, managedWallet1);
     }
 
     function test_recognizeLossAndRemoveImpairment_revert_exceedsDeployed() external {
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTS:RL:EXCEEDS_DEPLOYED");
+        vm.expectRevert("MAS:RL:EXCEEDS_DEPLOYED");
         strategy.recognizeLossAndRemoveImpairment(deployedAssets + 1, partialUnimpair, managedWallet1);
     }
 
     function test_recognizeLossAndRemoveImpairment_revert_zeroAssetsUnimpaired() external {
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTS:RI:ZERO_ASSETS");
+        vm.expectRevert("MAS:RI:ZERO_ASSETS");
         strategy.recognizeLossAndRemoveImpairment(partialLoss, 0, managedWallet1);
     }
 
     function test_recognizeLossAndRemoveImpairment_revert_exceedsImpairment() external {
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTS:RI:EXCEEDS_IMPAIRMENT");
+        vm.expectRevert("MAS:RI:EXCEEDS_IMPAIRMENT");
         strategy.recognizeLossAndRemoveImpairment(partialLoss, impairedAssets + 1, managedWallet1);
     }
 
@@ -84,10 +84,10 @@ contract RecognizeLossAndRemoveImpairmentSuccessTests is RecognizeLossAndRemoveI
         assertEq(strategy.unrealizedLosses(), impairedAssets);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.LossRecognized(strategyDelegate, managedWallet1, partialLoss);
+        emit IMapleAllocationStrategy.LossRecognized(strategyDelegate, managedWallet1, partialLoss);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.ImpairmentRemoved(partialUnimpair);
+        emit IMapleAllocationStrategy.ImpairmentRemoved(partialUnimpair);
 
         vm.prank(strategyDelegate);
         strategy.recognizeLossAndRemoveImpairment(partialLoss, partialUnimpair, managedWallet1);
@@ -109,10 +109,10 @@ contract RecognizeLossAndRemoveImpairmentSuccessTests is RecognizeLossAndRemoveI
         assertEq(strategy.unrealizedLosses(), impairedAssets);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.LossRecognized(operationalAdmin, managedWallet1, partialLoss);
+        emit IMapleAllocationStrategy.LossRecognized(operationalAdmin, managedWallet1, partialLoss);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.ImpairmentRemoved(partialUnimpair);
+        emit IMapleAllocationStrategy.ImpairmentRemoved(partialUnimpair);
 
         vm.prank(operationalAdmin);
         strategy.recognizeLossAndRemoveImpairment(partialLoss, partialUnimpair, managedWallet1);
@@ -134,10 +134,10 @@ contract RecognizeLossAndRemoveImpairmentSuccessTests is RecognizeLossAndRemoveI
         assertEq(strategy.unrealizedLosses(), impairedAssets);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.LossRecognized(strategyDelegate, managedWallet1, deployedAssets);
+        emit IMapleAllocationStrategy.LossRecognized(strategyDelegate, managedWallet1, deployedAssets);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.ImpairmentRemoved(impairedAssets);
+        emit IMapleAllocationStrategy.ImpairmentRemoved(impairedAssets);
 
         vm.prank(strategyDelegate);
         strategy.recognizeLossAndRemoveImpairment(deployedAssets, impairedAssets, managedWallet1);
@@ -159,10 +159,10 @@ contract RecognizeLossAndRemoveImpairmentSuccessTests is RecognizeLossAndRemoveI
         assertEq(strategy.unrealizedLosses(), impairedAssets);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.LossRecognized(strategyDelegate, managedWallet1, deployedAssets);
+        emit IMapleAllocationStrategy.LossRecognized(strategyDelegate, managedWallet1, deployedAssets);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.ImpairmentRemoved(partialUnimpair);
+        emit IMapleAllocationStrategy.ImpairmentRemoved(partialUnimpair);
 
         vm.prank(strategyDelegate);
         strategy.recognizeLossAndRemoveImpairment(deployedAssets, partialUnimpair, managedWallet1);

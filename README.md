@@ -1,21 +1,21 @@
-# Maple Trading Strategy
+# Maple Allocation Strategy
 
-[![CI](https://github.com/maple-labs/trading-strategy-private/actions/workflows/ci.yaml/badge.svg)](https://github.com/maple-labs/trading-strategy-private/actions/workflows/ci.yaml)
-[![GitBook - Documentation](https://img.shields.io/badge/GitBook-Documentation-orange?logo=gitbook&logoColor=white)](https://maplefinance.gitbook.io/maple)
+[![CI](https://github.com/maple-labs/allocation-strategy-private/actions/workflows/ci.yaml/badge.svg)](https://github.com/maple-labs/allocation-strategy-private/actions/workflows/ci.yaml)
+[![GitBook - Documentation](https://img.shields.io/badge/GitBook-Documentation-orange?logo=gitbook&logoColor=white)](https://docs.maple.finance/)
 [![Foundry](https://img.shields.io/badge/Built%20with-Foundry-FFDB1C.svg)](https://getfoundry.sh/)
-[![License: BUSL 1.1](https://img.shields.io/badge/License-BUSL%201.1-blue.svg)](https://github.com/maple-labs/trading-strategy-private/blob/main/LICENSE)
+[![License: BUSL 1.1](https://img.shields.io/badge/License-BUSL%201.1-blue.svg)](https://github.com/maple-labs/allocation-strategy-private/blob/main/LICENSE)
 
 ## Overview
 
-This repository contains the Maple trading strategy contract.
+This repository contains the Maple allocation strategy contract.
 
 ## Setup
 
 This project was built using [Foundry](https://book.getfoundry.sh/). Refer to installation instructions [here](https://github.com/foundry-rs/foundry#installation).
 
 ```sh
-git clone git@github.com:maple-labs/trading-strategy-private.git
-cd trading-strategy-private
+git clone git@github.com:maple-labs/allocation-strategy-private.git
+cd allocation-strategy-private
 forge install
 ```
 

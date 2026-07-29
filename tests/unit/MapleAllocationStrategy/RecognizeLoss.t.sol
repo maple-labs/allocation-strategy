@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
-import { IMapleTradingStrategy } from "../../../contracts/interfaces/IMapleTradingStrategy.sol";
-import { MapleTradingStrategy }  from "../../../contracts/MapleTradingStrategy.sol";
+import { IMapleAllocationStrategy } from "../../../contracts/interfaces/IMapleAllocationStrategy.sol";
+import { MapleAllocationStrategy }  from "../../../contracts/MapleAllocationStrategy.sol";
 
 import { TestBase } from "../../utils/TestBase.sol";
 
@@ -29,10 +29,10 @@ contract RecognizeLossTestBase is TestBase {
 contract RecognizeLossFailureTests is RecognizeLossTestBase {
 
     function test_recognizeLoss_revert_functionPaused() external {
-        globals.__setIsFunctionPaused(MapleTradingStrategy.recognizeLoss.selector, true);
+        globals.__setIsFunctionPaused(MapleAllocationStrategy.recognizeLoss.selector, true);
 
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTS:PAUSED");
+        vm.expectRevert("MAS:PAUSED");
         strategy.recognizeLoss(deployedAssets1, managedWallet1);
     }
 
@@ -40,18 +40,18 @@ contract RecognizeLossFailureTests is RecognizeLossTestBase {
         strategy.__setLocked(2);
 
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTS:LOCKED");
+        vm.expectRevert("MAS:LOCKED");
         strategy.recognizeLoss(deployedAssets1, managedWallet1);
     }
 
     function test_recognizeLoss_revert_notAuthorized() external {
-        vm.expectRevert("MTS:NOT_AUTHORIZED");
+        vm.expectRevert("MAS:NOT_AUTHORIZED");
         strategy.recognizeLoss(deployedAssets1, managedWallet1);
     }
 
     function test_recognizeLoss_revert_zeroAssets() external {
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTS:RL:ZERO_ASSETS");
+        vm.expectRevert("MAS:RL:ZERO_ASSETS");
         strategy.recognizeLoss(0, managedWallet1);
     }
 
@@ -59,13 +59,13 @@ contract RecognizeLossFailureTests is RecognizeLossTestBase {
         strategy.__setDeployedAssetsOf(managedWallet1, 0);
 
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTS:RL:EXCEEDS_DEPLOYED");
+        vm.expectRevert("MAS:RL:EXCEEDS_DEPLOYED");
         strategy.recognizeLoss(1, managedWallet1);
     }
 
     function test_recognizeLoss_revert_exceedsDeployed() external {
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTS:RL:EXCEEDS_DEPLOYED");
+        vm.expectRevert("MAS:RL:EXCEEDS_DEPLOYED");
         strategy.recognizeLoss(deployedAssets1 + 1, managedWallet1);
     }
 
@@ -80,7 +80,7 @@ contract RecognizeLossSuccessTests is RecognizeLossTestBase {
         assertEq(strategy.assetsUnderManagement(),          deployedAssets1 + deployedAssets2);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.LossRecognized(strategyDelegate, managedWallet1, partialLoss);
+        emit IMapleAllocationStrategy.LossRecognized(strategyDelegate, managedWallet1, partialLoss);
 
         vm.prank(strategyDelegate);
         strategy.recognizeLoss(partialLoss, managedWallet1);
@@ -98,7 +98,7 @@ contract RecognizeLossSuccessTests is RecognizeLossTestBase {
         assertEq(strategy.assetsUnderManagement(),          deployedAssets1 + deployedAssets2);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.LossRecognized(operationalAdmin, managedWallet1, partialLoss);
+        emit IMapleAllocationStrategy.LossRecognized(operationalAdmin, managedWallet1, partialLoss);
 
         vm.prank(operationalAdmin);
         strategy.recognizeLoss(partialLoss, managedWallet1);
@@ -116,7 +116,7 @@ contract RecognizeLossSuccessTests is RecognizeLossTestBase {
         assertEq(strategy.assetsUnderManagement(),          deployedAssets1 + deployedAssets2);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.LossRecognized(strategyDelegate, managedWallet1, deployedAssets1);
+        emit IMapleAllocationStrategy.LossRecognized(strategyDelegate, managedWallet1, deployedAssets1);
 
         vm.prank(strategyDelegate);
         strategy.recognizeLoss(deployedAssets1, managedWallet1);
@@ -139,7 +139,7 @@ contract RecognizeLossSuccessTests is RecognizeLossTestBase {
         assertEq(strategy.unrealizedLosses(), impairedAssets);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.LossRecognized(strategyDelegate, managedWallet2, deployedAssets2);
+        emit IMapleAllocationStrategy.LossRecognized(strategyDelegate, managedWallet2, deployedAssets2);
 
         vm.prank(strategyDelegate);
         strategy.recognizeLoss(deployedAssets2, managedWallet2);
@@ -165,7 +165,7 @@ contract RecognizeLossSuccessTests is RecognizeLossTestBase {
         assertEq(strategy.unrealizedLosses(), impairedAssets);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.LossRecognized(strategyDelegate, managedWallet1, deployedAssets1);
+        emit IMapleAllocationStrategy.LossRecognized(strategyDelegate, managedWallet1, deployedAssets1);
 
         vm.prank(strategyDelegate);
         strategy.recognizeLoss(deployedAssets1, managedWallet1);
@@ -186,7 +186,7 @@ contract RecognizeLossSuccessTests is RecognizeLossTestBase {
         assertEq(strategy.assetsUnderManagement(),          deployedAssets1 + deployedAssets2);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.LossRecognized(strategyDelegate, managedWallet1, deployedAssets1);
+        emit IMapleAllocationStrategy.LossRecognized(strategyDelegate, managedWallet1, deployedAssets1);
 
         vm.prank(strategyDelegate);
         strategy.recognizeLoss(deployedAssets1, managedWallet1);
@@ -197,7 +197,7 @@ contract RecognizeLossSuccessTests is RecognizeLossTestBase {
         assertEq(strategy.assetsUnderManagement(),          deployedAssets2);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.LossRecognized(strategyDelegate, managedWallet2, partialLoss);
+        emit IMapleAllocationStrategy.LossRecognized(strategyDelegate, managedWallet2, partialLoss);
 
         vm.prank(strategyDelegate);
         strategy.recognizeLoss(partialLoss, managedWallet2);
@@ -208,7 +208,7 @@ contract RecognizeLossSuccessTests is RecognizeLossTestBase {
         assertEq(strategy.assetsUnderManagement(),          deployedAssets2 - partialLoss);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.LossRecognized(strategyDelegate, managedWallet2, partialLoss);
+        emit IMapleAllocationStrategy.LossRecognized(strategyDelegate, managedWallet2, partialLoss);
 
         vm.prank(strategyDelegate);
         strategy.recognizeLoss(partialLoss, managedWallet2);

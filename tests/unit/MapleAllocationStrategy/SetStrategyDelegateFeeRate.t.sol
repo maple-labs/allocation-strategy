@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
-import { IMapleTradingStrategy } from "../../../contracts/interfaces/IMapleTradingStrategy.sol";
+import { IMapleAllocationStrategy } from "../../../contracts/interfaces/IMapleAllocationStrategy.sol";
 
-import { MapleTradingStrategy } from "../../../contracts/MapleTradingStrategy.sol";
+import { MapleAllocationStrategy } from "../../../contracts/MapleAllocationStrategy.sol";
 
 import { TestBase } from "../../utils/TestBase.sol";
 
@@ -18,10 +18,10 @@ contract SetStrategyDelegateFeeRateFailureTests is TestBase {
     function test_setStrategyDelegateFeeRate_revert_functionPaused() external {
         uint32 strategyDelegateFeeRate = 0.04e6;  // 4% delegate fee
 
-        globals.__setIsFunctionPaused(MapleTradingStrategy.setStrategyDelegateFeeRate.selector, true);
+        globals.__setIsFunctionPaused(MapleAllocationStrategy.setStrategyDelegateFeeRate.selector, true);
 
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTS:PAUSED");
+        vm.expectRevert("MAS:PAUSED");
         strategy.setStrategyDelegateFeeRate(strategyDelegateFeeRate);
     }
 
@@ -31,14 +31,14 @@ contract SetStrategyDelegateFeeRateFailureTests is TestBase {
         strategy.__setLocked(2);
 
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTS:LOCKED");
+        vm.expectRevert("MAS:LOCKED");
         strategy.setStrategyDelegateFeeRate(strategyDelegateFeeRate);
     }
 
     function test_setStrategyDelegateFeeRate_revert_notStrategyDelegate() external {
         uint32 strategyDelegateFeeRate = 0.04e6;  // 4% delegate fee
 
-        vm.expectRevert("MTS:NOT_STRATEGY_DELEGATE");
+        vm.expectRevert("MAS:NOT_STRATEGY_DELEGATE");
         strategy.setStrategyDelegateFeeRate(strategyDelegateFeeRate);
     }
 
@@ -46,7 +46,7 @@ contract SetStrategyDelegateFeeRateFailureTests is TestBase {
         uint32 strategyDelegateFeeRate = 0.04e6;  // 4% delegate fee
 
         vm.prank(governor);
-        vm.expectRevert("MTS:NOT_STRATEGY_DELEGATE");
+        vm.expectRevert("MAS:NOT_STRATEGY_DELEGATE");
         strategy.setStrategyDelegateFeeRate(strategyDelegateFeeRate);
     }
 
@@ -54,7 +54,7 @@ contract SetStrategyDelegateFeeRateFailureTests is TestBase {
         uint32 strategyDelegateFeeRate = 0.04e6;  // 4% delegate fee
 
         vm.prank(operationalAdmin);
-        vm.expectRevert("MTS:NOT_STRATEGY_DELEGATE");
+        vm.expectRevert("MAS:NOT_STRATEGY_DELEGATE");
         strategy.setStrategyDelegateFeeRate(strategyDelegateFeeRate);
     }
 
@@ -65,7 +65,7 @@ contract SetStrategyDelegateFeeRateFailureTests is TestBase {
         strategy.__setFeeRates(strategyDelegateFeeRate, strategyProtocolFeeRate);
 
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTS:SSDFR:NO_CHANGE");
+        vm.expectRevert("MAS:SSDFR:NO_CHANGE");
         strategy.setStrategyDelegateFeeRate(strategyDelegateFeeRate);
     }
 
@@ -73,7 +73,7 @@ contract SetStrategyDelegateFeeRateFailureTests is TestBase {
         uint32 strategyDelegateFeeRate = 1.5e6;  // 150% delegate fee
 
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTS:SSDFR:INVALID_FEE_RATE");
+        vm.expectRevert("MAS:SSDFR:INVALID_FEE_RATE");
         strategy.setStrategyDelegateFeeRate(strategyDelegateFeeRate);
     }
 
@@ -84,7 +84,7 @@ contract SetStrategyDelegateFeeRateFailureTests is TestBase {
         strategy.__setFeeRates(0, strategyProtocolFeeRate);
 
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTS:SSDFR:INVALID_SUM_FEE_RATE");
+        vm.expectRevert("MAS:SSDFR:INVALID_SUM_FEE_RATE");
         strategy.setStrategyDelegateFeeRate(strategyDelegateFeeRate);
     }
 
@@ -107,7 +107,7 @@ contract SetStrategyDelegateFeeRateSuccessTests is TestBase {
         assertEq(strategy.strategyProtocolFeeRate(), 0);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.StrategyDelegateFeeRateSet(strategyDelegateFeeRate);
+        emit IMapleAllocationStrategy.StrategyDelegateFeeRateSet(strategyDelegateFeeRate);
 
         vm.prank(strategyDelegate);
         strategy.setStrategyDelegateFeeRate(strategyDelegateFeeRate);
@@ -126,7 +126,7 @@ contract SetStrategyDelegateFeeRateSuccessTests is TestBase {
         assertEq(strategy.strategyProtocolFeeRate(), strategyProtocolFeeRate);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.StrategyDelegateFeeRateSet(strategyDelegateFeeRate);
+        emit IMapleAllocationStrategy.StrategyDelegateFeeRateSet(strategyDelegateFeeRate);
 
         vm.prank(strategyDelegate);
         strategy.setStrategyDelegateFeeRate(strategyDelegateFeeRate);
@@ -142,7 +142,7 @@ contract SetStrategyDelegateFeeRateSuccessTests is TestBase {
         assertEq(strategy.strategyProtocolFeeRate(), 0);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.StrategyDelegateFeeRateSet(strategyDelegateFeeRate);
+        emit IMapleAllocationStrategy.StrategyDelegateFeeRateSet(strategyDelegateFeeRate);
 
         vm.prank(strategyDelegate);
         strategy.setStrategyDelegateFeeRate(strategyDelegateFeeRate);
@@ -158,7 +158,7 @@ contract SetStrategyDelegateFeeRateSuccessTests is TestBase {
         assertEq(strategy.strategyProtocolFeeRate(), 0);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.StrategyDelegateFeeRateSet(strategyDelegateFeeRate);
+        emit IMapleAllocationStrategy.StrategyDelegateFeeRateSet(strategyDelegateFeeRate);
 
         vm.prank(strategyDelegate);
         strategy.setStrategyDelegateFeeRate(strategyDelegateFeeRate);
@@ -177,7 +177,7 @@ contract SetStrategyDelegateFeeRateSuccessTests is TestBase {
         assertEq(strategy.strategyProtocolFeeRate(), strategyProtocolFeeRate);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.StrategyDelegateFeeRateSet(0);
+        emit IMapleAllocationStrategy.StrategyDelegateFeeRateSet(0);
 
         vm.prank(strategyDelegate);
         strategy.setStrategyDelegateFeeRate(0);
@@ -210,7 +210,7 @@ contract SetStrategyDelegateFeeRateSuccessTests is TestBase {
         assertEq(strategy.yieldDeadline(),        yieldDeadline);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.StrategyDelegateFeeRateSet(newStrategyDelegateFeeRate);
+        emit IMapleAllocationStrategy.StrategyDelegateFeeRateSet(newStrategyDelegateFeeRate);
 
         vm.prank(strategyDelegate);
         strategy.setStrategyDelegateFeeRate(newStrategyDelegateFeeRate);
@@ -250,7 +250,7 @@ contract SetStrategyDelegateFeeRateSuccessTests is TestBase {
         strategy.setStrategyDelegateFeeRate(strategyDelegateFeeRate);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldRealized(managedWallet, 0, netYield, delegateFee, protocolFee, yieldDuration, "SETTER");
+        emit IMapleAllocationStrategy.YieldRealized(managedWallet, 0, netYield, delegateFee, protocolFee, yieldDuration, "SETTER");
 
         vm.prank(managedWallet);
         strategy.realizeYield(yieldAmount, yieldDuration, "SETTER");

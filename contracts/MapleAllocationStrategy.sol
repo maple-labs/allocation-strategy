@@ -5,9 +5,6 @@ import { ERC20Helper } from "../modules/erc20-helper/src/ERC20Helper.sol";
 
 import { MapleProxiedInternals } from "../modules/proxy-factory/contracts/MapleProxiedInternals.sol";
 
-import { IMapleTradingStrategy } from "./interfaces/IMapleTradingStrategy.sol";
-import { Permissions }           from "./interfaces/IMapleTradingStrategyStorage.sol";
-
 import {
     IERC20Like,
     IGlobalsLike,
@@ -15,9 +12,12 @@ import {
     IStrategyManagerLike
 } from "./interfaces/Interfaces.sol";
 
-import { MapleTradingStrategyStorage } from "./MapleTradingStrategyStorage.sol";
+import { IMapleAllocationStrategy } from "./interfaces/IMapleAllocationStrategy.sol";
+import { Permissions }              from "./interfaces/IMapleAllocationStrategyStorage.sol";
 
-contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStorage, MapleProxiedInternals {
+import { MapleAllocationStrategyStorage } from "./MapleAllocationStrategyStorage.sol";
+
+contract MapleAllocationStrategy is IMapleAllocationStrategy, MapleAllocationStrategyStorage, MapleProxiedInternals {
 
     /**************************************************************************************************************************************/
     /*** Constants                                                                                                                      ***/
@@ -25,7 +25,7 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
 
     bytes32 internal constant INSTANCE_KEY = "MAPLE_MANAGED_WALLET";
 
-    string public constant STRATEGY_TYPE = "TRADING";
+    string public constant STRATEGY_TYPE = "ALLOCATION";
 
     uint256 internal constant HUNDRED_PERCENT        = 1e6;
     uint256 internal constant REALIZE_YIELD_COOLDOWN = 1 hours;
@@ -35,7 +35,7 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
     /**************************************************************************************************************************************/
 
     modifier nonReentrant() {
-        require(_locked == 1, "MTS:LOCKED");
+        require(_locked == 1, "MAS:LOCKED");
 
         _locked = 2;
 
@@ -50,14 +50,14 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
         require(
             msg.sender == IStrategyManagerLike(strategyManager).strategyDelegate() ||
             msg.sender == IGlobalsLike(globals_).operationalAdmin(),
-            "MTS:NOT_AUTHORIZED"
+            "MAS:NOT_AUTHORIZED"
         );
 
         _;
     }
 
     modifier onlyFactory() {
-        require(msg.sender == _factory(), "MTS:NOT_FACTORY");
+        require(msg.sender == _factory(), "MAS:NOT_FACTORY");
 
         _;
     }
@@ -68,7 +68,7 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
         require(
             msg.sender == IGlobalsLike(globals_).governor() ||
             msg.sender == IGlobalsLike(globals_).operationalAdmin(),
-            "MTS:NOT_ADMIN"
+            "MAS:NOT_ADMIN"
         );
 
         _;
@@ -78,32 +78,32 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
         require(
             msg.sender == strategyDelegate() ||
             msg.sender == securityAdmin(),
-            "MTS:NOT_AUTHORIZED"
+            "MAS:NOT_AUTHORIZED"
         );
 
         _;
     }
 
     modifier onlyStrategyDelegate() {
-        require(msg.sender == strategyDelegate(), "MTS:NOT_STRATEGY_DELEGATE");
+        require(msg.sender == strategyDelegate(), "MAS:NOT_STRATEGY_DELEGATE");
 
         _;
     }
 
     modifier onlyStrategyManager() {
-        require(msg.sender == strategyManager, "MTS:NOT_STRATEGY_MANAGER");
+        require(msg.sender == strategyManager, "MAS:NOT_STRATEGY_MANAGER");
 
         _;
     }
 
     modifier onlyManagedWallet() {
-        require(IGlobalsLike(globals()).isInstanceOf(INSTANCE_KEY, msg.sender), "MTS:NOT_MAPLE_MANAGED_WALLET");
+        require(IGlobalsLike(globals()).isInstanceOf(INSTANCE_KEY, msg.sender), "MAS:NOT_MAPLE_MANAGED_WALLET");
 
         _;
     }
 
     modifier whenNotPaused() {
-        require(!IGlobalsLike(globals()).isFunctionPaused(msg.sig), "MTS:PAUSED");
+        require(!IGlobalsLike(globals()).isFunctionPaused(msg.sig), "MAS:PAUSED");
 
         _;
     }
@@ -113,7 +113,7 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
     /**************************************************************************************************************************************/
 
     function migrate(address migrator_, bytes calldata arguments_) external override whenNotPaused onlyFactory {
-        require(_migrate(migrator_, arguments_), "MTS:M:FAILED");
+        require(_migrate(migrator_, arguments_), "MAS:M:FAILED");
     }
 
     function setImplementation(address implementation_) external override whenNotPaused onlyFactory {
@@ -121,7 +121,7 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
     }
 
     function upgrade(uint256 version_, bytes calldata arguments_) external override whenNotPaused {
-        require(msg.sender == securityAdmin(), "MTS:U:NOT_AUTHORIZED");
+        require(msg.sender == securityAdmin(), "MAS:U:NOT_AUTHORIZED");
 
         IProxyFactoryLike(_factory()).upgradeInstance(version_, arguments_);
 
@@ -138,19 +138,19 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
     )
         external override whenNotPaused nonReentrant onlyManagedWallet
     {
-        require(permissions[msg.sender].canDeployAssets, "MTS:DA:NOT_ALLOWED");
+        require(permissions[msg.sender].canDeployAssets, "MAS:DA:NOT_ALLOWED");
 
-        require(assets_ >  0,                     "MTS:DA:ZERO_ASSETS");
-        require(assets_ <= availableToWithdraw(), "MTS:DA:INSUFFICIENT_ASSETS");
+        require(assets_ >  0,                     "MAS:DA:ZERO_ASSETS");
+        require(assets_ <= availableToWithdraw(), "MAS:DA:INSUFFICIENT_ASSETS");
 
         uint256 deployedAssets_ = deployedAssetsOf[msg.sender] + assets_;
 
-        require(deployedAssets_ <= deploymentCapOf[msg.sender], "MTS:DA:CAP_EXCEEDED");
+        require(deployedAssets_ <= deploymentCapOf[msg.sender], "MAS:DA:CAP_EXCEEDED");
 
         totalDeployedAssets          += assets_;
         deployedAssetsOf[msg.sender] += assets_;
 
-        require(ERC20Helper.transfer(fundsAsset, msg.sender, assets_), "MTS:DA:TRANSFER_FAILED");
+        require(ERC20Helper.transfer(fundsAsset, msg.sender, assets_), "MAS:DA:TRANSFER_FAILED");
 
         emit AssetsDeployed(msg.sender, assets_, metadata_);
     }
@@ -174,15 +174,15 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
     )
         external override whenNotPaused nonReentrant onlyManagedWallet
     {
-        require(permissions[msg.sender].canReturnAssets, "MTS:RA:NOT_ALLOWED");
+        require(permissions[msg.sender].canReturnAssets, "MAS:RA:NOT_ALLOWED");
 
-        require(assets_ != 0,                             "MTS:RA:ZERO_ASSETS");
-        require(assets_ <= deployedAssetsOf[onBehalfOf_], "MTS:RA:EXCEEDS_ASSETS");
+        require(assets_ != 0,                             "MAS:RA:ZERO_ASSETS");
+        require(assets_ <= deployedAssetsOf[onBehalfOf_], "MAS:RA:EXCEEDS_ASSETS");
 
         totalDeployedAssets           -= assets_;
         deployedAssetsOf[onBehalfOf_] -= assets_;
 
-        require(ERC20Helper.transferFrom(fundsAsset, msg.sender, address(this), assets_), "MTS:RA:TRANSFER_FAILED");
+        require(ERC20Helper.transferFrom(fundsAsset, msg.sender, address(this), assets_), "MAS:RA:TRANSFER_FAILED");
 
         emit AssetsReturned(msg.sender, onBehalfOf_, assets_, metadata_);
     }
@@ -194,14 +194,14 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
     )
         external override whenNotPaused nonReentrant onlyManagedWallet
     {
-        require(permissions[msg.sender].canRealizeYield, "MTS:RY:NOT_ALLOWED");
-        require(yield_ <= yieldCap,                      "MTS:RY:CAP_EXCEEDED");
-        require(yieldCooldown() == 0,                    "MTS:RY:COOLDOWN");
+        require(permissions[msg.sender].canRealizeYield, "MAS:RY:NOT_ALLOWED");
+        require(yield_ <= yieldCap,                      "MAS:RY:CAP_EXCEEDED");
+        require(yieldCooldown() == 0,                    "MAS:RY:COOLDOWN");
 
         address fundsAsset_ = fundsAsset;
 
         if (yield_ != 0) {
-            require(ERC20Helper.transferFrom(fundsAsset_, msg.sender, address(this), yield_), "MTS:RY:TRANSFER_FROM_FAILED");
+            require(ERC20Helper.transferFrom(fundsAsset_, msg.sender, address(this), yield_), "MAS:RY:TRANSFER_FROM_FAILED");
         }
 
         ( uint256 netYield_, uint256 delegateFee_, uint256 protocolFee_ ) = _accrueFees(fundsAsset_, yield_);
@@ -226,21 +226,21 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
         uint256 unrealizedYield_ = unrealizedYield();
         uint256 cancelledAssets_ = assets_ == type(uint256).max ? unrealizedYield_ : assets_;
 
-        require(cancelledAssets_ != 0,                "MTS:CY:ZERO_ASSETS");
-        require(cancelledAssets_ <= unrealizedYield_, "MTS:CY:EXCEEDS_UNREALIZED");
+        require(cancelledAssets_ != 0,                "MAS:CY:ZERO_ASSETS");
+        require(cancelledAssets_ <= unrealizedYield_, "MAS:CY:EXCEEDS_UNREALIZED");
 
-        require(IGlobalsLike(globals()).isInstanceOf(INSTANCE_KEY, recipient_), "MTS:CY:INVALID_RECIPIENT");
+        require(IGlobalsLike(globals()).isInstanceOf(INSTANCE_KEY, recipient_), "MAS:CY:INVALID_RECIPIENT");
 
         scheduledYieldAssets = unrealizedYield_ - cancelledAssets_;
         yieldStart           = uint32(block.timestamp);
 
-        require(ERC20Helper.transfer(fundsAsset, recipient_, cancelledAssets_), "MTS:CY:TRANSFER_FAILED");
+        require(ERC20Helper.transfer(fundsAsset, recipient_, cancelledAssets_), "MAS:CY:TRANSFER_FAILED");
 
         emit YieldCancelled(msg.sender, recipient_, cancelledAssets_);
     }
 
     function impair(uint256 assets_) external override whenNotPaused nonReentrant onlyAdmin {
-        require(assets_ > 0, "MTS:I:ZERO_ASSETS");
+        require(assets_ > 0, "MAS:I:ZERO_ASSETS");
 
         impairedAssets += assets_;
 
@@ -272,8 +272,8 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
     )
         external override whenNotPaused nonReentrant onlyAdmin
     {
-        require(accounts_.length != 0,               "MTS:SDC:ZERO_LENGTH");
-        require(accounts_.length == amounts_.length, "MTS:SDC:LENGTH_MISMATCH");
+        require(accounts_.length != 0,               "MAS:SDC:ZERO_LENGTH");
+        require(accounts_.length == amounts_.length, "MAS:SDC:LENGTH_MISMATCH");
 
         address globals_ = globals();
 
@@ -283,10 +283,10 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
 
             require(
                 IGlobalsLike(globals_).isInstanceOf(INSTANCE_KEY, account_) || cap_ == 0,
-                "MTS:SDC:NOT_MAPLE_MANAGED_WALLET"
+                "MAS:SDC:NOT_MAPLE_MANAGED_WALLET"
             );
 
-            require(deploymentCapOf[account_] != cap_, "MTS:SDC:NO_CHANGE");
+            require(deploymentCapOf[account_] != cap_, "MAS:SDC:NO_CHANGE");
 
             deploymentCapOf[account_] = cap_;
 
@@ -295,7 +295,7 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
     }
 
     function setMetadata(string calldata metadata_) external override whenNotPaused nonReentrant onlyAdmin {
-        require(keccak256(bytes(metadata_)) != keccak256(bytes(strategyMetadata)), "MTS:SM:NO_CHANGE");
+        require(keccak256(bytes(metadata_)) != keccak256(bytes(strategyMetadata)), "MAS:SM:NO_CHANGE");
 
         strategyMetadata = metadata_;
 
@@ -312,12 +312,12 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
     {
         uint256 length_ = accounts_.length;
 
-        require(length_ != 0, "MTS:SP:ZERO_LENGTH");
+        require(length_ != 0, "MAS:SP:ZERO_LENGTH");
         require(
             length_ == canDeployAssets_.length &&
             length_ == canReturnAssets_.length &&
             length_ == canRealizeYield_.length,
-            "MTS:SP:LENGTH_MISMATCH"
+            "MAS:SP:LENGTH_MISMATCH"
         );
 
         address globals_ = globals();
@@ -329,7 +329,7 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
             bool    canRealizeYieldFlag_ = canRealizeYield_[i_];
             bool    isTotalRevoke_       = !canDeployAssetsFlag_ && !canReturnAssetsFlag_ && !canRealizeYieldFlag_;
 
-            require(IGlobalsLike(globals_).isInstanceOf(INSTANCE_KEY, account_) || isTotalRevoke_, "MTS:SP:NOT_MAPLE_MANAGED_WALLET");
+            require(IGlobalsLike(globals_).isInstanceOf(INSTANCE_KEY, account_) || isTotalRevoke_, "MAS:SP:NOT_MAPLE_MANAGED_WALLET");
 
             Permissions memory currentPermissions_ = permissions[account_];
 
@@ -337,7 +337,7 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
                 currentPermissions_.canDeployAssets != canDeployAssetsFlag_ ||
                 currentPermissions_.canReturnAssets != canReturnAssetsFlag_ ||
                 currentPermissions_.canRealizeYield != canRealizeYieldFlag_,
-                "MTS:SP:NO_CHANGE"
+                "MAS:SP:NO_CHANGE"
             );
 
             permissions[account_] = Permissions({
@@ -351,9 +351,9 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
     }
 
     function setStrategyDelegateFeeRate(uint32 strategyDelegateFeeRate_) external override whenNotPaused nonReentrant onlyStrategyDelegate {
-        require(strategyDelegateFeeRate_ != strategyDelegateFeeRate,                   "MTS:SSDFR:NO_CHANGE");
-        require(strategyDelegateFeeRate_ <= HUNDRED_PERCENT,                           "MTS:SSDFR:INVALID_FEE_RATE");
-        require(strategyDelegateFeeRate_ + strategyProtocolFeeRate <= HUNDRED_PERCENT, "MTS:SSDFR:INVALID_SUM_FEE_RATE");
+        require(strategyDelegateFeeRate_ != strategyDelegateFeeRate,                   "MAS:SSDFR:NO_CHANGE");
+        require(strategyDelegateFeeRate_ <= HUNDRED_PERCENT,                           "MAS:SSDFR:INVALID_FEE_RATE");
+        require(strategyDelegateFeeRate_ + strategyProtocolFeeRate <= HUNDRED_PERCENT, "MAS:SSDFR:INVALID_SUM_FEE_RATE");
 
         strategyDelegateFeeRate = strategyDelegateFeeRate_;
 
@@ -361,9 +361,9 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
     }
 
     function setStrategyProtocolFeeRate(uint32 strategyProtocolFeeRate_) external override whenNotPaused nonReentrant onlyProtocolAdmins {
-        require(strategyProtocolFeeRate_ != strategyProtocolFeeRate,                   "MTS:SSPFR:NO_CHANGE");
-        require(strategyProtocolFeeRate_ <= HUNDRED_PERCENT,                           "MTS:SSPFR:INVALID_FEE_RATE");
-        require(strategyDelegateFeeRate + strategyProtocolFeeRate_ <= HUNDRED_PERCENT, "MTS:SSPFR:INVALID_SUM_FEE_RATE");
+        require(strategyProtocolFeeRate_ != strategyProtocolFeeRate,                   "MAS:SSPFR:NO_CHANGE");
+        require(strategyProtocolFeeRate_ <= HUNDRED_PERCENT,                           "MAS:SSPFR:INVALID_FEE_RATE");
+        require(strategyDelegateFeeRate + strategyProtocolFeeRate_ <= HUNDRED_PERCENT, "MAS:SSPFR:INVALID_SUM_FEE_RATE");
 
         strategyProtocolFeeRate = strategyProtocolFeeRate_;
 
@@ -371,7 +371,7 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
     }
 
     function setYieldCap(uint256 yieldCap_) external override whenNotPaused nonReentrant onlyAdmin {
-        require(yieldCap_ != yieldCap, "MTS:SYC:NO_CHANGE");
+        require(yieldCap_ != yieldCap, "MAS:SYC:NO_CHANGE");
 
         yieldCap = yieldCap_;
 
@@ -401,8 +401,8 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
     )
         external override whenNotPaused nonReentrant onlyStrategyManager
     {
-        require(assets_ <= availableToWithdraw(),                        "MTS:WFUS:INSUFFICIENT_ASSETS");
-        require(ERC20Helper.transfer(fundsAsset, destination_, assets_), "MTS:WFUS:TRANSFER_FAILED");
+        require(assets_ <= availableToWithdraw(),                        "MAS:WFUS:INSUFFICIENT_ASSETS");
+        require(ERC20Helper.transfer(fundsAsset, destination_, assets_), "MAS:WFUS:TRANSFER_FAILED");
 
         emit StrategyWithdrawn(strategyManager, destination_, assets_);
     }
@@ -488,11 +488,11 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
         netYield_    = yield_ - delegateFee_ - protocolFee_;
 
         if (delegateFee_ != 0) {
-            require(ERC20Helper.transfer(fundsAsset_, strategyDelegate(), delegateFee_), "MTS:CF:DELEGATE_TRANSFER_FAILED");
+            require(ERC20Helper.transfer(fundsAsset_, strategyDelegate(), delegateFee_), "MAS:CF:DELEGATE_TRANSFER_FAILED");
         }
 
         if (protocolFee_ != 0) {
-            require(ERC20Helper.transfer(fundsAsset_, mapleTreasury(), protocolFee_), "MTS:CF:PROTOCOL_TRANSFER_FAILED");
+            require(ERC20Helper.transfer(fundsAsset_, mapleTreasury(), protocolFee_), "MAS:CF:PROTOCOL_TRANSFER_FAILED");
         }
     }
 
@@ -501,8 +501,8 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
     }
 
     function _removeImpairment(uint256 assets_) internal {
-        require(assets_ > 0,               "MTS:RI:ZERO_ASSETS");
-        require(assets_ <= impairedAssets, "MTS:RI:EXCEEDS_IMPAIRMENT");
+        require(assets_ > 0,               "MAS:RI:ZERO_ASSETS");
+        require(assets_ <= impairedAssets, "MAS:RI:EXCEEDS_IMPAIRMENT");
 
         impairedAssets -= assets_;
 
@@ -510,8 +510,8 @@ contract MapleTradingStrategy is IMapleTradingStrategy, MapleTradingStrategyStor
     }
 
     function _recognizeLoss(uint256 assets_, address deployer_) internal {
-        require(assets_ != 0,                           "MTS:RL:ZERO_ASSETS");
-        require(assets_ <= deployedAssetsOf[deployer_], "MTS:RL:EXCEEDS_DEPLOYED");
+        require(assets_ != 0,                           "MAS:RL:ZERO_ASSETS");
+        require(assets_ <= deployedAssetsOf[deployer_], "MAS:RL:EXCEEDS_DEPLOYED");
 
         totalDeployedAssets         -= assets_;
         deployedAssetsOf[deployer_] -= assets_;

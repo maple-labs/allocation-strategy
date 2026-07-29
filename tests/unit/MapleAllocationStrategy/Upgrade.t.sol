@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import { IMapleProxied } from "../../../modules/proxy-factory/contracts/interfaces/IMapleProxied.sol";
 
-import { MapleTradingStrategy } from "../../../contracts/MapleTradingStrategy.sol";
+import { MapleAllocationStrategy } from "../../../contracts/MapleAllocationStrategy.sol";
 
 import { MockMigrator } from "../../utils/Mocks.sol";
 import { TestBase }     from "../../utils/TestBase.sol";
@@ -11,7 +11,7 @@ import { TestBase }     from "../../utils/TestBase.sol";
 contract UpgradeTests is TestBase {
 
     address migrator          = address(new MockMigrator());
-    address newImplementation = address(new MapleTradingStrategy());
+    address newImplementation = address(new MapleAllocationStrategy());
 
     bytes arguments = abi.encode(address(1337));
 
@@ -25,10 +25,10 @@ contract UpgradeTests is TestBase {
     }
 
     function test_upgrade_revert_functionPaused() external {
-        globals.__setIsFunctionPaused(MapleTradingStrategy.upgrade.selector, true);
+        globals.__setIsFunctionPaused(MapleAllocationStrategy.upgrade.selector, true);
 
         vm.prank(securityAdmin);
-        vm.expectRevert("MTS:PAUSED");
+        vm.expectRevert("MAS:PAUSED");
         strategy.upgrade(200, arguments);
     }
 
@@ -41,7 +41,7 @@ contract UpgradeTests is TestBase {
     }
 
     function test_upgrade_revert_notAuthorized() external {
-        vm.expectRevert("MTS:U:NOT_AUTHORIZED");
+        vm.expectRevert("MAS:U:NOT_AUTHORIZED");
         strategy.upgrade(200, arguments);
     }
 

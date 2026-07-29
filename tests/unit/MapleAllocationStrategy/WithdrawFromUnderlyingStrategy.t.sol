@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
-import { IMapleTradingStrategy } from "../../../contracts/interfaces/IMapleTradingStrategy.sol";
+import { IMapleAllocationStrategy } from "../../../contracts/interfaces/IMapleAllocationStrategy.sol";
 
-import { MapleTradingStrategy } from "../../../contracts/MapleTradingStrategy.sol";
+import { MapleAllocationStrategy } from "../../../contracts/MapleAllocationStrategy.sol";
 
 import { TestBase } from "../../utils/TestBase.sol";
 
@@ -20,10 +20,10 @@ contract WithdrawFromUnderlyingStrategyTests is TestBase {
     }
 
     function test_withdrawFromUnderlyingStrategy_revert_functionPaused() external {
-        globals.__setIsFunctionPaused(MapleTradingStrategy.withdrawFromUnderlyingStrategy.selector, true);
+        globals.__setIsFunctionPaused(MapleAllocationStrategy.withdrawFromUnderlyingStrategy.selector, true);
 
         vm.prank(address(manager));
-        vm.expectRevert("MTS:PAUSED");
+        vm.expectRevert("MAS:PAUSED");
         strategy.withdrawFromUnderlyingStrategy(destination, assets, "");
     }
 
@@ -31,18 +31,18 @@ contract WithdrawFromUnderlyingStrategyTests is TestBase {
         strategy.__setLocked(2);
 
         vm.prank(address(manager));
-        vm.expectRevert("MTS:LOCKED");
+        vm.expectRevert("MAS:LOCKED");
         strategy.withdrawFromUnderlyingStrategy(destination, assets, "");
     }
 
     function test_withdrawFromUnderlyingStrategy_revert_notStrategyManager() external {
-        vm.expectRevert("MTS:NOT_STRATEGY_MANAGER");
+        vm.expectRevert("MAS:NOT_STRATEGY_MANAGER");
         strategy.withdrawFromUnderlyingStrategy(destination, assets, "");
     }
 
     function test_withdrawFromUnderlyingStrategy_revert_insufficientAssets() external {
         vm.prank(address(manager));
-        vm.expectRevert("MTS:WFUS:INSUFFICIENT_ASSETS");
+        vm.expectRevert("MAS:WFUS:INSUFFICIENT_ASSETS");
         strategy.withdrawFromUnderlyingStrategy(destination, assets + 1, "");
     }
 
@@ -52,7 +52,7 @@ contract WithdrawFromUnderlyingStrategyTests is TestBase {
         assertEq(strategy.unrealizedYield(), 1);
 
         vm.prank(address(manager));
-        vm.expectRevert("MTS:WFUS:INSUFFICIENT_ASSETS");
+        vm.expectRevert("MAS:WFUS:INSUFFICIENT_ASSETS");
         strategy.withdrawFromUnderlyingStrategy(destination, assets, "");
     }
 
@@ -60,7 +60,7 @@ contract WithdrawFromUnderlyingStrategyTests is TestBase {
         asset.__setTransferReverts(true);
 
         vm.prank(address(manager));
-        vm.expectRevert("MTS:WFUS:TRANSFER_FAILED");
+        vm.expectRevert("MAS:WFUS:TRANSFER_FAILED");
         strategy.withdrawFromUnderlyingStrategy(destination, assets, "");
     }
 
@@ -73,7 +73,7 @@ contract WithdrawFromUnderlyingStrategyTests is TestBase {
         assertEq(strategy.assetsUnderManagement(), assets);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.StrategyWithdrawn(address(manager), destination, withdrawalAmount);
+        emit IMapleAllocationStrategy.StrategyWithdrawn(address(manager), destination, withdrawalAmount);
 
         vm.prank(address(manager));
         strategy.withdrawFromUnderlyingStrategy(destination, withdrawalAmount, "");
@@ -91,7 +91,7 @@ contract WithdrawFromUnderlyingStrategyTests is TestBase {
         assertEq(strategy.assetsUnderManagement(), assets);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.StrategyWithdrawn(address(manager), destination, assets);
+        emit IMapleAllocationStrategy.StrategyWithdrawn(address(manager), destination, assets);
 
         vm.prank(address(manager));
         strategy.withdrawFromUnderlyingStrategy(destination, assets, "");
@@ -129,7 +129,7 @@ contract WithdrawFromUnderlyingStrategyTests is TestBase {
         assertEq(strategy.assetsUnderManagement(), assets - unrealizedYield);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.StrategyWithdrawn(address(manager), destination, withdrawalAmount);
+        emit IMapleAllocationStrategy.StrategyWithdrawn(address(manager), destination, withdrawalAmount);
 
         vm.prank(address(manager));
         strategy.withdrawFromUnderlyingStrategy(destination, withdrawalAmount, "");
@@ -170,7 +170,7 @@ contract WithdrawFromUnderlyingStrategyTests is TestBase {
         assertEq(strategy.assetsUnderManagement(), withdrawalAmount);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.StrategyWithdrawn(address(manager), destination, withdrawalAmount);
+        emit IMapleAllocationStrategy.StrategyWithdrawn(address(manager), destination, withdrawalAmount);
 
         vm.prank(address(manager));
         strategy.withdrawFromUnderlyingStrategy(destination, withdrawalAmount, "");

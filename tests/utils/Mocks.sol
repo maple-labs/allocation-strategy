@@ -3,19 +3,19 @@ pragma solidity ^0.8.0;
 
 import { MockERC20 } from "../../modules/erc20/contracts/test/mocks/MockERC20.sol";
 
-import { MapleTradingStrategyStorage } from "../../contracts/MapleTradingStrategyStorage.sol";
+import { MapleAllocationStrategyStorage } from "../../contracts/MapleAllocationStrategyStorage.sol";
 
 contract MockAsset is MockERC20("Asset", "A", 6) {
 
     bool transferReverts;
     bool transferFromReverts;
 
-    function __setTransferReverts(bool transferReverts_) external {
-        transferReverts = transferReverts_;
-    }
-
     function __setTransferFromReverts(bool transferFromReverts_) external {
         transferFromReverts = transferFromReverts_;
+    }
+
+    function __setTransferReverts(bool transferReverts_) external {
+        transferReverts = transferReverts_;
     }
 
     function transfer(address to_, uint256 amount_) public override returns (bool success_) {
@@ -67,10 +67,6 @@ contract MockGlobals {
         governor = governor_;
     }
 
-    function __setMapleTreasury(address mapleTreasury_) external {
-        mapleTreasury = mapleTreasury_;
-    }
-
     function __setIsFunctionPaused(bytes4 signature_, bool isFunctionPaused_) external {
         isFunctionPaused[signature_] = isFunctionPaused_;
     }
@@ -81,6 +77,10 @@ contract MockGlobals {
 
     function __setIsPoolAsset(address asset_, bool isPoolAsset_) external {
         isPoolAsset[asset_] = isPoolAsset_;
+    }
+
+    function __setMapleTreasury(address mapleTreasury_) external {
+        mapleTreasury = mapleTreasury_;
     }
 
     function __setOperationalAdmin(address operationalAdmin_) external {
@@ -117,7 +117,7 @@ contract MockStrategyManager {
 
 }
 
-contract MockMigrator is MapleTradingStrategyStorage {
+contract MockMigrator is MapleAllocationStrategyStorage {
 
     fallback() external {
         strategyManager = abi.decode(msg.data, (address));

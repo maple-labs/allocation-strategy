@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
-import { IMapleTradingStrategy } from "../../../contracts/interfaces/IMapleTradingStrategy.sol";
+import { IMapleAllocationStrategy } from "../../../contracts/interfaces/IMapleAllocationStrategy.sol";
 
 import { TestBase } from "../../utils/TestBase.sol";
 
@@ -11,10 +11,10 @@ contract SetPermissionsFailureTests is TestBase {
     address managedWallet2 = makeAddr("managedWallet2");
 
     function test_setPermissions_revert_functionPaused() external {
-        globals.__setIsFunctionPaused(IMapleTradingStrategy.setPermissions.selector, true);
+        globals.__setIsFunctionPaused(IMapleAllocationStrategy.setPermissions.selector, true);
 
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTS:PAUSED");
+        vm.expectRevert("MAS:PAUSED");
         strategy.setPermissions(new address[](0), new bool[](0), new bool[](0), new bool[](0));
     }
 
@@ -22,38 +22,38 @@ contract SetPermissionsFailureTests is TestBase {
         strategy.__setLocked(2);
 
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTS:LOCKED");
+        vm.expectRevert("MAS:LOCKED");
         strategy.setPermissions(new address[](0), new bool[](0), new bool[](0), new bool[](0));
     }
 
     function test_setPermissions_revert_notAuthorized() external {
-        vm.expectRevert("MTS:NOT_AUTHORIZED");
+        vm.expectRevert("MAS:NOT_AUTHORIZED");
         strategy.setPermissions(new address[](0), new bool[](0), new bool[](0), new bool[](0));
     }
 
     function test_setPermissions_revert_notAuthorized_operationalAdmin() external {
         vm.prank(operationalAdmin);
-        vm.expectRevert("MTS:NOT_AUTHORIZED");
+        vm.expectRevert("MAS:NOT_AUTHORIZED");
         strategy.setPermissions(new address[](0), new bool[](0), new bool[](0), new bool[](0));
     }
 
     function test_setPermissions_revert_zeroLength() external {
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTS:SP:ZERO_LENGTH");
+        vm.expectRevert("MAS:SP:ZERO_LENGTH");
         strategy.setPermissions(new address[](0), new bool[](0), new bool[](0), new bool[](0));
     }
 
     function test_setPermissions_revert_lengthMismatch() external {
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTS:SP:LENGTH_MISMATCH");
+        vm.expectRevert("MAS:SP:LENGTH_MISMATCH");
         strategy.setPermissions(new address[](2), new bool[](1), new bool[](2), new bool[](2));
 
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTS:SP:LENGTH_MISMATCH");
+        vm.expectRevert("MAS:SP:LENGTH_MISMATCH");
         strategy.setPermissions(new address[](2), new bool[](2), new bool[](1), new bool[](2));
 
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTS:SP:LENGTH_MISMATCH");
+        vm.expectRevert("MAS:SP:LENGTH_MISMATCH");
         strategy.setPermissions(new address[](2), new bool[](2), new bool[](2), new bool[](1));
     }
 
@@ -61,7 +61,7 @@ contract SetPermissionsFailureTests is TestBase {
         address invalidWallet = makeAddr("invalidWallet");
 
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTS:SP:NOT_MAPLE_MANAGED_WALLET");
+        vm.expectRevert("MAS:SP:NOT_MAPLE_MANAGED_WALLET");
         strategy.setPermissions(
             array(invalidWallet),
             array(true),
@@ -75,7 +75,7 @@ contract SetPermissionsFailureTests is TestBase {
         globals.__setIsInstanceOf("MAPLE_MANAGED_WALLET", managedWallet2, false);
 
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTS:SP:NOT_MAPLE_MANAGED_WALLET");
+        vm.expectRevert("MAS:SP:NOT_MAPLE_MANAGED_WALLET");
         strategy.setPermissions(
             array(managedWallet1, managedWallet2),
             array(true,            true),
@@ -88,7 +88,7 @@ contract SetPermissionsFailureTests is TestBase {
         address managedWallet = makeAddr("managedWallet");
 
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTS:SP:NO_CHANGE");
+        vm.expectRevert("MAS:SP:NO_CHANGE");
         strategy.setPermissions(
             array(managedWallet),
             array(false),
@@ -111,7 +111,7 @@ contract SetPermissionsFailureTests is TestBase {
         assertPermissions(managedWallet1, true, false, true);
 
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTS:SP:NO_CHANGE");
+        vm.expectRevert("MAS:SP:NO_CHANGE");
         strategy.setPermissions(
             array(managedWallet1),
             array(true),
@@ -140,7 +140,7 @@ contract SetPermissionsSuccessTests is TestBase {
         assertPermissions(managedWallet1, false, false, false);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.PermissionSet(managedWallet1, true, false, true);
+        emit IMapleAllocationStrategy.PermissionSet(managedWallet1, true, false, true);
 
         vm.prank(strategyDelegate);
         strategy.setPermissions(
@@ -155,13 +155,13 @@ contract SetPermissionsSuccessTests is TestBase {
 
     function test_setPermissions_success_multipleAddresses() external {
         vm.expectEmit();
-        emit IMapleTradingStrategy.PermissionSet(managedWallet1, true, false, false);
+        emit IMapleAllocationStrategy.PermissionSet(managedWallet1, true, false, false);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.PermissionSet(managedWallet2, false, true, false);
+        emit IMapleAllocationStrategy.PermissionSet(managedWallet2, false, true, false);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.PermissionSet(managedWallet3, false, false, true);
+        emit IMapleAllocationStrategy.PermissionSet(managedWallet3, false, false, true);
 
         vm.prank(strategyDelegate);
         strategy.setPermissions(
@@ -178,10 +178,10 @@ contract SetPermissionsSuccessTests is TestBase {
 
     function test_setPermissions_success_duplicateAddress() external {
         vm.expectEmit();
-        emit IMapleTradingStrategy.PermissionSet(managedWallet1, true, false, false);
+        emit IMapleAllocationStrategy.PermissionSet(managedWallet1, true, false, false);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.PermissionSet(managedWallet1, false, true, true);
+        emit IMapleAllocationStrategy.PermissionSet(managedWallet1, false, true, true);
 
         vm.prank(strategyDelegate);
         strategy.setPermissions(
@@ -196,7 +196,7 @@ contract SetPermissionsSuccessTests is TestBase {
 
     function test_setPermissions_success_calledBySecurityAdmin() external {
         vm.expectEmit();
-        emit IMapleTradingStrategy.PermissionSet(managedWallet1, false, true, false);
+        emit IMapleAllocationStrategy.PermissionSet(managedWallet1, false, true, false);
 
         vm.prank(securityAdmin);
         strategy.setPermissions(
@@ -223,7 +223,7 @@ contract SetPermissionsSuccessTests is TestBase {
         globals.__setIsInstanceOf("MAPLE_MANAGED_WALLET", managedWallet1, false);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.PermissionSet(managedWallet1, false, false, false);
+        emit IMapleAllocationStrategy.PermissionSet(managedWallet1, false, false, false);
 
         vm.prank(strategyDelegate);
         strategy.setPermissions(

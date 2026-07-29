@@ -14,9 +14,9 @@ struct Permissions {
 }
 
 /**
- *  @title Defines the storage layout of a Maple trading strategy.
+ *  @title Defines the storage layout of a Maple allocation strategy.
  */
-interface IMapleTradingStrategyStorage {
+interface IMapleAllocationStrategyStorage {
 
     /**************************************************************************************************************************************/
     /*** Addresses                                                                                                                      ***/
@@ -58,16 +58,16 @@ interface IMapleTradingStrategyStorage {
     /**************************************************************************************************************************************/
 
     /**
-     *  @dev    Returns the amount of assets currently deployed by a trading address.
-     *  @param  account        Address of the trading address.
+     *  @dev    Returns the amount of assets currently deployed by a managed wallet.
+     *  @param  account        Address of the managed wallet.
      *  @return deployedAssets Amount of assets currently deployed by the address.
      */
     function deployedAssetsOf(address account) external view returns (uint256 deployedAssets);
 
     /**
-     *  @dev    Returns the deployment cap configured for a trading address.
-     *  @param  account       Address of the trading address to read the cap for.
-     *  @return deploymentCap Maximum amount of assets the trading address can deploy.
+     *  @dev    Returns the deployment cap configured for a managed wallet.
+     *  @param  account       Address of the managed wallet to read the cap for.
+     *  @return deploymentCap Maximum amount of assets the managed wallet can deploy.
      */
     function deploymentCapOf(address account) external view returns (uint256 deploymentCap);
 
@@ -94,7 +94,7 @@ interface IMapleTradingStrategyStorage {
     function scheduledYieldAssets() external view returns (uint256 scheduledYieldAssets);
 
     /**
-     *  @dev    Returns the total amount of assets currently deployed across all trading addresses.
+     *  @dev    Returns the total amount of assets currently deployed across all managed wallets.
      *  @return totalDeployedAssets Total amount of assets currently deployed by the strategy.
      */
     function totalDeployedAssets() external view returns (uint256 totalDeployedAssets);
@@ -140,7 +140,7 @@ interface IMapleTradingStrategyStorage {
     /**************************************************************************************************************************************/
 
     /**
-     *  @dev    Returns arbitrary metadata associated with this instance of the trading strategy.
+     *  @dev    Returns arbitrary metadata associated with this instance of the allocation strategy.
      *  @return strategyMetadata Optional metadata associated with the strategy.
      */
     function strategyMetadata() external view returns (string memory strategyMetadata);

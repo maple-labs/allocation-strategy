@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
-import { IMapleTradingStrategy } from "../../../contracts/interfaces/IMapleTradingStrategy.sol";
+import { IMapleAllocationStrategy } from "../../../contracts/interfaces/IMapleAllocationStrategy.sol";
 
 import { TestBase } from "../../utils/TestBase.sol";
 
@@ -11,10 +11,10 @@ contract SetYieldCapFailureTests is TestBase {
     uint256 newYieldCap = 2_000_000e6;
 
     function test_setYieldCap_revert_functionPaused() external {
-        globals.__setIsFunctionPaused(IMapleTradingStrategy.setYieldCap.selector, true);
+        globals.__setIsFunctionPaused(IMapleAllocationStrategy.setYieldCap.selector, true);
 
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTS:PAUSED");
+        vm.expectRevert("MAS:PAUSED");
         strategy.setYieldCap(newYieldCap);
     }
 
@@ -22,18 +22,18 @@ contract SetYieldCapFailureTests is TestBase {
         strategy.__setLocked(2);
 
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTS:LOCKED");
+        vm.expectRevert("MAS:LOCKED");
         strategy.setYieldCap(newYieldCap);
     }
 
     function test_setYieldCap_revert_notAuthorized() external {
-        vm.expectRevert("MTS:NOT_AUTHORIZED");
+        vm.expectRevert("MAS:NOT_AUTHORIZED");
         strategy.setYieldCap(newYieldCap);
     }
 
     function test_setYieldCap_revert_noChange() external {
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTS:SYC:NO_CHANGE");
+        vm.expectRevert("MAS:SYC:NO_CHANGE");
         strategy.setYieldCap(oldYieldCap);
     }
 
@@ -48,7 +48,7 @@ contract SetYieldCapSuccessTests is TestBase {
         assertEq(strategy.yieldCap(), oldYieldCap);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldCapSet(newYieldCap);
+        emit IMapleAllocationStrategy.YieldCapSet(newYieldCap);
 
         vm.prank(strategyDelegate);
         strategy.setYieldCap(newYieldCap);
@@ -62,7 +62,7 @@ contract SetYieldCapSuccessTests is TestBase {
         assertEq(strategy.yieldCap(), newYieldCap);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldCapSet(oldYieldCap);
+        emit IMapleAllocationStrategy.YieldCapSet(oldYieldCap);
 
         vm.prank(strategyDelegate);
         strategy.setYieldCap(oldYieldCap);
@@ -74,7 +74,7 @@ contract SetYieldCapSuccessTests is TestBase {
         assertEq(strategy.yieldCap(), oldYieldCap);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldCapSet(0);
+        emit IMapleAllocationStrategy.YieldCapSet(0);
 
         vm.prank(strategyDelegate);
         strategy.setYieldCap(0);
@@ -86,7 +86,7 @@ contract SetYieldCapSuccessTests is TestBase {
         assertEq(strategy.yieldCap(), oldYieldCap);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.YieldCapSet(newYieldCap);
+        emit IMapleAllocationStrategy.YieldCapSet(newYieldCap);
 
         vm.prank(operationalAdmin);
         strategy.setYieldCap(newYieldCap);

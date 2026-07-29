@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
-import { MapleTradingStrategy }            from "../../contracts/MapleTradingStrategy.sol";
-import { MapleTradingStrategyInitializer } from "../../contracts/MapleTradingStrategyInitializer.sol";
+import { MapleAllocationStrategy }            from "../../contracts/MapleAllocationStrategy.sol";
+import { MapleAllocationStrategyInitializer } from "../../contracts/MapleAllocationStrategyInitializer.sol";
 
-import { Permissions }                       from "../../contracts/interfaces/IMapleTradingStrategyStorage.sol";
-import { TradingStrategyInitializerParams }  from "../../contracts/interfaces/IMapleTradingStrategyInitializer.sol";
+import { AllocationStrategyInitializerParams } from "../../contracts/interfaces/IMapleAllocationStrategyInitializer.sol";
+import { Permissions }                         from "../../contracts/interfaces/IMapleAllocationStrategyStorage.sol";
 
-contract MapleTradingStrategyHarness is MapleTradingStrategy {
+contract MapleAllocationStrategyHarness is MapleAllocationStrategy {
 
     function __setDeployedAssetsOf(address account_, uint256 amount_) external {
         totalDeployedAssets = totalDeployedAssets - deployedAssetsOf[account_] + amount_;
@@ -59,9 +59,9 @@ contract MapleTradingStrategyHarness is MapleTradingStrategy {
 
 }
 
-contract MapleTradingStrategyInitializerHarness is MapleTradingStrategyInitializer {
+contract MapleAllocationStrategyInitializerHarness is MapleAllocationStrategyInitializer {
 
-    function __initialize(address strategyManager_, TradingStrategyInitializerParams memory params_) external {
+    function __initialize(address strategyManager_, AllocationStrategyInitializerParams memory params_) external {
         _initialize(strategyManager_, params_);
     }
 

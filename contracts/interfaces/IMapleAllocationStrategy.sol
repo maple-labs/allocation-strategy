@@ -3,12 +3,12 @@ pragma solidity ^0.8.0;
 
 import { IMapleProxied } from "../../modules/proxy-factory/contracts/interfaces/IMapleProxied.sol";
 
-import { IMapleTradingStrategyStorage } from "./IMapleTradingStrategyStorage.sol";
+import { IMapleAllocationStrategyStorage } from "./IMapleAllocationStrategyStorage.sol";
 
 /**
- *  @title Defines a Maple trading strategy.
+ *  @title Defines a Maple allocation strategy.
  */
-interface IMapleTradingStrategy is IMapleTradingStrategyStorage, IMapleProxied {
+interface IMapleAllocationStrategy is IMapleAllocationStrategyStorage, IMapleProxied {
 
     /**************************************************************************************************************************************/
     /*** Events                                                                                                                         ***/
@@ -32,9 +32,9 @@ interface IMapleTradingStrategy is IMapleTradingStrategyStorage, IMapleProxied {
     event AssetsReturned(address indexed caller, address indexed onBehalfOf, uint256 assets, bytes metadata);
 
     /**
-     *  @dev   Emitted when the deployment cap of a trading address is set.
-     *  @param account       Trading address the cap was set for.
-     *  @param deploymentCap New deployment cap for the trading address.
+     *  @dev   Emitted when the deployment cap of a managed wallet is set.
+     *  @param account       Managed wallet the cap was set for.
+     *  @param deploymentCap New deployment cap for the managed wallet.
      */
     event DeploymentCapSet(address indexed account, uint256 deploymentCap);
 
@@ -59,8 +59,8 @@ interface IMapleTradingStrategy is IMapleTradingStrategyStorage, IMapleProxied {
     event LossRecognized(address indexed caller, address indexed deployer, uint256 assets);
 
     /**
-     *  @dev   Emitted when permissions are set for a trading address.
-     *  @param account         Trading address the permissions were set for.
+     *  @dev   Emitted when permissions are set for a managed wallet.
+     *  @param account         Managed wallet the permissions were set for.
      *  @param canDeployAssets Defines if the address can call deployAssets().
      *  @param canReturnAssets Defines if the address can call returnAssets().
      *  @param canRealizeYield Defines if the address can call realizeYield().
@@ -80,9 +80,9 @@ interface IMapleTradingStrategy is IMapleTradingStrategyStorage, IMapleProxied {
     event StrategyDelegateFeeRateSet(uint32 strategyDelegateFeeRate);
 
     /**
-     *  @dev   Emitted when assets are deployed into the trading strategy.
+     *  @dev   Emitted when assets are deployed into the allocation strategy.
      *  @param strategyManager Address of the associated strategy manager.
-     *  @param assets          Amount of assets transferred into the trading strategy.
+     *  @param assets          Amount of assets transferred into the allocation strategy.
      */
     event StrategyFunded(address indexed strategyManager, uint256 assets);
 
@@ -100,10 +100,10 @@ interface IMapleTradingStrategy is IMapleTradingStrategyStorage, IMapleProxied {
     event StrategyProtocolFeeRateSet(uint32 strategyProtocolFeeRate);
 
     /**
-     *  @dev   Emitted when assets are withdrawn from the trading strategy.
+     *  @dev   Emitted when assets are withdrawn from the allocation strategy.
      *  @param strategyManager Address of the associated strategy manager.
      *  @param destination     Address that received the withdrawn assets.
-     *  @param assets          Amount of assets withdrawn from the trading strategy.
+     *  @param assets          Amount of assets withdrawn from the allocation strategy.
      */
     event StrategyWithdrawn(address indexed strategyManager, address indexed destination, uint256 assets);
 
@@ -147,7 +147,7 @@ interface IMapleTradingStrategy is IMapleTradingStrategyStorage, IMapleProxied {
 
     /**
      *  @dev   Transfers assets from the strategy to the caller.
-     *         Caller must be a valid trading address on MapleGlobals.
+     *         Caller must be a valid managed wallet on MapleGlobals.
      *         Caller must have permission to deploy assets.
      *         Cannot deploy more assets than allowed by the deployment cap.
      *         Cannot deploy more assets than are currently available in the strategy.
@@ -164,7 +164,7 @@ interface IMapleTradingStrategy is IMapleTradingStrategyStorage, IMapleProxied {
 
     /**
      *  @dev   Transfers assets from the caller to the strategy.
-     *         Caller must be a valid trading address on MapleGlobals.
+     *         Caller must be a valid managed wallet on MapleGlobals.
      *         Caller must have permission to return assets.
      *         Cannot return more assets than were already deployed.
      *  @param assets     Amount of assets to return.
@@ -176,9 +176,9 @@ interface IMapleTradingStrategy is IMapleTradingStrategyStorage, IMapleProxied {
 
     /**
      *  @dev   Transfers assets from the caller to the yield buffer.
-     *         Caller must be a valid trading address on MapleGlobals.
+     *         Caller must be a valid managed wallet on MapleGlobals.
      *         Caller must have permission to realize yield.
-     *         Can only be called once per hour across all trading addresses.
+     *         Can only be called once per hour across all managed wallets.
      *         Zero assets is valid and only updates the duration of the yield buffer.
      *         Zero duration is valid and causes all yield to be realized immediately.
      *         Cannot realize more assets than allowed by the yield cap.
@@ -199,7 +199,7 @@ interface IMapleTradingStrategy is IMapleTradingStrategyStorage, IMapleProxied {
      *         Remaining unrealized yield continues on its original schedule.
      *  @param assets    Amount of unrealized yield to cancel.
      *                   Can use `type(uint256).max` to cancel all remaining unrealized yield.
-     *  @param recipient Address to receive the cancelled yield. Must be a valid trading address on globals.
+     *  @param recipient Address to receive the cancelled yield. Must be a valid managed wallet on globals.
      */
     function cancelYield(uint256 assets, address recipient) external;
 
@@ -237,25 +237,25 @@ interface IMapleTradingStrategy is IMapleTradingStrategyStorage, IMapleProxied {
     function recognizeLossAndRemoveImpairment(uint256 assetsLost, uint256 assetsUnimpaired, address deployer) external;
 
     /**
-     *  @dev   Sets the deployment cap for a list of trading addresses.
+     *  @dev   Sets the deployment cap for a list of managed wallets.
      *         Callable only by the strategy delegate or operational admin.
-     *  @param accounts Trading addresses to set deployment caps for.
-     *  @param amounts  New deployment cap to set for each trading address.
+     *  @param accounts Managed wallets to set deployment caps for.
+     *  @param amounts  New deployment cap to set for each managed wallet.
      */
     function setDeploymentCaps(address[] calldata accounts, uint256[] calldata amounts) external;
 
     /**
-     *  @dev   Updates the metadata of the trading strategy.
+     *  @dev   Updates the metadata of the allocation strategy.
      *         Callable only by the strategy delegate or operational admin.
      *  @param metadata Optional metadata associated with the strategy.
      */
     function setMetadata(string calldata metadata) external;
 
     /**
-     *  @dev   Sets permissions for a list of trading addresses.
+     *  @dev   Sets permissions for a list of managed wallets.
      *         Callable only by the strategy delegate or operational admin.
-     *         Addresses must be valid trading addresses on MapleGlobals to receive any enabled permission.
-     *  @param accounts        Trading addresses to set permissions for.
+     *         Addresses must be valid managed wallets on MapleGlobals to receive any enabled permission.
+     *  @param accounts        Managed wallets to set permissions for.
      *  @param canDeployAssets Defines if each address can call deployAssets().
      *  @param canReturnAssets Defines if each address can call returnAssets().
      *  @param canRealizeYield Defines if each address can call realizeYield().
@@ -309,7 +309,7 @@ interface IMapleTradingStrategy is IMapleTradingStrategyStorage, IMapleProxied {
     /**
      *  @dev   Withdraws assets from the strategy to a specific address.
      *         Callable only by the strategy manager.
-     *         Only assets sitting in the trading strategy can be withdrawn.
+     *         Only assets sitting in the allocation strategy can be withdrawn.
      *  @param destination Address to send the assets to.
      *  @param assets      Amount of assets to withdraw.
      *  @param data        Unused, but reserved for future strategy-specific calldata.

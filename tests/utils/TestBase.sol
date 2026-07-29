@@ -3,13 +3,13 @@ pragma solidity ^0.8.0;
 
 import { Test } from "../../modules/forge-std/src/Test.sol";
 
-import { TradingStrategyInitializerParams } from "../../contracts/interfaces/IMapleTradingStrategyInitializer.sol";
+import { AllocationStrategyInitializerParams } from "../../contracts/interfaces/IMapleAllocationStrategyInitializer.sol";
 
-import { MapleTradingStrategyFactory } from "../../contracts/MapleTradingStrategyFactory.sol";
+import { MapleAllocationStrategyFactory } from "../../contracts/MapleAllocationStrategyFactory.sol";
 
 import {
-    MapleTradingStrategyHarness,
-    MapleTradingStrategyInitializerHarness
+    MapleAllocationStrategyHarness,
+    MapleAllocationStrategyInitializerHarness
 } from "./Harnesses.sol";
 
 import {
@@ -28,20 +28,20 @@ contract TestBase is Test {
     address securityAdmin    = makeAddr("securityAdmin");
     address strategyDelegate = makeAddr("strategyDelegate");
 
-    address implementation = address(new MapleTradingStrategyHarness());
-    address initializer    = address(new MapleTradingStrategyInitializerHarness());
+    address implementation = address(new MapleAllocationStrategyHarness());
+    address initializer    = address(new MapleAllocationStrategyInitializerHarness());
 
     uint32 startingTime;
 
-    TradingStrategyInitializerParams params;
+    AllocationStrategyInitializerParams params;
 
     MockAsset           asset          = new MockAsset();
     MockFactory         managerFactory = new MockFactory();
     MockGlobals         globals        = new MockGlobals();
     MockStrategyManager manager        = new MockStrategyManager();
 
-    MapleTradingStrategyFactory strategyFactory;
-    MapleTradingStrategyHarness strategy;
+    MapleAllocationStrategyFactory strategyFactory;
+    MapleAllocationStrategyHarness strategy;
 
     function setUp() public virtual {
         startingTime = uint32(block.timestamp);
@@ -58,14 +58,14 @@ contract TestBase is Test {
         manager.__setStrategyDelegate(strategyDelegate);
         managerFactory.__setIsInstance(address(manager), true);
 
-        strategyFactory = new MapleTradingStrategyFactory(address(globals));
+        strategyFactory = new MapleAllocationStrategyFactory(address(globals));
 
         vm.startPrank(governor);
         strategyFactory.registerImplementation(100, implementation, initializer);
         strategyFactory.setDefaultVersion(100);
         vm.stopPrank();
 
-        params = TradingStrategyInitializerParams({
+        params = AllocationStrategyInitializerParams({
             fundsAsset:              address(asset),
             strategyMetadata:        "MacAttack - 02a",
             strategyDelegateFeeRate: 0.02e6,
@@ -77,7 +77,7 @@ contract TestBase is Test {
         manager.__setUnderlyingStrategy(strategyFactory.getInstanceAddress(initializationArguments(), "DEFAULT"));
 
         vm.prank(deployer);
-        strategy = MapleTradingStrategyHarness(strategyFactory.createInstance(initializationArguments(), "DEFAULT"));
+        strategy = MapleAllocationStrategyHarness(strategyFactory.createInstance(initializationArguments(), "DEFAULT"));
     }
 
     function array(address element_) internal pure returns (address[] memory array_) {

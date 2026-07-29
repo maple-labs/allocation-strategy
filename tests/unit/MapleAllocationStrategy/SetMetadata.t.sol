@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
-import { IMapleTradingStrategy } from "../../../contracts/interfaces/IMapleTradingStrategy.sol";
+import { IMapleAllocationStrategy } from "../../../contracts/interfaces/IMapleAllocationStrategy.sol";
 
-import { MapleTradingStrategy } from "../../../contracts/MapleTradingStrategy.sol";
+import { MapleAllocationStrategy } from "../../../contracts/MapleAllocationStrategy.sol";
 
 import { TestBase } from "../../utils/TestBase.sol";
 
 contract SetMetadataFailureTests is TestBase {
 
     function test_setMetadata_revert_functionPaused() external {
-        globals.__setIsFunctionPaused(MapleTradingStrategy.setMetadata.selector, true);
+        globals.__setIsFunctionPaused(MapleAllocationStrategy.setMetadata.selector, true);
 
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTS:PAUSED");
+        vm.expectRevert("MAS:PAUSED");
         strategy.setMetadata("abc");
     }
 
@@ -21,12 +21,12 @@ contract SetMetadataFailureTests is TestBase {
         strategy.__setLocked(2);
 
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTS:LOCKED");
+        vm.expectRevert("MAS:LOCKED");
         strategy.setMetadata("abc");
     }
 
     function test_setMetadata_revert_notAuthorized() external {
-        vm.expectRevert("MTS:NOT_AUTHORIZED");
+        vm.expectRevert("MAS:NOT_AUTHORIZED");
         strategy.setMetadata("abc");
     }
 
@@ -34,7 +34,7 @@ contract SetMetadataFailureTests is TestBase {
         string memory metadata = strategy.strategyMetadata();
 
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTS:SM:NO_CHANGE");
+        vm.expectRevert("MAS:SM:NO_CHANGE");
         strategy.setMetadata(metadata);
     }
 
@@ -44,7 +44,7 @@ contract SetMetadataSuccessTests is TestBase {
 
     function test_setMetadata_success_emptyString() external {
         vm.expectEmit();
-        emit IMapleTradingStrategy.StrategyMetadataSet("");
+        emit IMapleAllocationStrategy.StrategyMetadataSet("");
 
         vm.prank(strategyDelegate);
         strategy.setMetadata("");
@@ -56,7 +56,7 @@ contract SetMetadataSuccessTests is TestBase {
         string memory metadata = "abc";
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.StrategyMetadataSet(metadata);
+        emit IMapleAllocationStrategy.StrategyMetadataSet(metadata);
 
         vm.prank(operationalAdmin);
         strategy.setMetadata(metadata);
@@ -68,7 +68,7 @@ contract SetMetadataSuccessTests is TestBase {
         string memory metadata = "abc";
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.StrategyMetadataSet(metadata);
+        emit IMapleAllocationStrategy.StrategyMetadataSet(metadata);
 
         vm.prank(strategyDelegate);
         strategy.setMetadata(metadata);

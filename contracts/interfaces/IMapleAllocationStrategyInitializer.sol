@@ -2,15 +2,15 @@
 pragma solidity ^0.8.0;
 
 /**
- *  @dev   Parameters required to initialize a trading strategy.
+ *  @dev   Parameters required to initialize an allocation strategy.
  *         Initializer arguments are encoded as abi.encode(strategyManager) || abi.encode(params).
  *  @param fundsAsset              Address of the asset used by the strategy.
- *  @param strategyMetadata        Optional metadata associated with the trading strategy.
+ *  @param strategyMetadata        Optional metadata associated with the allocation strategy.
  *  @param strategyDelegateFeeRate Percentage of yield collected by the strategy delegate.
  *  @param strategyProtocolFeeRate Percentage of yield collected by the Maple treasury.
  *  @param yieldCap                Maximum amount of assets that can be realized as yield in a single call.
  */
-struct TradingStrategyInitializerParams {
+struct AllocationStrategyInitializerParams {
     address fundsAsset;
     string  strategyMetadata;
     uint32  strategyDelegateFeeRate;
@@ -19,15 +19,15 @@ struct TradingStrategyInitializerParams {
 }
 
 /**
- *  @title Defines a contract used to initialize new Maple trading strategies.
+ *  @title Defines a contract used to initialize new Maple allocation strategies.
  */
-interface IMapleTradingStrategyInitializer {
+interface IMapleAllocationStrategyInitializer {
 
     /**
-     *  @dev   Emitted when the trading strategy proxy is initialized.
+     *  @dev   Emitted when the allocation strategy proxy is initialized.
      *  @param strategyManager Address of the strategy manager contract.
-     *  @param params          Trading strategy parameters set during initialization.
+     *  @param params          Allocation strategy parameters set during initialization.
      */
-    event Initialized(address indexed strategyManager, TradingStrategyInitializerParams params);
+    event Initialized(address indexed strategyManager, AllocationStrategyInitializerParams params);
 
 }

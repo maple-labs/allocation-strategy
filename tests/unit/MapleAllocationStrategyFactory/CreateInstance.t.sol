@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
-import { IMapleProxyFactory }               from "../../../modules/proxy-factory/contracts/interfaces/IMapleProxyFactory.sol";
-import { IMapleTradingStrategyInitializer } from "../../../contracts/interfaces/IMapleTradingStrategyInitializer.sol";
+import { IMapleProxyFactory } from "../../../modules/proxy-factory/contracts/interfaces/IMapleProxyFactory.sol";
 
-import { MapleTradingStrategyHarness } from "../../utils/Harnesses.sol";
-import { TestBase }                    from "../../utils/TestBase.sol";
+import { IMapleAllocationStrategyInitializer } from "../../../contracts/interfaces/IMapleAllocationStrategyInitializer.sol";
+
+import { MapleAllocationStrategyHarness } from "../../utils/Harnesses.sol";
+import { TestBase }                       from "../../utils/TestBase.sol";
 
 contract CreateInstanceTests is TestBase {
 
@@ -19,7 +20,7 @@ contract CreateInstanceTests is TestBase {
         globals.__setCanDeploy(deployer, false);
 
         vm.prank(deployer);
-        vm.expectRevert("MTSF:CI:CANNOT_DEPLOY");
+        vm.expectRevert("MASF:CI:CANNOT_DEPLOY");
         strategyFactory.createInstance(initializationArguments(), "");
     }
 
@@ -61,7 +62,7 @@ contract CreateInstanceTests is TestBase {
         address proxy = strategyFactory.getInstanceAddress(arguments, "");
 
         vm.expectEmit();
-        emit IMapleTradingStrategyInitializer.Initialized(address(manager), params);
+        emit IMapleAllocationStrategyInitializer.Initialized(address(manager), params);
 
         vm.expectEmit();
         emit IMapleProxyFactory.InstanceDeployed(100, proxy, arguments);
@@ -69,7 +70,7 @@ contract CreateInstanceTests is TestBase {
         assertEq(strategyFactory.isInstance(proxy), false);
 
         vm.prank(deployer);
-        strategy = MapleTradingStrategyHarness(strategyFactory.createInstance(arguments, ""));
+        strategy = MapleAllocationStrategyHarness(strategyFactory.createInstance(arguments, ""));
 
         assertEq(address(strategy), proxy);
 

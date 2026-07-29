@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
-import { IMapleTradingStrategy } from "../../../contracts/interfaces/IMapleTradingStrategy.sol";
+import { IMapleAllocationStrategy } from "../../../contracts/interfaces/IMapleAllocationStrategy.sol";
 
 import { TestBase } from "../../utils/TestBase.sol";
 
@@ -21,10 +21,10 @@ contract ImpairTestBase is TestBase {
 contract ImpairFailureTests is ImpairTestBase {
 
     function test_impair_revert_functionPaused() external {
-        globals.__setIsFunctionPaused(IMapleTradingStrategy.impair.selector, true);
+        globals.__setIsFunctionPaused(IMapleAllocationStrategy.impair.selector, true);
 
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTS:PAUSED");
+        vm.expectRevert("MAS:PAUSED");
         strategy.impair(partialAssets);
     }
 
@@ -32,19 +32,19 @@ contract ImpairFailureTests is ImpairTestBase {
         strategy.__setLocked(2);
 
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTS:LOCKED");
+        vm.expectRevert("MAS:LOCKED");
         strategy.impair(partialAssets);
     }
 
     function test_impair_revert_notAuthorized() external {
         vm.prank(governor);
-        vm.expectRevert("MTS:NOT_AUTHORIZED");
+        vm.expectRevert("MAS:NOT_AUTHORIZED");
         strategy.impair(partialAssets);
     }
 
     function test_impair_revert_zeroAssets() external {
         vm.prank(strategyDelegate);
-        vm.expectRevert("MTS:I:ZERO_ASSETS");
+        vm.expectRevert("MAS:I:ZERO_ASSETS");
         strategy.impair(0);
     }
 
@@ -57,7 +57,7 @@ contract ImpairSuccessTests is ImpairTestBase {
         assertEq(strategy.unrealizedLosses(), 0);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.Impaired(partialAssets);
+        emit IMapleAllocationStrategy.Impaired(partialAssets);
 
         vm.prank(strategyDelegate);
         strategy.impair(partialAssets);
@@ -71,7 +71,7 @@ contract ImpairSuccessTests is ImpairTestBase {
         assertEq(strategy.unrealizedLosses(), 0);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.Impaired(totalAssets);
+        emit IMapleAllocationStrategy.Impaired(totalAssets);
 
         vm.prank(operationalAdmin);
         strategy.impair(totalAssets);
@@ -93,7 +93,7 @@ contract ImpairSuccessTests is ImpairTestBase {
 
     function test_impair_success_accumulated() external {
         vm.expectEmit();
-        emit IMapleTradingStrategy.Impaired(partialAssets);
+        emit IMapleAllocationStrategy.Impaired(partialAssets);
 
         vm.prank(operationalAdmin);
         strategy.impair(partialAssets);
@@ -102,7 +102,7 @@ contract ImpairSuccessTests is ImpairTestBase {
         assertEq(strategy.unrealizedLosses(), partialAssets);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.Impaired(partialAssets);
+        emit IMapleAllocationStrategy.Impaired(partialAssets);
 
         vm.prank(strategyDelegate);
         strategy.impair(partialAssets);
@@ -113,7 +113,7 @@ contract ImpairSuccessTests is ImpairTestBase {
 
     function test_impair_success_noEffect() external {
         vm.expectEmit();
-        emit IMapleTradingStrategy.Impaired(totalAssets);
+        emit IMapleAllocationStrategy.Impaired(totalAssets);
 
         vm.prank(operationalAdmin);
         strategy.impair(totalAssets);
@@ -122,7 +122,7 @@ contract ImpairSuccessTests is ImpairTestBase {
         assertEq(strategy.unrealizedLosses(), totalAssets);
 
         vm.expectEmit();
-        emit IMapleTradingStrategy.Impaired(1);
+        emit IMapleAllocationStrategy.Impaired(1);
 
         vm.prank(strategyDelegate);
         strategy.impair(1);
