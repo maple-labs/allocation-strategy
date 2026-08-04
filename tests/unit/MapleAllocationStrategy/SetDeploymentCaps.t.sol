@@ -30,6 +30,12 @@ contract SetDeploymentCapsFailureTests is TestBase {
         strategy.setDeploymentCaps(new address[](0), new uint256[](0));
     }
 
+    function test_setDeploymentCaps_revert_notAuthorized_operationalAdmin() external {
+        vm.prank(operationalAdmin);
+        vm.expectRevert("MAS:NOT_AUTHORIZED");
+        strategy.setDeploymentCaps(new address[](0), new uint256[](0));
+    }
+
     function test_setDeploymentCaps_revert_zeroLength() external {
         vm.prank(strategyDelegate);
         vm.expectRevert("MAS:SDC:ZERO_LENGTH");
@@ -242,7 +248,7 @@ contract SetDeploymentCapsSuccessTests is TestBase {
         vm.expectEmit();
         emit IMapleAllocationStrategy.DeploymentCapSet(deployer1, cap);
 
-        vm.prank(operationalAdmin);
+        vm.prank(securityAdmin);
         strategy.setDeploymentCaps(array(deployer1), array(cap));
 
         assertEq(strategy.deploymentCapOf(deployer1), cap);

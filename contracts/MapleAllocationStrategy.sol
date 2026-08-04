@@ -226,7 +226,12 @@ contract MapleAllocationStrategy is IMapleAllocationStrategy, MapleAllocationStr
     /*** Administrative Functions                                                                                                       ***/
     /**************************************************************************************************************************************/
 
-    function cancelYield(uint256 assets_, address recipient_) external override whenNotPaused nonReentrant onlyAdmin {
+    function cancelYield(
+        uint256 assets_,
+        address recipient_
+    )
+        external override whenNotPaused nonReentrant onlySecurityAdminOrStrategyDelegate
+    {
         uint256 unrealizedYield_ = unrealizedYield();
         uint256 cancelledAssets_ = assets_ == type(uint256).max ? unrealizedYield_ : assets_;
 
@@ -276,7 +281,7 @@ contract MapleAllocationStrategy is IMapleAllocationStrategy, MapleAllocationStr
         address[] calldata accounts_,
         uint256[] calldata amounts_
     )
-        external override whenNotPaused nonReentrant onlyAdmin
+        external override whenNotPaused nonReentrant onlySecurityAdminOrStrategyDelegate
     {
         require(accounts_.length != 0,               "MAS:SDC:ZERO_LENGTH");
         require(accounts_.length == amounts_.length, "MAS:SDC:LENGTH_MISMATCH");

@@ -59,6 +59,12 @@ contract CancelYieldFailureTests is CancelYieldTestBase {
         strategy.cancelYield(yieldAssets, recipient);
     }
 
+    function test_cancelYield_revert_notAuthorized_operationalAdmin() external {
+        vm.prank(operationalAdmin);
+        vm.expectRevert("MAS:NOT_AUTHORIZED");
+        strategy.cancelYield(yieldAssets, recipient);
+    }
+
     function test_cancelYield_revert_zeroAssets() external {
         vm.prank(strategyDelegate);
         vm.expectRevert("MAS:CY:ZERO_ASSETS");
@@ -197,9 +203,9 @@ contract CancelYieldSuccessTests is CancelYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance - yieldAssets);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.YieldCancelled(operationalAdmin, recipient, yieldAssets);
+        emit IMapleAllocationStrategy.YieldCancelled(securityAdmin, recipient, yieldAssets);
 
-        vm.prank(operationalAdmin);
+        vm.prank(securityAdmin);
         strategy.cancelYield(yieldAssets, recipient);
 
         assertEq(asset.balanceOf(address(strategy)),  strategyBalance - yieldAssets);
@@ -274,9 +280,9 @@ contract CancelYieldSuccessTests is CancelYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance - unrealizedYield);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.YieldCancelled(operationalAdmin, recipient, cancelAmount);
+        emit IMapleAllocationStrategy.YieldCancelled(securityAdmin, recipient, cancelAmount);
 
-        vm.prank(operationalAdmin);
+        vm.prank(securityAdmin);
         strategy.cancelYield(cancelAmount, recipient);
 
         assertEq(asset.balanceOf(address(strategy)),  strategyBalance - cancelAmount);
@@ -367,9 +373,9 @@ contract CancelYieldSuccessTests is CancelYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance - unrealizedYield);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.YieldCancelled(operationalAdmin, recipient, unrealizedYield);
+        emit IMapleAllocationStrategy.YieldCancelled(securityAdmin, recipient, unrealizedYield);
 
-        vm.prank(operationalAdmin);
+        vm.prank(securityAdmin);
         strategy.cancelYield(type(uint256).max, recipient);
 
         assertEq(asset.balanceOf(address(strategy)),  strategyBalance - unrealizedYield);

@@ -201,7 +201,7 @@ interface IMapleAllocationStrategy is IMapleAllocationStrategyStorage, IMaplePro
 
     /**
      *  @dev   Cancels unrealized yield from the yield buffer and transfers it to the recipient.
-     *         Callable only by the strategy delegate or operational admin.
+     *         Callable only by the strategy delegate or security admin.
      *         Already-realized yield cannot be cancelled.
      *         Remaining unrealized yield continues on its original schedule.
      *  @param assets    Amount of unrealized yield to cancel.
@@ -253,7 +253,7 @@ interface IMapleAllocationStrategy is IMapleAllocationStrategyStorage, IMaplePro
 
     /**
      *  @dev   Sets the deployment cap for a list of managed wallets.
-     *         Callable only by the strategy delegate or operational admin.
+     *         Callable only by the strategy delegate or security admin.
      *  @param accounts Managed wallets to set deployment caps for.
      *  @param amounts  New deployment cap to set for each managed wallet.
      */
