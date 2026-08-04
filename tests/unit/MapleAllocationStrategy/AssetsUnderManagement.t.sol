@@ -25,8 +25,33 @@ contract AssetsUnderManagementTests is TestBase {
 
     function test_assetsUnderManagement_noYield_zeroDeployed_nonZeroBalance() external {
         asset.mint(address(strategy), strategyBalance);
+        strategy.__setRecordedAssets(strategyBalance);
 
         assertEq(strategy.assetsUnderManagement(), strategyBalance);
+    }
+
+    function test_assetsUnderManagement_noYield_zeroDeployed_unrecordedAssets() external {
+        asset.mint(address(strategy), strategyBalance);
+
+        assertEq(asset.balanceOf(address(strategy)), strategyBalance);
+        assertEq(strategy.recordedAssets(),          0);
+        assertEq(strategy.unrecordedAssets(),        strategyBalance);
+        assertEq(strategy.assetsUnderManagement(),   0);
+    }
+
+    function test_assetsUnderManagement_noYield_nonZeroDeployed_unrecordedAssets() external {
+        asset.mint(address(strategy), strategyBalance);
+        strategy.__setRecordedAssets(strategyBalance);
+
+        strategy.__setDeployedAssetsOf(managedWallet, deployedAssets);
+
+        assertEq(strategy.assetsUnderManagement(), deployedAssets + strategyBalance);
+
+        // Unrecorded assets do not inflate the assets under management.
+        asset.mint(address(strategy), strategyBalance);
+
+        assertEq(strategy.unrecordedAssets(),      strategyBalance);
+        assertEq(strategy.assetsUnderManagement(), deployedAssets + strategyBalance);
     }
 
     function test_assetsUnderManagement_noYield_nonZeroDeployed_zeroBalance() external {
@@ -37,6 +62,7 @@ contract AssetsUnderManagementTests is TestBase {
 
     function test_assetsUnderManagement_noYield_nonZeroDeployed_nonZeroBalance() external {
         asset.mint(address(strategy), strategyBalance);
+        strategy.__setRecordedAssets(strategyBalance);
 
         strategy.__setDeployedAssetsOf(managedWallet, deployedAssets);
 
@@ -57,6 +83,7 @@ contract AssetsUnderManagementTests is TestBase {
 
     function test_assetsUnderManagement_yieldBuffer_elapsedZero_zeroDeployed_nonZeroBalance() external {
         asset.mint(address(strategy), strategyBalance);
+        strategy.__setRecordedAssets(strategyBalance);
 
         strategy.__setYieldBuffer(yieldAssets, startingTime, startingTime + yieldDuration);
 
@@ -74,6 +101,7 @@ contract AssetsUnderManagementTests is TestBase {
 
     function test_assetsUnderManagement_yieldBuffer_elapsedZero_nonZeroDeployed_nonZeroBalance() external {
         asset.mint(address(strategy), strategyBalance);
+        strategy.__setRecordedAssets(strategyBalance);
 
         strategy.__setDeployedAssetsOf(managedWallet, deployedAssets);
         strategy.__setYieldBuffer(yieldAssets, startingTime, startingTime + yieldDuration);
@@ -97,6 +125,7 @@ contract AssetsUnderManagementTests is TestBase {
 
     function test_assetsUnderManagement_yieldBuffer_partialElapsed_zeroDeployed_nonZeroBalance() external {
         asset.mint(address(strategy), strategyBalance);
+        strategy.__setRecordedAssets(strategyBalance);
 
         strategy.__setYieldBuffer(yieldAssets, startingTime, startingTime + yieldDuration);
 
@@ -121,6 +150,7 @@ contract AssetsUnderManagementTests is TestBase {
 
     function test_assetsUnderManagement_yieldBuffer_partialElapsed_nonZeroDeployed_nonZeroBalance() external {
         asset.mint(address(strategy), strategyBalance);
+        strategy.__setRecordedAssets(strategyBalance);
 
         strategy.__setDeployedAssetsOf(managedWallet, deployedAssets);
         strategy.__setYieldBuffer(yieldAssets, startingTime, startingTime + yieldDuration);
@@ -147,6 +177,7 @@ contract AssetsUnderManagementTests is TestBase {
 
     function test_assetsUnderManagement_yieldBuffer_fullyElapsed_zeroDeployed_nonZeroBalance() external {
         asset.mint(address(strategy), strategyBalance);
+        strategy.__setRecordedAssets(strategyBalance);
 
         strategy.__setYieldBuffer(yieldAssets, startingTime, startingTime + yieldDuration);
 
@@ -166,6 +197,7 @@ contract AssetsUnderManagementTests is TestBase {
 
     function test_assetsUnderManagement_yieldBuffer_fullyElapsed_nonZeroDeployed_nonZeroBalance() external {
         asset.mint(address(strategy), strategyBalance);
+        strategy.__setRecordedAssets(strategyBalance);
 
         strategy.__setDeployedAssetsOf(managedWallet, deployedAssets);
         strategy.__setYieldBuffer(yieldAssets, startingTime, startingTime + yieldDuration);
@@ -177,6 +209,7 @@ contract AssetsUnderManagementTests is TestBase {
 
     function test_assetsUnderManagement_yieldBuffer_pastDeadline_nonZeroDeployed_nonZeroBalance() external {
         asset.mint(address(strategy), strategyBalance);
+        strategy.__setRecordedAssets(strategyBalance);
 
         strategy.__setDeployedAssetsOf(managedWallet, deployedAssets);
         strategy.__setYieldBuffer(yieldAssets, startingTime, startingTime + yieldDuration);
@@ -198,6 +231,7 @@ contract AssetsUnderManagementTests is TestBase {
 
     function test_assetsUnderManagement_yieldBuffer_zeroDuration_zeroDeployed_nonZeroBalance() external {
         asset.mint(address(strategy), strategyBalance);
+        strategy.__setRecordedAssets(strategyBalance);
 
         strategy.__setYieldBuffer(yieldAssets, startingTime, startingTime);
 
@@ -213,6 +247,7 @@ contract AssetsUnderManagementTests is TestBase {
 
     function test_assetsUnderManagement_yieldBuffer_zeroDuration_nonZeroDeployed_nonZeroBalance() external {
         asset.mint(address(strategy), strategyBalance);
+        strategy.__setRecordedAssets(strategyBalance);
 
         strategy.__setDeployedAssetsOf(managedWallet, deployedAssets);
         strategy.__setYieldBuffer(yieldAssets, startingTime, startingTime);

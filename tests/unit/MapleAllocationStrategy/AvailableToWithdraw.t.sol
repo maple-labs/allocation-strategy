@@ -14,12 +14,29 @@ contract AvailableToWithdrawTests is TestBase {
         super.setUp();
 
         asset.mint(address(strategy), strategyBalance);
+        strategy.__setRecordedAssets(strategyBalance);
     }
 
     function test_availableToWithdraw_zero() external {
-        asset.burn(address(strategy), strategyBalance);
+        strategy.__setRecordedAssets(0);
 
         assertEq(strategy.availableToWithdraw(), 0);
+    }
+
+    function test_availableToWithdraw_ignoresUnrecordedAssets() external {
+        asset.mint(address(strategy), strategyBalance);
+
+        assertEq(asset.balanceOf(address(strategy)), strategyBalance * 2);
+        assertEq(strategy.unrecordedAssets(),        strategyBalance);
+        assertEq(strategy.availableToWithdraw(),     strategyBalance);
+    }
+
+    function test_availableToWithdraw_ignoresBalanceShortfall() external {
+        asset.burn(address(strategy), strategyBalance);
+
+        assertEq(asset.balanceOf(address(strategy)), 0);
+        assertEq(strategy.unrecordedAssets(),        0);
+        assertEq(strategy.availableToWithdraw(),     strategyBalance);
     }
 
     function test_availableToWithdraw_zero_dueToYieldBuffer() external {
@@ -71,7 +88,7 @@ contract AvailableToWithdrawTests is TestBase {
         assertEq(strategy.availableToWithdraw(), strategyBalance);
     }
 
-    // NOTE: Unreachable since yield can't be withdrawn before it realizes.
+    // NOTE: Unreachable since yield can't be withdrawn or deployed before it realizes.
     function test_availableToWithdraw_underflow() external {
         strategy.__setYieldBuffer(strategyBalance + 1, startingTime, startingTime + 1 days);
 

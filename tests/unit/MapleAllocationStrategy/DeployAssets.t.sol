@@ -26,6 +26,7 @@ contract DeployAssetsTestBase is TestBase {
         strategy.__setDeploymentCapOf(managedWallet2, type(uint256).max);
 
         asset.mint(address(strategy), assetsToDeploy);
+        strategy.__setRecordedAssets(assetsToDeploy);
     }
 
 }
@@ -71,7 +72,7 @@ contract DeployAssetsFailureTests is DeployAssetsTestBase {
     }
 
     function test_deployAssets_revert_insufficientAssets() external {
-        asset.burn(address(strategy), 1);
+        strategy.__setRecordedAssets(assetsToDeploy - 1);
 
         vm.prank(managedWallet);
         vm.expectRevert("MAS:DA:INSUFFICIENT_ASSETS");
@@ -125,6 +126,7 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
 
     function test_deployAssets_success_minimumDeployment() external {
         assertEq(asset.balanceOf(address(strategy)), assetsToDeploy);
+        assertEq(strategy.recordedAssets(),          assetsToDeploy);
         assertEq(asset.balanceOf(managedWallet),     0);
 
         assertEq(strategy.totalDeployedAssets(),           0);
@@ -138,6 +140,7 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
         strategy.deployAssets(1, "a");
 
         assertEq(asset.balanceOf(address(strategy)), assetsToDeploy - 1);
+        assertEq(strategy.recordedAssets(),          assetsToDeploy - 1);
         assertEq(asset.balanceOf(managedWallet),     1);
 
         assertEq(strategy.totalDeployedAssets(),           1);
@@ -147,6 +150,7 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
 
     function test_deployAssets_success_firstDeployment() external {
         assertEq(asset.balanceOf(address(strategy)), assetsToDeploy);
+        assertEq(strategy.recordedAssets(),          assetsToDeploy);
         assertEq(asset.balanceOf(managedWallet),     0);
 
         assertEq(strategy.totalDeployedAssets(),           0);
@@ -160,6 +164,7 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
         strategy.deployAssets(assetsToDeploy, "a");
 
         assertEq(asset.balanceOf(address(strategy)), 0);
+        assertEq(strategy.recordedAssets(),          0);
         assertEq(asset.balanceOf(managedWallet),     assetsToDeploy);
 
         assertEq(strategy.totalDeployedAssets(),           assetsToDeploy);
@@ -171,6 +176,7 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
         strategy.__setDeploymentCapOf(managedWallet, assetsToDeploy);
 
         assertEq(asset.balanceOf(address(strategy)), assetsToDeploy);
+        assertEq(strategy.recordedAssets(),          assetsToDeploy);
         assertEq(asset.balanceOf(managedWallet),     0);
 
         assertEq(strategy.totalDeployedAssets(),           0);
@@ -184,6 +190,7 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
         strategy.deployAssets(assetsToDeploy, "a");
 
         assertEq(asset.balanceOf(address(strategy)), 0);
+        assertEq(strategy.recordedAssets(),          0);
         assertEq(asset.balanceOf(managedWallet),     assetsToDeploy);
 
         assertEq(strategy.totalDeployedAssets(),           assetsToDeploy);
@@ -201,7 +208,8 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
         uint256 unrealizedYield = assetsToDeploy - realizedYield;
 
         assertEq(asset.balanceOf(address(strategy)), assetsToDeploy);
-        assertEq(asset.balanceOf(managedWallet),    0);
+        assertEq(strategy.recordedAssets(),          assetsToDeploy);
+        assertEq(asset.balanceOf(managedWallet),     0);
 
         assertEq(strategy.availableToWithdraw(),           realizedYield);
         assertEq(strategy.totalDeployedAssets(),           0);
@@ -215,6 +223,7 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
         strategy.deployAssets(realizedYield, "");
 
         assertEq(asset.balanceOf(address(strategy)), unrealizedYield);
+        assertEq(strategy.recordedAssets(),          unrealizedYield);
         assertEq(asset.balanceOf(managedWallet),     realizedYield);
 
         assertEq(strategy.availableToWithdraw(),           0);
@@ -227,6 +236,7 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
         strategy.__setDeployedAssetsOf(managedWallet, deployedAssets);
 
         assertEq(asset.balanceOf(address(strategy)), assetsToDeploy);
+        assertEq(strategy.recordedAssets(),          assetsToDeploy);
         assertEq(asset.balanceOf(managedWallet),     0);
 
         assertEq(strategy.totalDeployedAssets(),           deployedAssets);
@@ -240,6 +250,7 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
         strategy.deployAssets(assetsToDeploy, "a");
 
         assertEq(asset.balanceOf(address(strategy)), 0);
+        assertEq(strategy.recordedAssets(),          0);
         assertEq(asset.balanceOf(managedWallet),     assetsToDeploy);
 
         assertEq(strategy.totalDeployedAssets(),           deployedAssets + assetsToDeploy);
@@ -250,6 +261,7 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
     function test_deployAssets_success_multipleDeployments() external {
 
         assertEq(asset.balanceOf(address(strategy)), assetsToDeploy);
+        assertEq(strategy.recordedAssets(),          assetsToDeploy);
         assertEq(asset.balanceOf(managedWallet),     0);
 
         assertEq(strategy.totalDeployedAssets(),           0);
@@ -270,6 +282,7 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
         strategy.deployAssets(firstDeploymentAmount, "a");
 
         assertEq(asset.balanceOf(address(strategy)), assetsToDeploy - firstDeploymentAmount);
+        assertEq(strategy.recordedAssets(),          assetsToDeploy - firstDeploymentAmount);
         assertEq(asset.balanceOf(managedWallet),     firstDeploymentAmount);
 
         assertEq(strategy.totalDeployedAssets(),           firstDeploymentAmount);
@@ -287,6 +300,7 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
         strategy.deployAssets(secondDeploymentAmount, "a");
 
         assertEq(asset.balanceOf(address(strategy)), assetsToDeploy - firstDeploymentAmount - secondDeploymentAmount);
+        assertEq(strategy.recordedAssets(),          assetsToDeploy - firstDeploymentAmount - secondDeploymentAmount);
         assertEq(asset.balanceOf(managedWallet),     firstDeploymentAmount + secondDeploymentAmount);
 
         assertEq(strategy.totalDeployedAssets(),           firstDeploymentAmount + secondDeploymentAmount);
@@ -295,6 +309,7 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
 
     function test_deployAssets_success_multipleDeployers() external {
         assertEq(asset.balanceOf(address(strategy)), assetsToDeploy);
+        assertEq(strategy.recordedAssets(),          assetsToDeploy);
         assertEq(asset.balanceOf(managedWallet),     0);
         assertEq(asset.balanceOf(managedWallet2),    0);
 
@@ -317,6 +332,7 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
         strategy.deployAssets(firstDeploymentAmount, "a");
 
         assertEq(asset.balanceOf(address(strategy)), assetsToDeploy - firstDeploymentAmount);
+        assertEq(strategy.recordedAssets(),          assetsToDeploy - firstDeploymentAmount);
         assertEq(asset.balanceOf(managedWallet),     firstDeploymentAmount);
         assertEq(asset.balanceOf(managedWallet2),    0);
 
@@ -336,6 +352,7 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
         strategy.deployAssets(secondDeploymentAmount, "b");
 
         assertEq(asset.balanceOf(address(strategy)), assetsToDeploy - firstDeploymentAmount - secondDeploymentAmount);
+        assertEq(strategy.recordedAssets(),          assetsToDeploy - firstDeploymentAmount - secondDeploymentAmount);
         assertEq(asset.balanceOf(managedWallet),     firstDeploymentAmount);
         assertEq(asset.balanceOf(managedWallet2),    secondDeploymentAmount);
 
@@ -343,6 +360,88 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
         assertEq(strategy.deployedAssetsOf(managedWallet),  firstDeploymentAmount);
         assertEq(strategy.deployedAssetsOf(managedWallet2), secondDeploymentAmount);
         assertEq(strategy.assetsUnderManagement(),          assetsToDeploy);
+    }
+
+    // NOTE: Assets sent back outside of returnAssets() are not recorded, and therefore cannot be deployed again.
+    function test_deployAssets_cannotRedeployUnrecordedAssets() external {
+        vm.prank(managedWallet);
+        strategy.deployAssets(assetsToDeploy, "");
+
+        /**********************************************************************************************************************************/
+        /*** Step: Managed Wallet Returns The Assets With A Plain Transfer                                                              ***/
+        /**********************************************************************************************************************************/
+
+        vm.prank(managedWallet);
+        asset.transfer(address(strategy), assetsToDeploy);
+
+        assertEq(asset.balanceOf(address(strategy)), assetsToDeploy);
+
+        assertEq(strategy.recordedAssets(),                0);
+        assertEq(strategy.unrecordedAssets(),              assetsToDeploy);
+        assertEq(strategy.availableToWithdraw(),           0);
+        assertEq(strategy.totalDeployedAssets(),           assetsToDeploy);
+        assertEq(strategy.deployedAssetsOf(managedWallet), assetsToDeploy);
+        assertEq(strategy.assetsUnderManagement(),         assetsToDeploy);
+
+        /**********************************************************************************************************************************/
+        /*** Step: The Same Assets Cannot Be Deployed A Second Time                                                                     ***/
+        /**********************************************************************************************************************************/
+
+        vm.prank(managedWallet);
+        vm.expectRevert("MAS:DA:INSUFFICIENT_ASSETS");
+        strategy.deployAssets(1, "");
+    }
+
+    // NOTE: Deployments draw only from recorded assets, even while unrecorded assets sit in the strategy.
+    function test_deployAssets_onlyConsumesRecordedAssets() external {
+        uint256 partialDeployment = assetsToDeploy / 2;
+        uint256 unrecordedAssets  = deployedAssets;
+
+        // Assets transferred to the strategy outside of a recorded flow.
+        asset.mint(address(strategy), unrecordedAssets);
+
+        assertEq(asset.balanceOf(address(strategy)), assetsToDeploy + unrecordedAssets);
+
+        assertEq(strategy.recordedAssets(),        assetsToDeploy);
+        assertEq(strategy.unrecordedAssets(),      unrecordedAssets);
+        assertEq(strategy.availableToWithdraw(),   assetsToDeploy);
+        assertEq(strategy.assetsUnderManagement(), assetsToDeploy);
+
+        /**********************************************************************************************************************************/
+        /*** Step: A Partial Deployment Leaves The Unrecorded Assets Untouched                                                          ***/
+        /**********************************************************************************************************************************/
+
+        vm.prank(managedWallet);
+        strategy.deployAssets(partialDeployment, "");
+
+        assertEq(asset.balanceOf(address(strategy)), assetsToDeploy + unrecordedAssets - partialDeployment);
+
+        assertEq(strategy.recordedAssets(),        assetsToDeploy - partialDeployment);
+        assertEq(strategy.unrecordedAssets(),      unrecordedAssets);
+        assertEq(strategy.availableToWithdraw(),   assetsToDeploy - partialDeployment);
+        assertEq(strategy.assetsUnderManagement(), assetsToDeploy);
+
+        /**********************************************************************************************************************************/
+        /*** Step: Deploying The Remaining Recorded Assets Exhausts The Availability                                                    ***/
+        /**********************************************************************************************************************************/
+
+        vm.prank(managedWallet);
+        strategy.deployAssets(assetsToDeploy - partialDeployment, "");
+
+        assertEq(asset.balanceOf(address(strategy)), unrecordedAssets);
+
+        assertEq(strategy.recordedAssets(),        0);
+        assertEq(strategy.unrecordedAssets(),      unrecordedAssets);
+        assertEq(strategy.availableToWithdraw(),   0);
+        assertEq(strategy.assetsUnderManagement(), assetsToDeploy);
+
+        /**********************************************************************************************************************************/
+        /*** Step: The Unrecorded Assets Cannot Be Deployed                                                                             ***/
+        /**********************************************************************************************************************************/
+
+        vm.prank(managedWallet);
+        vm.expectRevert("MAS:DA:INSUFFICIENT_ASSETS");
+        strategy.deployAssets(1, "");
     }
 
 }

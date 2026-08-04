@@ -32,6 +32,13 @@ interface IMapleAllocationStrategy is IMapleAllocationStrategyStorage, IMaplePro
     event AssetsReturned(address indexed caller, address indexed onBehalfOf, uint256 assets, bytes metadata);
 
     /**
+     *  @dev   Emitted when unrecorded assets are skimmed from the strategy.
+     *  @param recipient Address that received the skimmed assets.
+     *  @param assets    Amount of assets skimmed.
+     */
+    event AssetsSkimmed(address indexed recipient, uint256 assets);
+
+    /**
      *  @dev   Emitted when the deployment cap of a managed wallet is set.
      *  @param account       Managed wallet the cap was set for.
      *  @param deploymentCap New deployment cap for the managed wallet.
@@ -237,6 +244,14 @@ interface IMapleAllocationStrategy is IMapleAllocationStrategyStorage, IMaplePro
     function recognizeLossAndRemoveImpairment(uint256 assetsLost, uint256 assetsUnimpaired, address deployer) external;
 
     /**
+     *  @dev   Transfers all assets held by the strategy that have not been recorded to a given recipient.
+     *         Callable only by the strategy delegate or operational admin.
+     *         Does not affect the recorded assets, and therefore does not affect the assets under management.
+     *  @param recipient Address that will receive the unrecorded assets.
+     */
+    function skim(address recipient) external;
+
+    /**
      *  @dev   Sets the deployment cap for a list of managed wallets.
      *         Callable only by the strategy delegate or operational admin.
      *  @param accounts Managed wallets to set deployment caps for.
@@ -322,14 +337,15 @@ interface IMapleAllocationStrategy is IMapleAllocationStrategyStorage, IMaplePro
 
     /**
      *  @dev    Returns the amount of assets available for deployment or withdrawal.
-     *          Does not include unrealized assets still sitting in the yield buffer.
+     *          Equal to the recorded assets less the unrealized assets still sitting in the yield buffer.
+     *          Assets that have not been recorded by the strategy are never available.
      *  @return availableToWithdraw Assets available for deployment or withdrawal.
      */
     function availableToWithdraw() external view returns (uint256 availableToWithdraw);
 
     /**
      *  @dev    Returns the total amount of assets managed by the strategy.
-     *          Includes all deployed assets and cash in the strategy, but doesn't include unrealized yield.
+     *          Includes all deployed assets and recorded assets in the strategy, but doesn't include unrealized yield.
      *  @return assetsUnderManagement Total assets managed by the strategy.
      */
     function assetsUnderManagement() external view returns (uint256 assetsUnderManagement);
@@ -364,6 +380,13 @@ interface IMapleAllocationStrategy is IMapleAllocationStrategyStorage, IMaplePro
      *  @return strategyDelegate Address of the strategy delegate.
      */
     function strategyDelegate() external view returns (address strategyDelegate);
+
+    /**
+     *  @dev    Returns the amount of assets held by the strategy that have not been recorded.
+     *          Equal to the balance of the funds asset less the recorded assets, clamping at zero.
+     *  @return unrecordedAssets Amount of assets held by the strategy that have not been recorded.
+     */
+    function unrecordedAssets() external view returns (uint256 unrecordedAssets);
 
     /**
      *  @dev    Returns the amount of unrealized losses.

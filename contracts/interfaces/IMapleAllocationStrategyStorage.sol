@@ -88,6 +88,15 @@ interface IMapleAllocationStrategyStorage {
     function impairedAssets() external view returns (uint256 impairedAssets);
 
     /**
+     *  @dev    Returns the amount of assets recorded as held by the strategy.
+     *          Comprised of the assets available to withdraw and the yield that has not vested yet.
+     *          Assets transferred to the strategy outside of fundUnderlyingStrategy(), returnAssets() and realizeYield()
+     *          are not recorded, and therefore are not reflected in this value.
+     *  @return recordedAssets Amount of assets recorded as held by the strategy.
+     */
+    function recordedAssets() external view returns (uint256 recordedAssets);
+
+    /**
      *  @dev    Returns the total amount of assets in the yield buffer since it was last updated.
      *  @return scheduledYieldAssets Total assets in the yield buffer since last update.
      */

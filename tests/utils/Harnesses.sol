@@ -39,6 +39,10 @@ contract MapleAllocationStrategyHarness is MapleAllocationStrategy {
         });
     }
 
+    function __setRecordedAssets(uint256 recordedAssets_) external {
+        recordedAssets = recordedAssets_;
+    }
+
     function __setYieldBuffer(uint256 yieldAssets_, uint32 yieldStart_, uint32 yieldDeadline_) external {
         scheduledYieldAssets = yieldAssets_;
         yieldStart           = yieldStart_;

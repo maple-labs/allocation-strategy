@@ -11,6 +11,7 @@ contract MapleAllocationStrategyStorage is IMapleAllocationStrategyStorage {
     address public override strategyManager;  // Address of the strategy manager.
 
     uint256 public override impairedAssets;        // Total amount of assets impaired.
+    uint256 public override recordedAssets;        // Assets recorded being held by the strategy.
     uint256 public override scheduledYieldAssets;  // Total assets in the yield buffer since last update.
     uint256 public override totalDeployedAssets;   // Total assets deployed across all managed wallets.
     uint256 public override yieldCap;              // Maximum amount of assets that can be realized as yield in a single call.

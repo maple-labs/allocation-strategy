@@ -109,6 +109,7 @@ contract ReturnAssetsSuccessTests is ReturnAssetsTestBase {
         uint256 assetsToReturn = deployedAssets1 / 3;
 
         assertEq(asset.balanceOf(address(strategy)), 0);
+        assertEq(strategy.recordedAssets(),          0);
         assertEq(asset.balanceOf(managedWallet1),    deployedAssets1);
 
         assertEq(strategy.totalDeployedAssets(),            deployedAssets1 + deployedAssets2);
@@ -122,6 +123,7 @@ contract ReturnAssetsSuccessTests is ReturnAssetsTestBase {
         strategy.returnAssets(assetsToReturn, managedWallet1, "");
 
         assertEq(asset.balanceOf(address(strategy)), assetsToReturn);
+        assertEq(strategy.recordedAssets(),          assetsToReturn);
         assertEq(asset.balanceOf(managedWallet1),    deployedAssets1 - assetsToReturn);
 
         assertEq(strategy.totalDeployedAssets(),            deployedAssets1 + deployedAssets2 - assetsToReturn);
@@ -131,6 +133,7 @@ contract ReturnAssetsSuccessTests is ReturnAssetsTestBase {
 
     function test_returnAssets_success_fullReturn_sameDeployer() external {
         assertEq(asset.balanceOf(address(strategy)), 0);
+        assertEq(strategy.recordedAssets(),          0);
         assertEq(asset.balanceOf(managedWallet1),    deployedAssets1);
 
         assertEq(strategy.totalDeployedAssets(),            deployedAssets1 + deployedAssets2);
@@ -144,6 +147,7 @@ contract ReturnAssetsSuccessTests is ReturnAssetsTestBase {
         strategy.returnAssets(deployedAssets1, managedWallet1, "");
 
         assertEq(asset.balanceOf(address(strategy)), deployedAssets1);
+        assertEq(strategy.recordedAssets(),          deployedAssets1);
         assertEq(asset.balanceOf(managedWallet1),    0);
 
         assertEq(strategy.totalDeployedAssets(),            deployedAssets2);
@@ -155,6 +159,7 @@ contract ReturnAssetsSuccessTests is ReturnAssetsTestBase {
         uint256 assetsToReturn = deployedAssets1 / 3;
 
         assertEq(asset.balanceOf(address(strategy)), 0);
+        assertEq(strategy.recordedAssets(),          0);
         assertEq(asset.balanceOf(managedWallet1),    deployedAssets1);
         assertEq(asset.balanceOf(managedWallet2),    deployedAssets2);
 
@@ -170,6 +175,7 @@ contract ReturnAssetsSuccessTests is ReturnAssetsTestBase {
         strategy.returnAssets(assetsToReturn, managedWallet1, "");
 
         assertEq(asset.balanceOf(address(strategy)), assetsToReturn);
+        assertEq(strategy.recordedAssets(),          assetsToReturn);
         assertEq(asset.balanceOf(managedWallet1),    deployedAssets1);
         assertEq(asset.balanceOf(managedWallet2),    deployedAssets2 - assetsToReturn);
 
@@ -181,6 +187,7 @@ contract ReturnAssetsSuccessTests is ReturnAssetsTestBase {
 
     function test_returnAssets_success_fullReturn_differentDeployer() external {
         assertEq(asset.balanceOf(address(strategy)), 0);
+        assertEq(strategy.recordedAssets(),          0);
         assertEq(asset.balanceOf(managedWallet1),    deployedAssets1);
         assertEq(asset.balanceOf(managedWallet2),    deployedAssets2);
 
@@ -196,6 +203,7 @@ contract ReturnAssetsSuccessTests is ReturnAssetsTestBase {
         strategy.returnAssets(deployedAssets1, managedWallet1, "");
 
         assertEq(asset.balanceOf(address(strategy)), deployedAssets1);
+        assertEq(strategy.recordedAssets(),          deployedAssets1);
         assertEq(asset.balanceOf(managedWallet1),    deployedAssets1);
         assertEq(asset.balanceOf(managedWallet2),    deployedAssets2 - deployedAssets1);
 
@@ -212,6 +220,7 @@ contract ReturnAssetsSuccessTests is ReturnAssetsTestBase {
         strategy.__setPermissions(managedWallet1, false);
 
         assertEq(asset.balanceOf(address(strategy)), 0);
+        assertEq(strategy.recordedAssets(),          0);
         assertEq(asset.balanceOf(managedWallet1),    deployedAssets1);
         assertEq(asset.balanceOf(managedWallet2),    deployedAssets2);
 
@@ -227,6 +236,7 @@ contract ReturnAssetsSuccessTests is ReturnAssetsTestBase {
         strategy.returnAssets(assetsToReturn, managedWallet1, "recovery");
 
         assertEq(asset.balanceOf(address(strategy)), assetsToReturn);
+        assertEq(strategy.recordedAssets(),          assetsToReturn);
         assertEq(asset.balanceOf(managedWallet1),    deployedAssets1);
         assertEq(asset.balanceOf(managedWallet2),    deployedAssets2 - assetsToReturn);
 
@@ -238,6 +248,7 @@ contract ReturnAssetsSuccessTests is ReturnAssetsTestBase {
 
     function test_returnAssets_success_multipleCallersAndDeployers() external {
         assertEq(asset.balanceOf(address(strategy)), 0);
+        assertEq(strategy.recordedAssets(),          0);
         assertEq(asset.balanceOf(managedWallet1),    deployedAssets1);
         assertEq(asset.balanceOf(managedWallet2),    deployedAssets2);
 
@@ -263,6 +274,7 @@ contract ReturnAssetsSuccessTests is ReturnAssetsTestBase {
         totalDeployedAssets -= assetsToReturn1;
 
         assertEq(asset.balanceOf(address(strategy)), assetsToReturn1);
+        assertEq(strategy.recordedAssets(),          assetsToReturn1);
         assertEq(asset.balanceOf(managedWallet1),    deployedAssets1 - assetsToReturn1);
         assertEq(asset.balanceOf(managedWallet2),    deployedAssets2);
 
@@ -286,6 +298,7 @@ contract ReturnAssetsSuccessTests is ReturnAssetsTestBase {
         totalDeployedAssets -= assetsToReturn2;
 
         assertEq(asset.balanceOf(address(strategy)), assetsToReturn1 + assetsToReturn2);
+        assertEq(strategy.recordedAssets(),          assetsToReturn1 + assetsToReturn2);
         assertEq(asset.balanceOf(managedWallet1),    deployedAssets1 - assetsToReturn1);
         assertEq(asset.balanceOf(managedWallet2),    deployedAssets2 - assetsToReturn2);
 
@@ -295,7 +308,7 @@ contract ReturnAssetsSuccessTests is ReturnAssetsTestBase {
         assertEq(strategy.assetsUnderManagement(),          deployedAssets1 + deployedAssets2);
 
         /**********************************************************************************************************************************/
-        /*** Step 3: Address 1 Returns Assets on Behalf of Address 2                                                                      ***/
+        /*** Step 3: Address 1 Returns Assets on Behalf of Address 2                                                                    ***/
         /**********************************************************************************************************************************/
 
         uint256 assetsToReturn3 = deployedAssets2 / 9;
@@ -309,6 +322,7 @@ contract ReturnAssetsSuccessTests is ReturnAssetsTestBase {
         totalDeployedAssets -= assetsToReturn3;
 
         assertEq(asset.balanceOf(address(strategy)), assetsToReturn1 + assetsToReturn2 + assetsToReturn3);
+        assertEq(strategy.recordedAssets(),          assetsToReturn1 + assetsToReturn2 + assetsToReturn3);
         assertEq(asset.balanceOf(managedWallet1),    deployedAssets1 - assetsToReturn1 - assetsToReturn3);
         assertEq(asset.balanceOf(managedWallet2),    deployedAssets2 - assetsToReturn2);
 
@@ -332,6 +346,7 @@ contract ReturnAssetsSuccessTests is ReturnAssetsTestBase {
         totalDeployedAssets -= assetsToReturn4;
 
         assertEq(asset.balanceOf(address(strategy)), assetsToReturn1 + assetsToReturn2 + assetsToReturn3 + assetsToReturn4);
+        assertEq(strategy.recordedAssets(),          assetsToReturn1 + assetsToReturn2 + assetsToReturn3 + assetsToReturn4);
         assertEq(asset.balanceOf(managedWallet1),    deployedAssets1 - assetsToReturn1 - assetsToReturn3);
         assertEq(asset.balanceOf(managedWallet2),    deployedAssets2 - assetsToReturn2 - assetsToReturn4);
 

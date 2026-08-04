@@ -17,6 +17,7 @@ contract WithdrawFromUnderlyingStrategyTests is TestBase {
         super.setUp();
 
         asset.mint(address(strategy), assets);
+        strategy.__setRecordedAssets(assets);
     }
 
     function test_withdrawFromUnderlyingStrategy_revert_functionPaused() external {
@@ -68,6 +69,7 @@ contract WithdrawFromUnderlyingStrategyTests is TestBase {
         uint256 withdrawalAmount = assets / 3;
 
         assertEq(asset.balanceOf(address(strategy)), assets);
+        assertEq(strategy.recordedAssets(),          assets);
         assertEq(asset.balanceOf(destination),       0);
 
         assertEq(strategy.assetsUnderManagement(), assets);
@@ -79,6 +81,7 @@ contract WithdrawFromUnderlyingStrategyTests is TestBase {
         strategy.withdrawFromUnderlyingStrategy(destination, withdrawalAmount, "");
 
         assertEq(asset.balanceOf(address(strategy)), assets - withdrawalAmount);
+        assertEq(strategy.recordedAssets(),          assets - withdrawalAmount);
         assertEq(asset.balanceOf(destination),       withdrawalAmount);
 
         assertEq(strategy.assetsUnderManagement(), assets - withdrawalAmount);
@@ -86,6 +89,7 @@ contract WithdrawFromUnderlyingStrategyTests is TestBase {
 
     function test_withdrawFromUnderlyingStrategy_success_fullWithdrawal() external {
         assertEq(asset.balanceOf(address(strategy)), assets);
+        assertEq(strategy.recordedAssets(),          assets);
         assertEq(asset.balanceOf(destination),       0);
 
         assertEq(strategy.assetsUnderManagement(), assets);
@@ -97,6 +101,7 @@ contract WithdrawFromUnderlyingStrategyTests is TestBase {
         strategy.withdrawFromUnderlyingStrategy(destination, assets, "");
 
         assertEq(asset.balanceOf(address(strategy)), 0);
+        assertEq(strategy.recordedAssets(),          0);
         assertEq(asset.balanceOf(destination),       assets);
 
         assertEq(strategy.assetsUnderManagement(), 0);
@@ -121,6 +126,7 @@ contract WithdrawFromUnderlyingStrategyTests is TestBase {
         vm.warp(yieldAccruing);
 
         assertEq(asset.balanceOf(address(strategy)), assets);
+        assertEq(strategy.recordedAssets(),          assets);
         assertEq(asset.balanceOf(destination),       0);
 
         assertEq(strategy.realizedYield(),         realizedYield);
@@ -135,6 +141,7 @@ contract WithdrawFromUnderlyingStrategyTests is TestBase {
         strategy.withdrawFromUnderlyingStrategy(destination, withdrawalAmount, "");
 
         assertEq(asset.balanceOf(address(strategy)), assets - withdrawalAmount);
+        assertEq(strategy.recordedAssets(),          assets - withdrawalAmount);
         assertEq(asset.balanceOf(destination),       withdrawalAmount);
 
         assertEq(strategy.realizedYield(),         realizedYield);
@@ -162,6 +169,7 @@ contract WithdrawFromUnderlyingStrategyTests is TestBase {
         vm.warp(yieldAccruing);
 
         assertEq(asset.balanceOf(address(strategy)), assets);
+        assertEq(strategy.recordedAssets(),          assets);
         assertEq(asset.balanceOf(destination),       0);
 
         assertEq(strategy.realizedYield(),         realizedYield);
@@ -176,6 +184,7 @@ contract WithdrawFromUnderlyingStrategyTests is TestBase {
         strategy.withdrawFromUnderlyingStrategy(destination, withdrawalAmount, "");
 
         assertEq(asset.balanceOf(address(strategy)), unrealizedYield);
+        assertEq(strategy.recordedAssets(),          unrealizedYield);
         assertEq(asset.balanceOf(destination),       withdrawalAmount);
 
         assertEq(strategy.realizedYield(),         realizedYield);

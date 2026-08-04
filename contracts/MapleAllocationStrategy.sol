@@ -149,6 +149,7 @@ contract MapleAllocationStrategy is IMapleAllocationStrategy, MapleAllocationStr
 
         totalDeployedAssets          += assets_;
         deployedAssetsOf[msg.sender] += assets_;
+        recordedAssets               -= assets_;
 
         require(ERC20Helper.transfer(fundsAsset, msg.sender, assets_), "MAS:DA:TRANSFER_FAILED");
 
@@ -181,6 +182,7 @@ contract MapleAllocationStrategy is IMapleAllocationStrategy, MapleAllocationStr
 
         totalDeployedAssets           -= assets_;
         deployedAssetsOf[onBehalfOf_] -= assets_;
+        recordedAssets                += assets_;
 
         require(ERC20Helper.transferFrom(fundsAsset, msg.sender, address(this), assets_), "MAS:RA:TRANSFER_FAILED");
 
@@ -209,6 +211,8 @@ contract MapleAllocationStrategy is IMapleAllocationStrategy, MapleAllocationStr
         uint256 unrealizedYield_  = unrealizedYield();
         uint32  currentTimestamp_ = uint32(block.timestamp);
 
+        recordedAssets += netYield_;
+
         scheduledYieldAssets = netYield_ + unrealizedYield_;
 
         yieldLastRealized = currentTimestamp_;
@@ -230,6 +234,8 @@ contract MapleAllocationStrategy is IMapleAllocationStrategy, MapleAllocationStr
         require(cancelledAssets_ <= unrealizedYield_, "MAS:CY:EXCEEDS_UNREALIZED");
 
         require(IGlobalsLike(globals()).isInstanceOf(INSTANCE_KEY, recipient_), "MAS:CY:INVALID_RECIPIENT");
+
+        recordedAssets -= cancelledAssets_;
 
         scheduledYieldAssets = unrealizedYield_ - cancelledAssets_;
         yieldStart           = uint32(block.timestamp);
@@ -378,6 +384,17 @@ contract MapleAllocationStrategy is IMapleAllocationStrategy, MapleAllocationStr
         emit YieldCapSet(yieldCap_);
     }
 
+    function skim(address recipient_) external override whenNotPaused nonReentrant onlyAdmin {
+        uint256 unrecordedAssets_ = unrecordedAssets();
+
+        require(recipient_ != address(0), "MAS:S:ZERO_RECIPIENT");
+        require(unrecordedAssets_ != 0,   "MAS:S:ZERO_ASSETS");
+
+        require(ERC20Helper.transfer(fundsAsset, recipient_, unrecordedAssets_), "MAS:S:TRANSFER_FAILED");
+
+        emit AssetsSkimmed(recipient_, unrecordedAssets_);
+    }
+
     /**************************************************************************************************************************************/
     /*** Liquidity Functions                                                                                                            ***/
     /**************************************************************************************************************************************/
@@ -389,6 +406,8 @@ contract MapleAllocationStrategy is IMapleAllocationStrategy, MapleAllocationStr
     )
         external override whenNotPaused nonReentrant onlyStrategyManager returns (uint256 assetsOut_)
     {
+        recordedAssets += assetsIn_;
+
         assetsOut_ = assetsIn_;
 
         emit StrategyFunded(strategyManager, assetsIn_);
@@ -401,7 +420,10 @@ contract MapleAllocationStrategy is IMapleAllocationStrategy, MapleAllocationStr
     )
         external override whenNotPaused nonReentrant onlyStrategyManager
     {
-        require(assets_ <= availableToWithdraw(),                        "MAS:WFUS:INSUFFICIENT_ASSETS");
+        require(assets_ <= availableToWithdraw(), "MAS:WFUS:INSUFFICIENT_ASSETS");
+
+        recordedAssets -= assets_;
+
         require(ERC20Helper.transfer(fundsAsset, destination_, assets_), "MAS:WFUS:TRANSFER_FAILED");
 
         emit StrategyWithdrawn(strategyManager, destination_, assets_);
@@ -412,7 +434,7 @@ contract MapleAllocationStrategy is IMapleAllocationStrategy, MapleAllocationStr
     /**************************************************************************************************************************************/
 
     function availableToWithdraw() public view override returns (uint256 availableAssets_) {
-        availableAssets_ = IERC20Like(fundsAsset).balanceOf(address(this)) - unrealizedYield();
+        availableAssets_ = recordedAssets - unrealizedYield();
     }
 
     function assetsUnderManagement() public view override returns (uint256 assetsUnderManagement_) {
@@ -453,6 +475,12 @@ contract MapleAllocationStrategy is IMapleAllocationStrategy, MapleAllocationStr
 
     function strategyDelegate() public view override returns (address strategyDelegate_) {
         strategyDelegate_ = IStrategyManagerLike(strategyManager).strategyDelegate();
+    }
+
+    function unrecordedAssets() public view override returns (uint256 unrecordedAssets_) {
+        uint256 balance_ = IERC20Like(fundsAsset).balanceOf(address(this));
+
+        unrecordedAssets_ = balance_ > recordedAssets ? balance_ - recordedAssets : 0;
     }
 
     function unrealizedLosses() public view override returns (uint256 unrealizedLosses_) {

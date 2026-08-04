@@ -27,6 +27,7 @@ contract CancelYieldTestBase is TestBase {
         yieldDeadline = startingTime + yieldDuration;
 
         asset.mint(address(strategy), strategyBalance);
+        strategy.__setRecordedAssets(strategyBalance);
 
         strategy.__setYieldBuffer(yieldAssets, yieldStart, yieldDeadline);
         globals.__setIsInstanceOf("MAPLE_MANAGED_WALLET", recipient, true);
@@ -149,6 +150,7 @@ contract CancelYieldSuccessTests is CancelYieldTestBase {
 
     function test_cancelYield_success_noElapsedTime_partialCancel() external {
         assertEq(asset.balanceOf(address(strategy)),  strategyBalance);
+        assertEq(strategy.recordedAssets(),           strategyBalance);
         assertEq(asset.balanceOf(address(recipient)), 0);
 
         assertEq(strategy.scheduledYieldAssets(), yieldAssets);
@@ -167,6 +169,7 @@ contract CancelYieldSuccessTests is CancelYieldTestBase {
         strategy.cancelYield(cancelAmount, recipient);
 
         assertEq(asset.balanceOf(address(strategy)),  strategyBalance - cancelAmount);
+        assertEq(strategy.recordedAssets(),           strategyBalance - cancelAmount);
         assertEq(asset.balanceOf(address(recipient)), cancelAmount);
 
         assertEq(strategy.scheduledYieldAssets(), yieldAssets - cancelAmount);
@@ -181,6 +184,7 @@ contract CancelYieldSuccessTests is CancelYieldTestBase {
 
     function test_cancelYield_success_noElapsedTime_fullCancel_explicit() external {
         assertEq(asset.balanceOf(address(strategy)),  strategyBalance);
+        assertEq(strategy.recordedAssets(),           strategyBalance);
         assertEq(asset.balanceOf(address(recipient)), 0);
 
         assertEq(strategy.scheduledYieldAssets(), yieldAssets);
@@ -199,6 +203,7 @@ contract CancelYieldSuccessTests is CancelYieldTestBase {
         strategy.cancelYield(yieldAssets, recipient);
 
         assertEq(asset.balanceOf(address(strategy)),  strategyBalance - yieldAssets);
+        assertEq(strategy.recordedAssets(),           strategyBalance - yieldAssets);
         assertEq(asset.balanceOf(address(recipient)), yieldAssets);
 
         assertEq(strategy.scheduledYieldAssets(), 0);
@@ -213,6 +218,7 @@ contract CancelYieldSuccessTests is CancelYieldTestBase {
 
     function test_cancelYield_success_noElapsedTime_fullCancel_maxUint() external {
         assertEq(asset.balanceOf(address(strategy)),  strategyBalance);
+        assertEq(strategy.recordedAssets(),           strategyBalance);
         assertEq(asset.balanceOf(address(recipient)), 0);
 
         assertEq(strategy.scheduledYieldAssets(), yieldAssets);
@@ -231,6 +237,7 @@ contract CancelYieldSuccessTests is CancelYieldTestBase {
         strategy.cancelYield(type(uint256).max, recipient);
 
         assertEq(asset.balanceOf(address(strategy)),  strategyBalance - yieldAssets);
+        assertEq(strategy.recordedAssets(),           strategyBalance - yieldAssets);
         assertEq(asset.balanceOf(address(recipient)), yieldAssets);
 
         assertEq(strategy.scheduledYieldAssets(), 0);
@@ -254,6 +261,7 @@ contract CancelYieldSuccessTests is CancelYieldTestBase {
         uint256 unrealizedYield = yieldAssets - realizedYield;
 
         assertEq(asset.balanceOf(address(strategy)),  strategyBalance);
+        assertEq(strategy.recordedAssets(),           strategyBalance);
         assertEq(asset.balanceOf(address(recipient)), 0);
 
         assertEq(strategy.scheduledYieldAssets(), yieldAssets);
@@ -272,6 +280,7 @@ contract CancelYieldSuccessTests is CancelYieldTestBase {
         strategy.cancelYield(cancelAmount, recipient);
 
         assertEq(asset.balanceOf(address(strategy)),  strategyBalance - cancelAmount);
+        assertEq(strategy.recordedAssets(),           strategyBalance - cancelAmount);
         assertEq(asset.balanceOf(address(recipient)), cancelAmount);
 
         assertEq(strategy.scheduledYieldAssets(), unrealizedYield - cancelAmount);
@@ -286,6 +295,7 @@ contract CancelYieldSuccessTests is CancelYieldTestBase {
         vm.warp(yieldDeadline);
 
         assertEq(asset.balanceOf(address(strategy)),  strategyBalance - cancelAmount);
+        assertEq(strategy.recordedAssets(),           strategyBalance - cancelAmount);
         assertEq(asset.balanceOf(address(recipient)), cancelAmount);
 
         assertEq(strategy.scheduledYieldAssets(), unrealizedYield - cancelAmount);
@@ -305,6 +315,7 @@ contract CancelYieldSuccessTests is CancelYieldTestBase {
         uint256 unrealizedYield = yieldAssets - realizedYield;
 
         assertEq(asset.balanceOf(address(strategy)),  strategyBalance);
+        assertEq(strategy.recordedAssets(),           strategyBalance);
         assertEq(asset.balanceOf(address(recipient)), 0);
 
         assertEq(strategy.scheduledYieldAssets(), yieldAssets);
@@ -323,6 +334,7 @@ contract CancelYieldSuccessTests is CancelYieldTestBase {
         strategy.cancelYield(unrealizedYield, recipient);
 
         assertEq(asset.balanceOf(address(strategy)),  strategyBalance - unrealizedYield);
+        assertEq(strategy.recordedAssets(),           strategyBalance - unrealizedYield);
         assertEq(asset.balanceOf(address(recipient)), unrealizedYield);
 
         assertEq(strategy.scheduledYieldAssets(), 0);
@@ -342,6 +354,7 @@ contract CancelYieldSuccessTests is CancelYieldTestBase {
         uint256 unrealizedYield = yieldAssets - realizedYield;
 
         assertEq(asset.balanceOf(address(strategy)),  strategyBalance);
+        assertEq(strategy.recordedAssets(),           strategyBalance);
         assertEq(asset.balanceOf(address(recipient)), 0);
 
         assertEq(strategy.scheduledYieldAssets(), yieldAssets);
@@ -360,6 +373,7 @@ contract CancelYieldSuccessTests is CancelYieldTestBase {
         strategy.cancelYield(type(uint256).max, recipient);
 
         assertEq(asset.balanceOf(address(strategy)),  strategyBalance - unrealizedYield);
+        assertEq(strategy.recordedAssets(),           strategyBalance - unrealizedYield);
         assertEq(asset.balanceOf(address(recipient)), unrealizedYield);
 
         assertEq(strategy.scheduledYieldAssets(), 0);

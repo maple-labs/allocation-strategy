@@ -197,11 +197,13 @@ contract SetStrategyDelegateFeeRateSuccessTests is TestBase {
         uint32  yieldDeadline        = startingTime + 3 days;
 
         asset.mint(address(strategy), strategyBalance);
+        strategy.__setRecordedAssets(strategyBalance);
 
         strategy.__setFeeRates(strategyDelegateFeeRate, strategyProtocolFeeRate);
         strategy.__setYieldBuffer(scheduledYieldAssets, yieldStart, yieldDeadline);
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
+        assertEq(strategy.recordedAssets(),                  strategyBalance);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -216,6 +218,7 @@ contract SetStrategyDelegateFeeRateSuccessTests is TestBase {
         strategy.setStrategyDelegateFeeRate(newStrategyDelegateFeeRate);
 
         assertEq(asset.balanceOf(address(strategy)),         strategyBalance);
+        assertEq(strategy.recordedAssets(),                  strategyBalance);
         assertEq(asset.balanceOf(address(strategyDelegate)), 0);
         assertEq(asset.balanceOf(address(mapleTreasury)),    0);
 
@@ -256,6 +259,7 @@ contract SetStrategyDelegateFeeRateSuccessTests is TestBase {
         strategy.realizeYield(yieldAmount, yieldDuration, "SETTER");
 
         assertEq(asset.balanceOf(address(strategy)),         netYield);
+        assertEq(strategy.recordedAssets(),                  netYield);
         assertEq(asset.balanceOf(address(managedWallet)),    0);
         assertEq(asset.balanceOf(address(strategyDelegate)), delegateFee);
         assertEq(asset.balanceOf(address(mapleTreasury)),    protocolFee);
