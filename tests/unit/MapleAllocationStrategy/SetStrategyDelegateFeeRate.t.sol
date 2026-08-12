@@ -253,7 +253,16 @@ contract SetStrategyDelegateFeeRateSuccessTests is TestBase {
         strategy.setStrategyDelegateFeeRate(strategyDelegateFeeRate);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.YieldRealized(managedWallet, 0, netYield, delegateFee, protocolFee, yieldDuration, "SETTER");
+        emit IMapleAllocationStrategy.YieldRealized(
+            managedWallet,
+            0,
+            netYield,
+            delegateFee,
+            protocolFee,
+            netYield,
+            yieldDuration,
+            "SETTER"
+        );
 
         vm.prank(managedWallet);
         strategy.realizeYield(yieldAmount, yieldDuration, "SETTER");

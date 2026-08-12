@@ -169,7 +169,7 @@ contract CancelYieldSuccessTests is CancelYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance - yieldAssets);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.YieldCancelled(strategyDelegate, recipient, cancelAmount);
+        emit IMapleAllocationStrategy.YieldCancelled(strategyDelegate, recipient, cancelAmount, strategyBalance - cancelAmount);
 
         vm.prank(strategyDelegate);
         strategy.cancelYield(cancelAmount, recipient);
@@ -203,7 +203,7 @@ contract CancelYieldSuccessTests is CancelYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance - yieldAssets);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.YieldCancelled(securityAdmin, recipient, yieldAssets);
+        emit IMapleAllocationStrategy.YieldCancelled(securityAdmin, recipient, yieldAssets, strategyBalance - yieldAssets);
 
         vm.prank(securityAdmin);
         strategy.cancelYield(yieldAssets, recipient);
@@ -237,7 +237,7 @@ contract CancelYieldSuccessTests is CancelYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance - yieldAssets);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.YieldCancelled(strategyDelegate, recipient, yieldAssets);
+        emit IMapleAllocationStrategy.YieldCancelled(strategyDelegate, recipient, yieldAssets, strategyBalance - yieldAssets);
 
         vm.prank(strategyDelegate);
         strategy.cancelYield(type(uint256).max, recipient);
@@ -280,7 +280,7 @@ contract CancelYieldSuccessTests is CancelYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance - unrealizedYield);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.YieldCancelled(securityAdmin, recipient, cancelAmount);
+        emit IMapleAllocationStrategy.YieldCancelled(securityAdmin, recipient, cancelAmount, strategyBalance - cancelAmount);
 
         vm.prank(securityAdmin);
         strategy.cancelYield(cancelAmount, recipient);
@@ -334,7 +334,7 @@ contract CancelYieldSuccessTests is CancelYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance - unrealizedYield);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.YieldCancelled(strategyDelegate, recipient, unrealizedYield);
+        emit IMapleAllocationStrategy.YieldCancelled(strategyDelegate, recipient, unrealizedYield, strategyBalance - unrealizedYield);
 
         vm.prank(strategyDelegate);
         strategy.cancelYield(unrealizedYield, recipient);
@@ -373,7 +373,7 @@ contract CancelYieldSuccessTests is CancelYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance - unrealizedYield);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.YieldCancelled(securityAdmin, recipient, unrealizedYield);
+        emit IMapleAllocationStrategy.YieldCancelled(securityAdmin, recipient, unrealizedYield, strategyBalance - unrealizedYield);
 
         vm.prank(securityAdmin);
         strategy.cancelYield(type(uint256).max, recipient);

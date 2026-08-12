@@ -134,7 +134,7 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
         assertEq(strategy.assetsUnderManagement(),         assetsToDeploy);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.AssetsDeployed(managedWallet, 1, "a");
+        emit IMapleAllocationStrategy.AssetsDeployed(managedWallet, 1, assetsToDeploy - 1, "a");
 
         vm.prank(managedWallet);
         strategy.deployAssets(1, "a");
@@ -158,7 +158,7 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
         assertEq(strategy.assetsUnderManagement(),         assetsToDeploy);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.AssetsDeployed(managedWallet, assetsToDeploy, "a");
+        emit IMapleAllocationStrategy.AssetsDeployed(managedWallet, assetsToDeploy, 0, "a");
 
         vm.prank(managedWallet);
         strategy.deployAssets(assetsToDeploy, "a");
@@ -184,7 +184,7 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
         assertEq(strategy.assetsUnderManagement(),         assetsToDeploy);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.AssetsDeployed(managedWallet, assetsToDeploy, "a");
+        emit IMapleAllocationStrategy.AssetsDeployed(managedWallet, assetsToDeploy, 0, "a");
 
         vm.prank(managedWallet);
         strategy.deployAssets(assetsToDeploy, "a");
@@ -217,7 +217,7 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
         assertEq(strategy.assetsUnderManagement(),         realizedYield);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.AssetsDeployed(managedWallet, realizedYield, "");
+        emit IMapleAllocationStrategy.AssetsDeployed(managedWallet, realizedYield, unrealizedYield, "");
 
         vm.prank(managedWallet);
         strategy.deployAssets(realizedYield, "");
@@ -244,7 +244,7 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
         assertEq(strategy.assetsUnderManagement(),         deployedAssets + assetsToDeploy);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.AssetsDeployed(managedWallet, assetsToDeploy, "a");
+        emit IMapleAllocationStrategy.AssetsDeployed(managedWallet, assetsToDeploy, 0, "a");
 
         vm.prank(managedWallet);
         strategy.deployAssets(assetsToDeploy, "a");
@@ -276,7 +276,7 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
         /**********************************************************************************************************************************/
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.AssetsDeployed(managedWallet, firstDeploymentAmount, "a");
+        emit IMapleAllocationStrategy.AssetsDeployed(managedWallet, firstDeploymentAmount, assetsToDeploy - firstDeploymentAmount, "a");
 
         vm.prank(managedWallet);
         strategy.deployAssets(firstDeploymentAmount, "a");
@@ -294,7 +294,12 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
         /**********************************************************************************************************************************/
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.AssetsDeployed(managedWallet, secondDeploymentAmount, "a");
+        emit IMapleAllocationStrategy.AssetsDeployed(
+            managedWallet,
+            secondDeploymentAmount,
+            assetsToDeploy - firstDeploymentAmount - secondDeploymentAmount,
+            "a"
+        );
 
         vm.prank(managedWallet);
         strategy.deployAssets(secondDeploymentAmount, "a");
@@ -326,7 +331,7 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
         /**********************************************************************************************************************************/
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.AssetsDeployed(managedWallet, firstDeploymentAmount, "a");
+        emit IMapleAllocationStrategy.AssetsDeployed(managedWallet, firstDeploymentAmount, assetsToDeploy - firstDeploymentAmount, "a");
 
         vm.prank(managedWallet);
         strategy.deployAssets(firstDeploymentAmount, "a");
@@ -346,7 +351,12 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
         /**********************************************************************************************************************************/
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.AssetsDeployed(managedWallet2, secondDeploymentAmount, "b");
+        emit IMapleAllocationStrategy.AssetsDeployed(
+            managedWallet2,
+            secondDeploymentAmount,
+            assetsToDeploy - firstDeploymentAmount - secondDeploymentAmount,
+            "b"
+        );
 
         vm.prank(managedWallet2);
         strategy.deployAssets(secondDeploymentAmount, "b");

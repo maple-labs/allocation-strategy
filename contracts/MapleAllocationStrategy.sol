@@ -149,11 +149,12 @@ contract MapleAllocationStrategy is IMapleAllocationStrategy, MapleAllocationStr
 
         totalDeployedAssets          += assets_;
         deployedAssetsOf[msg.sender] += assets_;
-        recordedAssets               -= assets_;
+
+        uint256 updatedRecordedAssets_ = recordedAssets -= assets_;
 
         require(ERC20Helper.transfer(fundsAsset, msg.sender, assets_), "MAS:DA:TRANSFER_FAILED");
 
-        emit AssetsDeployed(msg.sender, assets_, metadata_);
+        emit AssetsDeployed(msg.sender, assets_, updatedRecordedAssets_, metadata_);
     }
 
     function multicall(bytes[] calldata data_) external override {
@@ -182,11 +183,12 @@ contract MapleAllocationStrategy is IMapleAllocationStrategy, MapleAllocationStr
 
         totalDeployedAssets           -= assets_;
         deployedAssetsOf[onBehalfOf_] -= assets_;
-        recordedAssets                += assets_;
+
+        uint256 updatedRecordedAssets_ = recordedAssets += assets_;
 
         require(ERC20Helper.transferFrom(fundsAsset, msg.sender, address(this), assets_), "MAS:RA:TRANSFER_FAILED");
 
-        emit AssetsReturned(msg.sender, onBehalfOf_, assets_, metadata_);
+        emit AssetsReturned(msg.sender, onBehalfOf_, assets_, updatedRecordedAssets_, metadata_);
     }
 
     function realizeYield(
@@ -208,18 +210,25 @@ contract MapleAllocationStrategy is IMapleAllocationStrategy, MapleAllocationStr
 
         ( uint256 netYield_, uint256 delegateFee_, uint256 protocolFee_ ) = _accrueFees(fundsAsset_, yield_);
 
-        uint256 unrealizedYield_  = unrealizedYield();
-        uint32  currentTimestamp_ = uint32(block.timestamp);
-
-        recordedAssets += netYield_;
+        uint256 unrealizedYield_       = unrealizedYield();
+        uint256 updatedRecordedAssets_ = recordedAssets += netYield_;
 
         scheduledYieldAssets = netYield_ + unrealizedYield_;
 
-        yieldLastRealized = currentTimestamp_;
-        yieldStart        = currentTimestamp_;
-        yieldDeadline     = currentTimestamp_ + duration_;
+        yieldLastRealized = uint32(block.timestamp);
+        yieldStart        = uint32(block.timestamp);
+        yieldDeadline     = uint32(block.timestamp) + duration_;
 
-        emit YieldRealized(msg.sender, unrealizedYield_, netYield_, delegateFee_, protocolFee_, duration_, metadata_);
+        emit YieldRealized(
+            msg.sender,
+            unrealizedYield_,
+            netYield_,
+            delegateFee_,
+            protocolFee_,
+            updatedRecordedAssets_,
+            duration_,
+            metadata_
+        );
     }
 
     /**************************************************************************************************************************************/
@@ -240,14 +249,14 @@ contract MapleAllocationStrategy is IMapleAllocationStrategy, MapleAllocationStr
 
         require(IGlobalsLike(globals()).isInstanceOf(INSTANCE_KEY, recipient_), "MAS:CY:INVALID_RECIPIENT");
 
-        recordedAssets -= cancelledAssets_;
+        uint256 updatedRecordedAssets_ = recordedAssets -= cancelledAssets_;
 
         scheduledYieldAssets = unrealizedYield_ - cancelledAssets_;
         yieldStart           = uint32(block.timestamp);
 
         require(ERC20Helper.transfer(fundsAsset, recipient_, cancelledAssets_), "MAS:CY:TRANSFER_FAILED");
 
-        emit YieldCancelled(msg.sender, recipient_, cancelledAssets_);
+        emit YieldCancelled(msg.sender, recipient_, cancelledAssets_, updatedRecordedAssets_);
     }
 
     function impair(uint256 assets_) external override whenNotPaused nonReentrant onlyAdmin {
@@ -411,11 +420,11 @@ contract MapleAllocationStrategy is IMapleAllocationStrategy, MapleAllocationStr
     )
         external override whenNotPaused nonReentrant onlyStrategyManager returns (uint256 assetsOut_)
     {
-        recordedAssets += assetsIn_;
+        uint256 updatedRecordedAssets_ = recordedAssets += assetsIn_;
 
         assetsOut_ = assetsIn_;
 
-        emit StrategyFunded(strategyManager, assetsIn_);
+        emit StrategyFunded(strategyManager, assetsIn_, updatedRecordedAssets_);
     }
 
     function withdrawFromUnderlyingStrategy(
@@ -427,11 +436,11 @@ contract MapleAllocationStrategy is IMapleAllocationStrategy, MapleAllocationStr
     {
         require(assets_ <= availableToWithdraw(), "MAS:WFUS:INSUFFICIENT_ASSETS");
 
-        recordedAssets -= assets_;
+        uint256 updatedRecordedAssets_ = recordedAssets -= assets_;
 
         require(ERC20Helper.transfer(fundsAsset, destination_, assets_), "MAS:WFUS:TRANSFER_FAILED");
 
-        emit StrategyWithdrawn(strategyManager, destination_, assets_);
+        emit StrategyWithdrawn(strategyManager, destination_, assets_, updatedRecordedAssets_);
     }
 
     /**************************************************************************************************************************************/

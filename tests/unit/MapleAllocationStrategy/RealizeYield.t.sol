@@ -260,7 +260,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         vm.warp(yieldStart + 2 hours);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.YieldRealized(managedWallet, 0, 0, 0, 0, 0, "");
+        emit IMapleAllocationStrategy.YieldRealized(managedWallet, 0, 0, 0, 0, strategyBalance, 0, "");
 
         vm.prank(managedWallet);
         strategy.realizeYield(0, 0, "");
@@ -298,7 +298,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance - scheduledYieldAssets);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.YieldRealized(managedWallet, scheduledYieldAssets, 0, 0, 0, 0, "");
+        emit IMapleAllocationStrategy.YieldRealized(managedWallet, scheduledYieldAssets, 0, 0, 0, strategyBalance, 0, "");
 
         vm.prank(managedWallet);
         strategy.realizeYield(0, 0, "");
@@ -344,7 +344,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance - unrealizedYield);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.YieldRealized(managedWallet, unrealizedYield, 0, 0, 0, 0, "");
+        emit IMapleAllocationStrategy.YieldRealized(managedWallet, unrealizedYield, 0, 0, 0, strategyBalance, 0, "");
 
         vm.prank(managedWallet);
         strategy.realizeYield(0, 0, "");
@@ -383,7 +383,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.availableToWithdraw(), strategyBalance);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.YieldRealized(managedWallet, 0, 0, 0, 0, 0, "");
+        emit IMapleAllocationStrategy.YieldRealized(managedWallet, 0, 0, 0, 0, strategyBalance, 0, "");
 
         vm.prank(managedWallet);
         strategy.realizeYield(0, 0, "");
@@ -422,7 +422,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.YieldRealized(managedWallet, 0, 0, 0, 0, 0, "");
+        emit IMapleAllocationStrategy.YieldRealized(managedWallet, 0, 0, 0, 0, strategyBalance, 0, "");
 
         vm.prank(managedWallet);
         strategy.realizeYield(0, 0, "");
@@ -469,7 +469,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         vm.warp(yieldStart + 2 hours);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.YieldRealized(managedWallet, 0, 0, 0, 0, newYieldDuration, "");
+        emit IMapleAllocationStrategy.YieldRealized(managedWallet, 0, 0, 0, 0, strategyBalance, newYieldDuration, "");
 
         vm.prank(managedWallet);
         strategy.realizeYield(0, newYieldDuration, "");
@@ -507,7 +507,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance - scheduledYieldAssets);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.YieldRealized(managedWallet, scheduledYieldAssets, 0, 0, 0, newYieldDuration, "");
+        emit IMapleAllocationStrategy.YieldRealized(managedWallet, scheduledYieldAssets, 0, 0, 0, strategyBalance, newYieldDuration, "");
 
         vm.prank(managedWallet);
         strategy.realizeYield(0, newYieldDuration, "");
@@ -553,7 +553,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance - unrealizedYield);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.YieldRealized(managedWallet, unrealizedYield, 0, 0, 0, newYieldDuration, "");
+        emit IMapleAllocationStrategy.YieldRealized(managedWallet, unrealizedYield, 0, 0, 0, strategyBalance, newYieldDuration, "");
 
         vm.prank(managedWallet);
         strategy.realizeYield(0, newYieldDuration, "");
@@ -592,7 +592,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.availableToWithdraw(), strategyBalance);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.YieldRealized(managedWallet, 0, 0, 0, 0, newYieldDuration, "");
+        emit IMapleAllocationStrategy.YieldRealized(managedWallet, 0, 0, 0, 0, strategyBalance, newYieldDuration, "");
 
         vm.prank(managedWallet);
         strategy.realizeYield(0, newYieldDuration, "");
@@ -631,7 +631,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.YieldRealized(managedWallet, 0, 0, 0, 0, newYieldDuration, "");
+        emit IMapleAllocationStrategy.YieldRealized(managedWallet, 0, 0, 0, 0, strategyBalance, newYieldDuration, "");
 
         vm.prank(managedWallet);
         strategy.realizeYield(0, newYieldDuration, "");
@@ -680,7 +680,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         vm.warp(yieldStart + 2 hours);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.YieldRealized(managedWallet, 0, newYieldAmount, 0, 0, 0, "");
+        emit IMapleAllocationStrategy.YieldRealized(managedWallet, 0, newYieldAmount, 0, 0, strategyBalance + newYieldAmount, 0, "");
 
         vm.prank(managedWallet);
         strategy.realizeYield(newYieldAmount, 0, "");
@@ -720,7 +720,16 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance - scheduledYieldAssets);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.YieldRealized(managedWallet, scheduledYieldAssets, newYieldAmount, 0, 0, 0, "");
+        emit IMapleAllocationStrategy.YieldRealized(
+            managedWallet,
+            scheduledYieldAssets,
+            newYieldAmount,
+            0,
+            0,
+            strategyBalance + newYieldAmount,
+            0,
+            ""
+        );
 
         vm.prank(managedWallet);
         strategy.realizeYield(newYieldAmount, 0, "");
@@ -768,7 +777,16 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance - unrealizedYield);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.YieldRealized(managedWallet, unrealizedYield, newYieldAmount, 0, 0, 0, "");
+        emit IMapleAllocationStrategy.YieldRealized(
+            managedWallet,
+            unrealizedYield,
+            newYieldAmount,
+            0,
+            0,
+            strategyBalance + newYieldAmount,
+            0,
+            ""
+        );
 
         vm.prank(managedWallet);
         strategy.realizeYield(newYieldAmount, 0, "");
@@ -809,7 +827,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.availableToWithdraw(), strategyBalance);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.YieldRealized(managedWallet, 0, newYieldAmount, 0, 0, 0, "");
+        emit IMapleAllocationStrategy.YieldRealized(managedWallet, 0, newYieldAmount, 0, 0, strategyBalance + newYieldAmount, 0, "");
 
         vm.prank(managedWallet);
         strategy.realizeYield(newYieldAmount, 0, "");
@@ -850,7 +868,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.YieldRealized(managedWallet, 0, newYieldAmount, 0, 0, 0, "");
+        emit IMapleAllocationStrategy.YieldRealized(managedWallet, 0, newYieldAmount, 0, 0, strategyBalance + newYieldAmount, 0, "");
 
         vm.prank(managedWallet);
         strategy.realizeYield(newYieldAmount, 0, "");
@@ -901,7 +919,16 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         vm.warp(yieldStart + 2 hours);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.YieldRealized(managedWallet, 0, netYieldAmount, delegateFee, protocolFee, 0, "");
+        emit IMapleAllocationStrategy.YieldRealized(
+            managedWallet,
+            0,
+            netYieldAmount,
+            delegateFee,
+            protocolFee,
+            strategyBalance + netYieldAmount,
+            0,
+            ""
+        );
 
         vm.prank(managedWallet);
         strategy.realizeYield(newYieldAmount, 0, "");
@@ -943,7 +970,16 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance - scheduledYieldAssets);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.YieldRealized(managedWallet, scheduledYieldAssets, netYieldAmount, delegateFee, protocolFee, 0, "");
+        emit IMapleAllocationStrategy.YieldRealized(
+            managedWallet,
+            scheduledYieldAssets,
+            netYieldAmount,
+            delegateFee,
+            protocolFee,
+            strategyBalance + netYieldAmount,
+            0,
+            ""
+        );
 
         vm.prank(managedWallet);
         strategy.realizeYield(newYieldAmount, 0, "");
@@ -993,7 +1029,16 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance - unrealizedYield);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.YieldRealized(managedWallet, unrealizedYield, netYieldAmount, delegateFee, protocolFee, 0, "");
+        emit IMapleAllocationStrategy.YieldRealized(
+            managedWallet,
+            unrealizedYield,
+            netYieldAmount,
+            delegateFee,
+            protocolFee,
+            strategyBalance + netYieldAmount,
+            0,
+            ""
+        );
 
         vm.prank(managedWallet);
         strategy.realizeYield(newYieldAmount, 0, "");
@@ -1036,7 +1081,16 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.availableToWithdraw(), strategyBalance);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.YieldRealized(managedWallet, 0, netYieldAmount, delegateFee, protocolFee, 0, "");
+        emit IMapleAllocationStrategy.YieldRealized(
+            managedWallet,
+            0,
+            netYieldAmount,
+            delegateFee,
+            protocolFee,
+            strategyBalance + netYieldAmount,
+            0,
+            ""
+        );
 
         vm.prank(managedWallet);
         strategy.realizeYield(newYieldAmount, 0, "");
@@ -1079,7 +1133,16 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.YieldRealized(managedWallet, 0, netYieldAmount, delegateFee, protocolFee, 0, "");
+        emit IMapleAllocationStrategy.YieldRealized(
+            managedWallet,
+            0,
+            netYieldAmount,
+            delegateFee,
+            protocolFee,
+            strategyBalance + netYieldAmount,
+            0,
+            ""
+        );
 
         vm.prank(managedWallet);
         strategy.realizeYield(newYieldAmount, 0, "");
@@ -1126,7 +1189,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         vm.warp(yieldStart + 2 hours);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.YieldRealized(managedWallet, 0, tinyYieldAmount, 0, 0, 0, "");
+        emit IMapleAllocationStrategy.YieldRealized(managedWallet, 0, tinyYieldAmount, 0, 0, strategyBalance + tinyYieldAmount, 0, "");
 
         vm.prank(managedWallet);
         strategy.realizeYield(tinyYieldAmount, 0, "");
@@ -1164,7 +1227,16 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance - scheduledYieldAssets);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.YieldRealized(managedWallet, scheduledYieldAssets, tinyYieldAmount, 0, 0, 0, "");
+        emit IMapleAllocationStrategy.YieldRealized(
+            managedWallet,
+            scheduledYieldAssets,
+            tinyYieldAmount,
+            0,
+            0,
+            strategyBalance + tinyYieldAmount,
+            0,
+            ""
+        );
 
         vm.prank(managedWallet);
         strategy.realizeYield(tinyYieldAmount, 0, "");
@@ -1210,7 +1282,16 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance - unrealizedYield);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.YieldRealized(managedWallet, unrealizedYield, tinyYieldAmount, 0, 0, 0, "");
+        emit IMapleAllocationStrategy.YieldRealized(
+            managedWallet,
+            unrealizedYield,
+            tinyYieldAmount,
+            0,
+            0,
+            strategyBalance + tinyYieldAmount,
+            0,
+            ""
+        );
 
         vm.prank(managedWallet);
         strategy.realizeYield(tinyYieldAmount, 0, "");
@@ -1249,7 +1330,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.availableToWithdraw(), strategyBalance);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.YieldRealized(managedWallet, 0, tinyYieldAmount, 0, 0, 0, "");
+        emit IMapleAllocationStrategy.YieldRealized(managedWallet, 0, tinyYieldAmount, 0, 0, strategyBalance + tinyYieldAmount, 0, "");
 
         vm.prank(managedWallet);
         strategy.realizeYield(tinyYieldAmount, 0, "");
@@ -1288,7 +1369,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.YieldRealized(managedWallet, 0, tinyYieldAmount, 0, 0, 0, "");
+        emit IMapleAllocationStrategy.YieldRealized(managedWallet, 0, tinyYieldAmount, 0, 0, strategyBalance + tinyYieldAmount, 0, "");
 
         vm.prank(managedWallet);
         strategy.realizeYield(tinyYieldAmount, 0, "");
@@ -1339,7 +1420,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         vm.warp(yieldStart + 2 hours);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.YieldRealized(managedWallet, 0, 0, delegateFee, protocolFee, 0, "");
+        emit IMapleAllocationStrategy.YieldRealized(managedWallet, 0, 0, delegateFee, protocolFee, strategyBalance, 0, "");
 
         vm.prank(managedWallet);
         strategy.realizeYield(newYieldAmount, 0, "");
@@ -1393,7 +1474,16 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         vm.warp(yieldStart + 2 hours);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.YieldRealized(managedWallet, 0, netYieldAmount, delegateFee, protocolFee, 0, "");
+        emit IMapleAllocationStrategy.YieldRealized(
+            managedWallet,
+            0,
+            netYieldAmount,
+            delegateFee,
+            protocolFee,
+            strategyBalance + netYieldAmount,
+            0,
+            ""
+        );
 
         vm.prank(managedWallet);
         strategy.realizeYield(tinyYieldAmount, 0, "");
@@ -1442,7 +1532,16 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         vm.warp(yieldStart + 2 hours);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.YieldRealized(managedWallet, 0, newYieldAmount, 0, 0, newYieldDuration, "");
+        emit IMapleAllocationStrategy.YieldRealized(
+            managedWallet,
+            0,
+            newYieldAmount,
+            0,
+            0,
+            strategyBalance + newYieldAmount,
+            newYieldDuration,
+            ""
+        );
 
         vm.prank(managedWallet);
         strategy.realizeYield(newYieldAmount, newYieldDuration, "");
@@ -1482,7 +1581,16 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance - scheduledYieldAssets);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.YieldRealized(managedWallet, scheduledYieldAssets, newYieldAmount, 0, 0, newYieldDuration, "");
+        emit IMapleAllocationStrategy.YieldRealized(
+            managedWallet,
+            scheduledYieldAssets,
+            newYieldAmount,
+            0,
+            0,
+            strategyBalance + newYieldAmount,
+            newYieldDuration,
+            ""
+        );
 
         vm.prank(managedWallet);
         strategy.realizeYield(newYieldAmount, newYieldDuration, "");
@@ -1530,7 +1638,16 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance - unrealizedYield);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.YieldRealized(managedWallet, unrealizedYield, newYieldAmount, 0, 0, newYieldDuration, "");
+        emit IMapleAllocationStrategy.YieldRealized(
+            managedWallet,
+            unrealizedYield,
+            newYieldAmount,
+            0,
+            0,
+            strategyBalance + newYieldAmount,
+            newYieldDuration,
+            ""
+        );
 
         vm.prank(managedWallet);
         strategy.realizeYield(newYieldAmount, newYieldDuration, "");
@@ -1571,7 +1688,16 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.availableToWithdraw(), strategyBalance);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.YieldRealized(managedWallet, 0, newYieldAmount, 0, 0, newYieldDuration, "");
+        emit IMapleAllocationStrategy.YieldRealized(
+            managedWallet,
+            0,
+            newYieldAmount,
+            0,
+            0,
+            strategyBalance + newYieldAmount,
+            newYieldDuration,
+            ""
+        );
 
         vm.prank(managedWallet);
         strategy.realizeYield(newYieldAmount, newYieldDuration, "");
@@ -1612,7 +1738,16 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.YieldRealized(managedWallet, 0, newYieldAmount, 0, 0, newYieldDuration, "");
+        emit IMapleAllocationStrategy.YieldRealized(
+            managedWallet,
+            0,
+            newYieldAmount,
+            0,
+            0,
+            strategyBalance + newYieldAmount,
+            newYieldDuration,
+            ""
+        );
 
         vm.prank(managedWallet);
         strategy.realizeYield(newYieldAmount, newYieldDuration, "");
@@ -1663,7 +1798,16 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         vm.warp(yieldStart + 2 hours);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.YieldRealized(managedWallet, 0, netYieldAmount, delegateFee, protocolFee, newYieldDuration, "");
+        emit IMapleAllocationStrategy.YieldRealized(
+            managedWallet,
+            0,
+            netYieldAmount,
+            delegateFee,
+            protocolFee,
+            strategyBalance + netYieldAmount,
+            newYieldDuration,
+            ""
+        );
 
         vm.prank(managedWallet);
         strategy.realizeYield(newYieldAmount, newYieldDuration, "");
@@ -1711,6 +1855,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
             netYieldAmount,
             delegateFee,
             protocolFee,
+            strategyBalance + netYieldAmount,
             newYieldDuration,
             ""
         );
@@ -1769,6 +1914,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
             netYieldAmount,
             delegateFee,
             protocolFee,
+            strategyBalance + netYieldAmount,
             newYieldDuration,
             ""
         );
@@ -1814,7 +1960,16 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.availableToWithdraw(), strategyBalance);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.YieldRealized(managedWallet, 0, netYieldAmount, delegateFee, protocolFee, newYieldDuration, "");
+        emit IMapleAllocationStrategy.YieldRealized(
+            managedWallet,
+            0,
+            netYieldAmount,
+            delegateFee,
+            protocolFee,
+            strategyBalance + netYieldAmount,
+            newYieldDuration,
+            ""
+        );
 
         vm.prank(managedWallet);
         strategy.realizeYield(newYieldAmount, newYieldDuration, "");
@@ -1857,7 +2012,16 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.YieldRealized(managedWallet, 0, netYieldAmount, delegateFee, protocolFee, newYieldDuration, "");
+        emit IMapleAllocationStrategy.YieldRealized(
+            managedWallet,
+            0,
+            netYieldAmount,
+            delegateFee,
+            protocolFee,
+            strategyBalance + netYieldAmount,
+            newYieldDuration,
+            ""
+        );
 
         vm.prank(managedWallet);
         strategy.realizeYield(newYieldAmount, newYieldDuration, "");
@@ -1904,7 +2068,16 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         vm.warp(yieldStart + 2 hours);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.YieldRealized(managedWallet, 0, tinyYieldAmount, 0, 0, newYieldDuration, "");
+        emit IMapleAllocationStrategy.YieldRealized(
+            managedWallet,
+            0,
+            tinyYieldAmount,
+            0,
+            0,
+            strategyBalance + tinyYieldAmount,
+            newYieldDuration,
+            ""
+        );
 
         vm.prank(managedWallet);
         strategy.realizeYield(tinyYieldAmount, newYieldDuration, "");
@@ -1942,7 +2115,16 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance - scheduledYieldAssets);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.YieldRealized(managedWallet, scheduledYieldAssets, tinyYieldAmount, 0, 0, newYieldDuration, "");
+        emit IMapleAllocationStrategy.YieldRealized(
+            managedWallet,
+            scheduledYieldAssets,
+            tinyYieldAmount,
+            0,
+            0,
+            strategyBalance + tinyYieldAmount,
+            newYieldDuration,
+            ""
+        );
 
         vm.prank(managedWallet);
         strategy.realizeYield(tinyYieldAmount, newYieldDuration, "");
@@ -1988,7 +2170,16 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance - unrealizedYield);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.YieldRealized(managedWallet, unrealizedYield, tinyYieldAmount, 0, 0, newYieldDuration, "");
+        emit IMapleAllocationStrategy.YieldRealized(
+            managedWallet,
+            unrealizedYield,
+            tinyYieldAmount,
+            0,
+            0,
+            strategyBalance + tinyYieldAmount,
+            newYieldDuration,
+            ""
+        );
 
         vm.prank(managedWallet);
         strategy.realizeYield(tinyYieldAmount, newYieldDuration, "");
@@ -2027,7 +2218,16 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.availableToWithdraw(), strategyBalance);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.YieldRealized(managedWallet, 0, tinyYieldAmount, 0, 0, newYieldDuration, "");
+        emit IMapleAllocationStrategy.YieldRealized(
+            managedWallet,
+            0,
+            tinyYieldAmount,
+            0,
+            0,
+            strategyBalance + tinyYieldAmount,
+            newYieldDuration,
+            ""
+        );
 
         vm.prank(managedWallet);
         strategy.realizeYield(tinyYieldAmount, newYieldDuration, "");
@@ -2066,7 +2266,16 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.YieldRealized(managedWallet, 0, tinyYieldAmount, 0, 0, newYieldDuration, "");
+        emit IMapleAllocationStrategy.YieldRealized(
+            managedWallet,
+            0,
+            tinyYieldAmount,
+            0,
+            0,
+            strategyBalance + tinyYieldAmount,
+            newYieldDuration,
+            ""
+        );
 
         vm.prank(managedWallet);
         strategy.realizeYield(tinyYieldAmount, newYieldDuration, "");
@@ -2120,6 +2329,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
             netYieldAmount,
             delegateFee,
             protocolFee,
+            strategyBalance + netYieldAmount,
             newYieldDuration,
             ""
         );
@@ -2162,7 +2372,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance - scheduledYieldAssets);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.YieldRealized(managedWallet, scheduledYieldAssets, 0, 0, 0, newYieldDuration, "");
+        emit IMapleAllocationStrategy.YieldRealized(managedWallet, scheduledYieldAssets, 0, 0, 0, strategyBalance, newYieldDuration, "");
 
         vm.prank(managedWallet);
         strategy.realizeYield(0, newYieldDuration, "");
@@ -2202,7 +2412,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
         assertEq(strategy.assetsUnderManagement(), strategyBalance - scheduledYieldAssets);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.YieldRealized(managedWallet, scheduledYieldAssets, 0, 0, 0, newYieldDuration, "");
+        emit IMapleAllocationStrategy.YieldRealized(managedWallet, scheduledYieldAssets, 0, 0, 0, strategyBalance, newYieldDuration, "");
 
         vm.prank(managedWallet);
         strategy.realizeYield(0, newYieldDuration, "");

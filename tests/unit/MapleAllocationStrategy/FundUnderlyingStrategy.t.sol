@@ -43,7 +43,7 @@ contract FundUnderlyingStrategyTests is TestBase {
         assertEq(strategy.assetsUnderManagement(), 0);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.StrategyFunded(address(manager), assetsIn);
+        emit IMapleAllocationStrategy.StrategyFunded(address(manager), assetsIn, assetsIn);
 
         vm.prank(address(manager));
         uint256 assetsOut = strategy.fundUnderlyingStrategy(assetsIn, "");

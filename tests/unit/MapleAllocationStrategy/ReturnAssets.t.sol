@@ -117,7 +117,7 @@ contract ReturnAssetsSuccessTests is ReturnAssetsTestBase {
         assertEq(strategy.assetsUnderManagement(),          deployedAssets1 + deployedAssets2);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.AssetsReturned(managedWallet1, managedWallet1, assetsToReturn, "");
+        emit IMapleAllocationStrategy.AssetsReturned(managedWallet1, managedWallet1, assetsToReturn, assetsToReturn, "");
 
         vm.prank(managedWallet1);
         strategy.returnAssets(assetsToReturn, managedWallet1, "");
@@ -141,7 +141,7 @@ contract ReturnAssetsSuccessTests is ReturnAssetsTestBase {
         assertEq(strategy.assetsUnderManagement(),          deployedAssets1 + deployedAssets2);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.AssetsReturned(managedWallet1, managedWallet1, deployedAssets1, "");
+        emit IMapleAllocationStrategy.AssetsReturned(managedWallet1, managedWallet1, deployedAssets1, deployedAssets1, "");
 
         vm.prank(managedWallet1);
         strategy.returnAssets(deployedAssets1, managedWallet1, "");
@@ -169,7 +169,7 @@ contract ReturnAssetsSuccessTests is ReturnAssetsTestBase {
         assertEq(strategy.assetsUnderManagement(),          deployedAssets1 + deployedAssets2);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.AssetsReturned(managedWallet2, managedWallet1, assetsToReturn, "");
+        emit IMapleAllocationStrategy.AssetsReturned(managedWallet2, managedWallet1, assetsToReturn, assetsToReturn, "");
 
         vm.prank(managedWallet2);
         strategy.returnAssets(assetsToReturn, managedWallet1, "");
@@ -197,7 +197,7 @@ contract ReturnAssetsSuccessTests is ReturnAssetsTestBase {
         assertEq(strategy.assetsUnderManagement(),          deployedAssets1 + deployedAssets2);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.AssetsReturned(managedWallet2, managedWallet1, deployedAssets1, "");
+        emit IMapleAllocationStrategy.AssetsReturned(managedWallet2, managedWallet1, deployedAssets1, deployedAssets1, "");
 
         vm.prank(managedWallet2);
         strategy.returnAssets(deployedAssets1, managedWallet1, "");
@@ -230,7 +230,7 @@ contract ReturnAssetsSuccessTests is ReturnAssetsTestBase {
         assertEq(strategy.assetsUnderManagement(),          deployedAssets1 + deployedAssets2);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.AssetsReturned(managedWallet2, managedWallet1, assetsToReturn, "recovery");
+        emit IMapleAllocationStrategy.AssetsReturned(managedWallet2, managedWallet1, assetsToReturn, assetsToReturn, "recovery");
 
         vm.prank(managedWallet2);
         strategy.returnAssets(assetsToReturn, managedWallet1, "recovery");
@@ -266,7 +266,7 @@ contract ReturnAssetsSuccessTests is ReturnAssetsTestBase {
         uint256 assetsToReturn1 = deployedAssets1 / 7;
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.AssetsReturned(managedWallet1, managedWallet1, assetsToReturn1, "a");
+        emit IMapleAllocationStrategy.AssetsReturned(managedWallet1, managedWallet1, assetsToReturn1, assetsToReturn1, "a");
 
         vm.prank(managedWallet1);
         strategy.returnAssets(assetsToReturn1, managedWallet1, "a");
@@ -290,7 +290,13 @@ contract ReturnAssetsSuccessTests is ReturnAssetsTestBase {
         uint256 assetsToReturn2 = deployedAssets1 / 13;
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.AssetsReturned(managedWallet2, managedWallet1, assetsToReturn2, "b");
+        emit IMapleAllocationStrategy.AssetsReturned(
+            managedWallet2,
+            managedWallet1,
+            assetsToReturn2,
+            assetsToReturn1 + assetsToReturn2,
+            "b"
+        );
 
         vm.prank(managedWallet2);
         strategy.returnAssets(assetsToReturn2, managedWallet1, "b");
@@ -314,7 +320,13 @@ contract ReturnAssetsSuccessTests is ReturnAssetsTestBase {
         uint256 assetsToReturn3 = deployedAssets2 / 9;
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.AssetsReturned(managedWallet1, managedWallet2, assetsToReturn3, "c");
+        emit IMapleAllocationStrategy.AssetsReturned(
+            managedWallet1,
+            managedWallet2,
+            assetsToReturn3,
+            assetsToReturn1 + assetsToReturn2 + assetsToReturn3,
+            "c"
+        );
 
         vm.prank(managedWallet1);
         strategy.returnAssets(assetsToReturn3, managedWallet2, "c");
@@ -338,7 +350,13 @@ contract ReturnAssetsSuccessTests is ReturnAssetsTestBase {
         uint256 assetsToReturn4 = deployedAssets2 / 17;
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.AssetsReturned(managedWallet2, managedWallet2, assetsToReturn4, "d");
+        emit IMapleAllocationStrategy.AssetsReturned(
+            managedWallet2,
+            managedWallet2,
+            assetsToReturn4,
+            assetsToReturn1 + assetsToReturn2 + assetsToReturn3 + assetsToReturn4,
+            "d"
+        );
 
         vm.prank(managedWallet2);
         strategy.returnAssets(assetsToReturn4, managedWallet2, "d");

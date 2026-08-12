@@ -16,20 +16,22 @@ interface IMapleAllocationStrategy is IMapleAllocationStrategyStorage, IMaplePro
 
     /**
      *  @dev   Emitted when assets are deployed.
-     *  @param deployer Address that deployed the assets.
-     *  @param assets   Amount of assets deployed.
-     *  @param metadata Optional metadata associated with the deployment.
+     *  @param deployer       Address that deployed the assets.
+     *  @param assets         Amount of assets deployed.
+     *  @param recordedAssets Amount of assets recorded as held by the strategy after the deployment.
+     *  @param metadata       Optional metadata associated with the deployment.
      */
-    event AssetsDeployed(address indexed deployer, uint256 assets, bytes metadata);
+    event AssetsDeployed(address indexed deployer, uint256 assets, uint256 recordedAssets, bytes metadata);
 
     /**
      *  @dev   Emitted when deployed assets are returned to the strategy.
-     *  @param caller     Address that transferred the assets back.
-     *  @param onBehalfOf Address to which the returned assets were credited.
-     *  @param assets     Amount of assets returned.
-     *  @param metadata   Optional metadata associated with the repayment.
+     *  @param caller         Address that transferred the assets back.
+     *  @param onBehalfOf     Address to which the returned assets were credited.
+     *  @param assets         Amount of assets returned.
+     *  @param recordedAssets Amount of assets recorded as held by the strategy after the return.
+     *  @param metadata       Optional metadata associated with the repayment.
      */
-    event AssetsReturned(address indexed caller, address indexed onBehalfOf, uint256 assets, bytes metadata);
+    event AssetsReturned(address indexed caller, address indexed onBehalfOf, uint256 assets, uint256 recordedAssets, bytes metadata);
 
     /**
      *  @dev   Emitted when unrecorded assets are skimmed from the strategy.
@@ -90,8 +92,9 @@ interface IMapleAllocationStrategy is IMapleAllocationStrategyStorage, IMaplePro
      *  @dev   Emitted when assets are deployed into the allocation strategy.
      *  @param strategyManager Address of the associated strategy manager.
      *  @param assets          Amount of assets transferred into the allocation strategy.
+     *  @param recordedAssets  Amount of assets recorded as held by the strategy after the funding.
      */
-    event StrategyFunded(address indexed strategyManager, uint256 assets);
+    event StrategyFunded(address indexed strategyManager, uint256 assets, uint256 recordedAssets);
 
     /**
      *  @dev   Emitted when the strategy metadata is set.
@@ -111,16 +114,18 @@ interface IMapleAllocationStrategy is IMapleAllocationStrategyStorage, IMaplePro
      *  @param strategyManager Address of the associated strategy manager.
      *  @param destination     Address that received the withdrawn assets.
      *  @param assets          Amount of assets withdrawn from the allocation strategy.
+     *  @param recordedAssets  Amount of assets recorded as held by the strategy after the withdrawal.
      */
-    event StrategyWithdrawn(address indexed strategyManager, address indexed destination, uint256 assets);
+    event StrategyWithdrawn(address indexed strategyManager, address indexed destination, uint256 assets, uint256 recordedAssets);
 
     /**
      *  @dev   Emitted when unrealized yield is cancelled from the yield buffer.
-     *  @param caller    Address that cancelled the yield.
-     *  @param recipient Address that received the cancelled yield.
-     *  @param assets    Amount of unrealized yield cancelled.
+     *  @param caller         Address that cancelled the yield.
+     *  @param recipient      Address that received the cancelled yield.
+     *  @param assets         Amount of unrealized yield cancelled.
+     *  @param recordedAssets Amount of assets recorded as held by the strategy after the cancellation.
      */
-    event YieldCancelled(address indexed caller, address indexed recipient, uint256 assets);
+    event YieldCancelled(address indexed caller, address indexed recipient, uint256 assets, uint256 recordedAssets);
 
     /**
      *  @dev   Emitted when the yield cap is set.
@@ -135,6 +140,7 @@ interface IMapleAllocationStrategy is IMapleAllocationStrategyStorage, IMaplePro
      *  @param netYield        Amount of net yield transferred.
      *  @param delegateFee     Amount of fees collected by the delegate.
      *  @param protocolFee     Amount of fees collected by the protocol.
+     *  @param recordedAssets  Amount of assets recorded as held by the strategy after the realization.
      *  @param duration        Duration over which the yield will be realized.
      *  @param metadata        Optional metadata associated with the yield.
      */
@@ -144,6 +150,7 @@ interface IMapleAllocationStrategy is IMapleAllocationStrategyStorage, IMaplePro
         uint256 netYield,
         uint256 delegateFee,
         uint256 protocolFee,
+        uint256 recordedAssets,
         uint32  duration,
         bytes   metadata
     );

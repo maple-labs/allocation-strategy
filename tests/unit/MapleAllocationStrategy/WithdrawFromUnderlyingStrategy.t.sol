@@ -75,7 +75,7 @@ contract WithdrawFromUnderlyingStrategyTests is TestBase {
         assertEq(strategy.assetsUnderManagement(), assets);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.StrategyWithdrawn(address(manager), destination, withdrawalAmount);
+        emit IMapleAllocationStrategy.StrategyWithdrawn(address(manager), destination, withdrawalAmount, assets - withdrawalAmount);
 
         vm.prank(address(manager));
         strategy.withdrawFromUnderlyingStrategy(destination, withdrawalAmount, "");
@@ -95,7 +95,7 @@ contract WithdrawFromUnderlyingStrategyTests is TestBase {
         assertEq(strategy.assetsUnderManagement(), assets);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.StrategyWithdrawn(address(manager), destination, assets);
+        emit IMapleAllocationStrategy.StrategyWithdrawn(address(manager), destination, assets, 0);
 
         vm.prank(address(manager));
         strategy.withdrawFromUnderlyingStrategy(destination, assets, "");
@@ -135,7 +135,7 @@ contract WithdrawFromUnderlyingStrategyTests is TestBase {
         assertEq(strategy.assetsUnderManagement(), assets - unrealizedYield);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.StrategyWithdrawn(address(manager), destination, withdrawalAmount);
+        emit IMapleAllocationStrategy.StrategyWithdrawn(address(manager), destination, withdrawalAmount, assets - withdrawalAmount);
 
         vm.prank(address(manager));
         strategy.withdrawFromUnderlyingStrategy(destination, withdrawalAmount, "");
@@ -178,7 +178,7 @@ contract WithdrawFromUnderlyingStrategyTests is TestBase {
         assertEq(strategy.assetsUnderManagement(), withdrawalAmount);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.StrategyWithdrawn(address(manager), destination, withdrawalAmount);
+        emit IMapleAllocationStrategy.StrategyWithdrawn(address(manager), destination, withdrawalAmount, unrealizedYield);
 
         vm.prank(address(manager));
         strategy.withdrawFromUnderlyingStrategy(destination, withdrawalAmount, "");
