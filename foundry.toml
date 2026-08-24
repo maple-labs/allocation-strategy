@@ -3,7 +3,7 @@ src             = 'contracts'
 test            = 'tests'
 libs            = ['modules']
 optimizer       = false
-solc_version    = '0.8.28'
+solc_version    = '0.8.34'
 verbosity       = 3
 block_timestamp = 1_622_400_000
 fs_permissions  = [{ access = "read", path = "./"}]
