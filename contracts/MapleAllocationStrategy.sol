@@ -17,6 +17,31 @@ import { Permissions }              from "./interfaces/IMapleAllocationStrategyS
 
 import { MapleAllocationStrategyStorage } from "./MapleAllocationStrategyStorage.sol";
 
+/*
+
+    ███╗   ███╗ █████╗ ██████╗ ██╗     ███████╗
+    ████╗ ████║██╔══██╗██╔══██╗██║     ██╔════╝
+    ██╔████╔██║███████║██████╔╝██║     █████╗
+    ██║╚██╔╝██║██╔══██║██╔═══╝ ██║     ██╔══╝
+    ██║ ╚═╝ ██║██║  ██║██║     ███████╗███████╗
+    ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝     ╚══════╝╚══════╝
+
+     █████╗ ██╗     ██╗      ██████╗  ██████╗ █████╗ ████████╗██╗ ██████╗ ███╗   ██╗
+    ██╔══██╗██║     ██║     ██╔═══██╗██╔════╝██╔══██╗╚══██╔══╝██║██╔═══██╗████╗  ██║
+    ███████║██║     ██║     ██║   ██║██║     ███████║   ██║   ██║██║   ██║██╔██╗ ██║
+    ██╔══██║██║     ██║     ██║   ██║██║     ██╔══██║   ██║   ██║██║   ██║██║╚██╗██║
+    ██║  ██║███████╗███████╗╚██████╔╝╚██████╗██║  ██║   ██║   ██║╚██████╔╝██║ ╚████║
+    ╚═╝  ╚═╝╚══════╝╚══════╝ ╚═════╝  ╚═════╝╚═╝  ╚═╝   ╚═╝   ╚═╝ ╚═════╝ ╚═╝  ╚═══╝
+
+    ███████╗████████╗██████╗  █████╗ ████████╗███████╗ ██████╗██╗   ██╗
+    ██╔════╝╚══██╔══╝██╔══██╗██╔══██╗╚══██╔══╝██╔════╝██╔════╝╚██╗ ██╔╝
+    ███████╗   ██║   ██████╔╝███████║   ██║   █████╗  ██║  ███╗╚████╔╝
+    ╚════██║   ██║   ██╔══██╗██╔══██║   ██║   ██╔══╝  ██║   ██║ ╚██╔╝
+    ███████║   ██║   ██║  ██║██║  ██║   ██║   ███████╗╚██████╔╝  ██║
+    ╚══════╝   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   ╚══════╝ ╚═════╝   ╚═╝
+
+*/
+
 contract MapleAllocationStrategy is IMapleAllocationStrategy, MapleAllocationStrategyStorage, MapleProxiedInternals {
 
     /**************************************************************************************************************************************/
@@ -129,8 +154,37 @@ contract MapleAllocationStrategy is IMapleAllocationStrategy, MapleAllocationStr
     }
 
     /**************************************************************************************************************************************/
-    /*** Management Functions                                                                                                           ***/
+    /*** Liquidity Management Functions                                                                                                 ***/
     /**************************************************************************************************************************************/
+
+    function fundUnderlyingStrategy(
+        uint256 assetsIn_,
+        bytes calldata /* data_ */
+    )
+        external override whenNotPaused nonReentrant onlyStrategyManager returns (uint256 assetsOut_)
+    {
+        uint256 updatedRecordedAssets_ = recordedAssets += assetsIn_;
+
+        assetsOut_ = assetsIn_;
+
+        emit StrategyFunded(strategyManager, assetsIn_, updatedRecordedAssets_);
+    }
+
+    function withdrawFromUnderlyingStrategy(
+        address destination_,
+        uint256 assets_,
+        bytes calldata /* data_ */
+    )
+        external override whenNotPaused nonReentrant onlyStrategyManager
+    {
+        require(assets_ <= availableToWithdraw(), "MAS:WFUS:INSUFFICIENT_ASSETS");
+
+        uint256 updatedRecordedAssets_ = recordedAssets -= assets_;
+
+        require(ERC20Helper.transfer(fundsAsset, destination_, assets_), "MAS:WFUS:TRANSFER_FAILED");
+
+        emit StrategyWithdrawn(strategyManager, destination_, assets_, updatedRecordedAssets_);
+    }
 
     function deployAssets(
         uint256 assets_,
@@ -155,18 +209,6 @@ contract MapleAllocationStrategy is IMapleAllocationStrategy, MapleAllocationStr
         require(ERC20Helper.transfer(fundsAsset, msg.sender, assets_), "MAS:DA:TRANSFER_FAILED");
 
         emit AssetsDeployed(msg.sender, assets_, updatedRecordedAssets_, metadata_);
-    }
-
-    function multicall(bytes[] calldata data_) external override {
-        for (uint256 i = 0; i < data_.length; i++) {
-            ( bool success_, bytes memory returnData_ ) = address(this).delegatecall(data_[i]);
-
-            if (!success_) {
-                assembly ("memory-safe") {
-                    revert(add(32, returnData_), mload(returnData_))
-                }
-            }
-        }
     }
 
     function returnAssets(
@@ -231,10 +273,6 @@ contract MapleAllocationStrategy is IMapleAllocationStrategy, MapleAllocationStr
         );
     }
 
-    /**************************************************************************************************************************************/
-    /*** Administrative Functions                                                                                                       ***/
-    /**************************************************************************************************************************************/
-
     function cancelYield(
         uint256 assets_,
         address recipient_
@@ -285,6 +323,10 @@ contract MapleAllocationStrategy is IMapleAllocationStrategy, MapleAllocationStr
         _recognizeLoss(assetsLost_, deployer_);
         _removeImpairment(assetsUnimpaired_);
     }
+
+    /**************************************************************************************************************************************/
+    /*** Administrative Functions                                                                                                       ***/
+    /**************************************************************************************************************************************/
 
     function setDeploymentCaps(
         address[] calldata accounts_,
@@ -409,38 +451,16 @@ contract MapleAllocationStrategy is IMapleAllocationStrategy, MapleAllocationStr
         emit AssetsSkimmed(recipient_, unrecordedAssets_);
     }
 
-    /**************************************************************************************************************************************/
-    /*** Liquidity Functions                                                                                                            ***/
-    /**************************************************************************************************************************************/
+    function multicall(bytes[] calldata data_) external override {
+        for (uint256 i = 0; i < data_.length; i++) {
+            ( bool success_, bytes memory returnData_ ) = address(this).delegatecall(data_[i]);
 
-    // NOTE: Funding caps are enforced by the strategy manager.
-    function fundUnderlyingStrategy(
-        uint256 assetsIn_,
-        bytes calldata /* data_ */
-    )
-        external override whenNotPaused nonReentrant onlyStrategyManager returns (uint256 assetsOut_)
-    {
-        uint256 updatedRecordedAssets_ = recordedAssets += assetsIn_;
-
-        assetsOut_ = assetsIn_;
-
-        emit StrategyFunded(strategyManager, assetsIn_, updatedRecordedAssets_);
-    }
-
-    function withdrawFromUnderlyingStrategy(
-        address destination_,
-        uint256 assets_,
-        bytes calldata /* data_ */
-    )
-        external override whenNotPaused nonReentrant onlyStrategyManager
-    {
-        require(assets_ <= availableToWithdraw(), "MAS:WFUS:INSUFFICIENT_ASSETS");
-
-        uint256 updatedRecordedAssets_ = recordedAssets -= assets_;
-
-        require(ERC20Helper.transfer(fundsAsset, destination_, assets_), "MAS:WFUS:TRANSFER_FAILED");
-
-        emit StrategyWithdrawn(strategyManager, destination_, assets_, updatedRecordedAssets_);
+            if (!success_) {
+                assembly ("memory-safe") {
+                    revert(add(32, returnData_), mload(returnData_))
+                }
+            }
+        }
     }
 
     /**************************************************************************************************************************************/

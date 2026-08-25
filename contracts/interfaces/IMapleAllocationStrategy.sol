@@ -156,8 +156,28 @@ interface IMapleAllocationStrategy is IMapleAllocationStrategyStorage, IMaplePro
     );
 
     /**************************************************************************************************************************************/
-    /*** Management Functions                                                                                                           ***/
+    /*** Liquidity Management Functions                                                                                                 ***/
     /**************************************************************************************************************************************/
+
+    /**
+     *  @dev    Acknowledges assets have been funded to the strategy.
+     *          Callable only by the strategy manager.
+     *  @param  assetsIn  Amount of assets that have been transferred to the strategy.
+     *  @param  data      Unused, but reserved for future strategy-specific calldata.
+     *  @return assetsOut Value of transferred assets after the funding.
+     *                    Equal to the amount of assets that were transferred.
+     */
+    function fundUnderlyingStrategy(uint256 assetsIn, bytes calldata data) external returns (uint256 assetsOut);
+
+    /**
+     *  @dev   Withdraws assets from the strategy to a specific address.
+     *         Callable only by the strategy manager.
+     *         Only assets sitting in the allocation strategy can be withdrawn.
+     *  @param destination Address to send the assets to.
+     *  @param assets      Amount of assets to withdraw.
+     *  @param data        Unused, but reserved for future strategy-specific calldata.
+     */
+    function withdrawFromUnderlyingStrategy(address destination, uint256 assets, bytes calldata data) external;
 
     /**
      *  @dev   Transfers assets from the strategy to the caller.
@@ -169,12 +189,6 @@ interface IMapleAllocationStrategy is IMapleAllocationStrategyStorage, IMaplePro
      *  @param metadata Optional metadata associated with the deployment.
      */
     function deployAssets(uint256 assets, bytes calldata metadata) external;
-
-    /**
-     *  @dev   Allows EOAs to batch admin calls.
-     *  @param data Array of calldata.
-     */
-    function multicall(bytes[] calldata data) external;
 
     /**
      *  @dev   Transfers assets from the caller to the strategy.
@@ -201,10 +215,6 @@ interface IMapleAllocationStrategy is IMapleAllocationStrategyStorage, IMaplePro
      *  @param metadata Optional metadata associated with the yield.
      */
     function realizeYield(uint256 assets, uint32 duration, bytes calldata metadata) external;
-
-    /**************************************************************************************************************************************/
-    /*** Administrative Functions                                                                                                       ***/
-    /**************************************************************************************************************************************/
 
     /**
      *  @dev   Cancels unrealized yield from the yield buffer and transfers it to the recipient.
@@ -250,13 +260,9 @@ interface IMapleAllocationStrategy is IMapleAllocationStrategyStorage, IMaplePro
      */
     function recognizeLossAndRemoveImpairment(uint256 assetsLost, uint256 assetsUnimpaired, address deployer) external;
 
-    /**
-     *  @dev   Transfers all assets held by the strategy that have not been recorded to a given recipient.
-     *         Callable only by the strategy delegate or operational admin.
-     *         Does not affect the recorded assets, and therefore does not affect the assets under management.
-     *  @param recipient Address that will receive the unrecorded assets.
-     */
-    function skim(address recipient) external;
+    /**************************************************************************************************************************************/
+    /*** Administrative Functions                                                                                                       ***/
+    /**************************************************************************************************************************************/
 
     /**
      *  @dev   Sets the deployment cap for a list of managed wallets.
@@ -314,29 +320,19 @@ interface IMapleAllocationStrategy is IMapleAllocationStrategyStorage, IMaplePro
      */
     function setYieldCap(uint256 yieldCap) external;
 
-    /**************************************************************************************************************************************/
-    /*** Liquidity Functions                                                                                                            ***/
-    /**************************************************************************************************************************************/
+    /**
+     *  @dev   Transfers all assets held by the strategy that have not been recorded to a given recipient.
+     *         Callable only by the strategy delegate or operational admin.
+     *         Does not affect the recorded assets, and therefore does not affect the assets under management.
+     *  @param recipient Address that will receive the unrecorded assets.
+     */
+    function skim(address recipient) external;
 
     /**
-     *  @dev    Acknowledges assets have been funded to the strategy.
-     *          Callable only by the strategy manager.
-     *  @param  assetsIn  Amount of assets that have been transferred to the strategy.
-     *  @param  data      Unused, but reserved for future strategy-specific calldata.
-     *  @return assetsOut Value of transferred assets after the funding.
-     *                    Equal to the amount of assets that were transferred.
+     *  @dev   Allows EOAs to batch admin calls.
+     *  @param data Array of calldata.
      */
-    function fundUnderlyingStrategy(uint256 assetsIn, bytes calldata data) external returns (uint256 assetsOut);
-
-    /**
-     *  @dev   Withdraws assets from the strategy to a specific address.
-     *         Callable only by the strategy manager.
-     *         Only assets sitting in the allocation strategy can be withdrawn.
-     *  @param destination Address to send the assets to.
-     *  @param assets      Amount of assets to withdraw.
-     *  @param data        Unused, but reserved for future strategy-specific calldata.
-     */
-    function withdrawFromUnderlyingStrategy(address destination, uint256 assets, bytes calldata data) external;
+    function multicall(bytes[] calldata data) external;
 
     /**************************************************************************************************************************************/
     /*** View Functions                                                                                                                 ***/
