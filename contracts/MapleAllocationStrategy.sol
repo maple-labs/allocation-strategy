@@ -69,7 +69,13 @@ contract MapleAllocationStrategy is IMapleAllocationStrategy, MapleAllocationStr
         _locked = 1;
     }
 
-    modifier onlyAdmin() {
+    modifier onlyFactory() {
+        require(msg.sender == _factory(), "MAS:NOT_FACTORY");
+
+        _;
+    }
+
+    modifier onlyOpsAdminOrStrategyDelegate() {
         address globals_ = globals();
 
         require(
@@ -77,12 +83,6 @@ contract MapleAllocationStrategy is IMapleAllocationStrategy, MapleAllocationStr
             msg.sender == IGlobalsLike(globals_).operationalAdmin(),
             "MAS:NOT_AUTHORIZED"
         );
-
-        _;
-    }
-
-    modifier onlyFactory() {
-        require(msg.sender == _factory(), "MAS:NOT_FACTORY");
 
         _;
     }
@@ -297,7 +297,7 @@ contract MapleAllocationStrategy is IMapleAllocationStrategy, MapleAllocationStr
         emit YieldCancelled(msg.sender, recipient_, cancelledAssets_, updatedRecordedAssets_);
     }
 
-    function impair(uint256 assets_) external override whenNotPaused nonReentrant onlyAdmin {
+    function impair(uint256 assets_) external override whenNotPaused nonReentrant onlyOpsAdminOrStrategyDelegate {
         require(assets_ > 0, "MAS:I:ZERO_ASSETS");
 
         impairedAssets += assets_;
@@ -305,11 +305,11 @@ contract MapleAllocationStrategy is IMapleAllocationStrategy, MapleAllocationStr
         emit Impaired(assets_);
     }
 
-    function removeImpairment(uint256 assets_) public override whenNotPaused nonReentrant onlyAdmin {
+    function removeImpairment(uint256 assets_) public override whenNotPaused nonReentrant onlyOpsAdminOrStrategyDelegate {
         _removeImpairment(assets_);
     }
 
-    function recognizeLoss(uint256 assets_, address deployer_) public override whenNotPaused nonReentrant onlyAdmin {
+    function recognizeLoss(uint256 assets_, address deployer_) public override whenNotPaused nonReentrant onlyOpsAdminOrStrategyDelegate {
         _recognizeLoss(assets_, deployer_);
     }
 
@@ -318,7 +318,7 @@ contract MapleAllocationStrategy is IMapleAllocationStrategy, MapleAllocationStr
         uint256 assetsUnimpaired_,
         address deployer_
     )
-        external override whenNotPaused nonReentrant onlyAdmin
+        external override whenNotPaused nonReentrant onlyOpsAdminOrStrategyDelegate
     {
         _recognizeLoss(assetsLost_, deployer_);
         _removeImpairment(assetsUnimpaired_);
@@ -356,7 +356,7 @@ contract MapleAllocationStrategy is IMapleAllocationStrategy, MapleAllocationStr
         }
     }
 
-    function setMetadata(string calldata metadata_) external override whenNotPaused nonReentrant onlyAdmin {
+    function setMetadata(string calldata metadata_) external override whenNotPaused nonReentrant onlyOpsAdminOrStrategyDelegate {
         require(keccak256(bytes(metadata_)) != keccak256(bytes(strategyMetadata)), "MAS:SM:NO_CHANGE");
 
         strategyMetadata = metadata_;
@@ -432,7 +432,7 @@ contract MapleAllocationStrategy is IMapleAllocationStrategy, MapleAllocationStr
         emit StrategyProtocolFeeRateSet(strategyProtocolFeeRate_);
     }
 
-    function setYieldCap(uint256 yieldCap_) external override whenNotPaused nonReentrant onlyAdmin {
+    function setYieldCap(uint256 yieldCap_) external override whenNotPaused nonReentrant onlyOpsAdminOrStrategyDelegate {
         require(yieldCap_ != yieldCap, "MAS:SYC:NO_CHANGE");
 
         yieldCap = yieldCap_;
@@ -440,7 +440,7 @@ contract MapleAllocationStrategy is IMapleAllocationStrategy, MapleAllocationStr
         emit YieldCapSet(yieldCap_);
     }
 
-    function skim(address recipient_) external override whenNotPaused nonReentrant onlyAdmin {
+    function skim(address recipient_) external override whenNotPaused nonReentrant onlyOpsAdminOrStrategyDelegate {
         uint256 unrecordedAssets_ = unrecordedAssets();
 
         require(recipient_ != address(0), "MAS:S:ZERO_RECIPIENT");
