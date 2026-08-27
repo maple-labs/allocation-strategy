@@ -109,12 +109,6 @@ contract MapleAllocationStrategy is IMapleAllocationStrategy, MapleAllocationStr
         _;
     }
 
-    modifier onlyStrategyDelegate() {
-        require(msg.sender == strategyDelegate(), "MAS:NOT_STRATEGY_DELEGATE");
-
-        _;
-    }
-
     modifier onlyStrategyManager() {
         require(msg.sender == strategyManager, "MAS:NOT_STRATEGY_MANAGER");
 
@@ -412,7 +406,8 @@ contract MapleAllocationStrategy is IMapleAllocationStrategy, MapleAllocationStr
         }
     }
 
-    function setStrategyDelegateFeeRate(uint32 strategyDelegateFeeRate_) external override whenNotPaused nonReentrant onlyStrategyDelegate {
+    function setStrategyDelegateFeeRate(uint32 strategyDelegateFeeRate_) external override whenNotPaused nonReentrant {
+        require(msg.sender == strategyDelegate(),                                      "MAS:SSDFR:NOT_STRATEGY_DELEGATE");
         require(strategyDelegateFeeRate_ != strategyDelegateFeeRate,                   "MAS:SSDFR:NO_CHANGE");
         require(strategyDelegateFeeRate_ <= HUNDRED_PERCENT,                           "MAS:SSDFR:INVALID_FEE_RATE");
         require(strategyDelegateFeeRate_ + strategyProtocolFeeRate <= HUNDRED_PERCENT, "MAS:SSDFR:INVALID_SUM_FEE_RATE");

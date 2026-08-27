@@ -38,7 +38,7 @@ contract SetStrategyDelegateFeeRateFailureTests is TestBase {
     function test_setStrategyDelegateFeeRate_revert_notStrategyDelegate() external {
         uint32 strategyDelegateFeeRate = 0.04e6;  // 4% delegate fee
 
-        vm.expectRevert("MAS:NOT_STRATEGY_DELEGATE");
+        vm.expectRevert("MAS:SSDFR:NOT_STRATEGY_DELEGATE");
         strategy.setStrategyDelegateFeeRate(strategyDelegateFeeRate);
     }
 
@@ -46,7 +46,7 @@ contract SetStrategyDelegateFeeRateFailureTests is TestBase {
         uint32 strategyDelegateFeeRate = 0.04e6;  // 4% delegate fee
 
         vm.prank(governor);
-        vm.expectRevert("MAS:NOT_STRATEGY_DELEGATE");
+        vm.expectRevert("MAS:SSDFR:NOT_STRATEGY_DELEGATE");
         strategy.setStrategyDelegateFeeRate(strategyDelegateFeeRate);
     }
 
@@ -54,7 +54,7 @@ contract SetStrategyDelegateFeeRateFailureTests is TestBase {
         uint32 strategyDelegateFeeRate = 0.04e6;  // 4% delegate fee
 
         vm.prank(operationalAdmin);
-        vm.expectRevert("MAS:NOT_STRATEGY_DELEGATE");
+        vm.expectRevert("MAS:SSDFR:NOT_STRATEGY_DELEGATE");
         strategy.setStrategyDelegateFeeRate(strategyDelegateFeeRate);
     }
 
