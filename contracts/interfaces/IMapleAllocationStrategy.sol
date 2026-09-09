@@ -281,7 +281,7 @@ interface IMapleAllocationStrategy is IMapleAllocationStrategyStorage, IMaplePro
 
     /**
      *  @dev   Sets permissions for a list of managed wallets.
-     *         Callable only by the strategy delegate or operational admin.
+     *         Callable only by the strategy delegate or security admin.
      *         Addresses must be valid managed wallets on MapleGlobals to receive any enabled permission.
      *  @param accounts        Managed wallets to set permissions for.
      *  @param canDeployAssets Defines if each address can call deployAssets().
