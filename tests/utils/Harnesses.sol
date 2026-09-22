@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
-import { MapleAllocationStrategy }            from "../../contracts/MapleAllocationStrategy.sol";
+import { MapleAllocationStrategy } from "../../contracts/MapleAllocationStrategy.sol";
 import { MapleAllocationStrategyInitializer } from "../../contracts/MapleAllocationStrategyInitializer.sol";
 
 import { AllocationStrategyInitializerParams } from "../../contracts/interfaces/IMapleAllocationStrategyInitializer.sol";
-import { Permissions }                         from "../../contracts/interfaces/IMapleAllocationStrategyStorage.sol";
+import { Permissions } from "../../contracts/interfaces/IMapleAllocationStrategyStorage.sol";
 
 contract MapleAllocationStrategyHarness is MapleAllocationStrategy {
 
     function __setDeployedAssetsOf(address account_, uint256 amount_) external {
-        totalDeployedAssets = totalDeployedAssets - deployedAssetsOf[account_] + amount_;
+        totalDeployedAssets        = totalDeployedAssets - deployedAssetsOf[account_] + amount_;
         deployedAssetsOf[account_] = amount_;
     }
 
@@ -32,11 +32,7 @@ contract MapleAllocationStrategyHarness is MapleAllocationStrategy {
     }
 
     function __setPermissions(address account_, bool allowed_) external {
-        permissions[account_] = Permissions({
-            canDeployAssets: allowed_,
-            canReturnAssets: allowed_,
-            canRealizeYield: allowed_
-        });
+        permissions[account_] = Permissions({ canDeployAssets: allowed_, canReturnAssets: allowed_, canRealizeYield: allowed_ });
     }
 
     function __setRecordedAssets(uint256 recordedAssets_) external {

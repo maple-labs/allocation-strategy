@@ -16,13 +16,13 @@ contract DeployAssetsTestBase is TestBase {
     function setUp() public override {
         super.setUp();
 
-        globals.__setIsInstanceOf("MAPLE_MANAGED_WALLET", managedWallet,  true);
+        globals.__setIsInstanceOf("MAPLE_MANAGED_WALLET", managedWallet, true);
         globals.__setIsInstanceOf("MAPLE_MANAGED_WALLET", managedWallet2, true);
 
-        strategy.__setPermissions(managedWallet,  true);
+        strategy.__setPermissions(managedWallet, true);
         strategy.__setPermissions(managedWallet2, true);
 
-        strategy.__setDeploymentCapOf(managedWallet,  deployedAssets + assetsToDeploy);
+        strategy.__setDeploymentCapOf(managedWallet, deployedAssets + assetsToDeploy);
         strategy.__setDeploymentCapOf(managedWallet2, type(uint256).max);
 
         asset.mint(address(strategy), assetsToDeploy);
@@ -259,7 +259,6 @@ contract DeployAssetsSuccessTests is DeployAssetsTestBase {
     }
 
     function test_deployAssets_success_multipleDeployments() external {
-
         assertEq(asset.balanceOf(address(strategy)), assetsToDeploy);
         assertEq(strategy.recordedAssets(),          assetsToDeploy);
         assertEq(asset.balanceOf(managedWallet),     0);

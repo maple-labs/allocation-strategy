@@ -62,10 +62,7 @@ contract SetDeploymentCapsFailureTests is TestBase {
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MAS:SDC:NOT_MAPLE_MANAGED_WALLET");
-        strategy.setDeploymentCaps(
-            array(validDeployer1, validDeployer2, invalidDeployer),
-            array(100e6,          200e6,          300e6)
-        );
+        strategy.setDeploymentCaps(array(validDeployer1, validDeployer2, invalidDeployer), array(100e6, 200e6, 300e6));
 
         assertEq(strategy.deploymentCapOf(validDeployer1),  0);
         assertEq(strategy.deploymentCapOf(validDeployer2),  0);

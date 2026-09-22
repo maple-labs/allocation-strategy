@@ -12,9 +12,9 @@ pragma solidity ^0.8.0;
  */
 struct AllocationStrategyInitializerParams {
     address fundsAsset;
-    string  strategyMetadata;
-    uint32  strategyDelegateFeeRate;
-    uint32  strategyProtocolFeeRate;
+    string strategyMetadata;
+    uint32 strategyDelegateFeeRate;
+    uint32 strategyProtocolFeeRate;
     uint256 yieldCap;
 }
 

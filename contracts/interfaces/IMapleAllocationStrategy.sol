@@ -74,12 +74,7 @@ interface IMapleAllocationStrategy is IMapleAllocationStrategyStorage, IMaplePro
      *  @param canReturnAssets Defines if the address can call returnAssets().
      *  @param canRealizeYield Defines if the address can call realizeYield().
      */
-    event PermissionSet(
-        address indexed account,
-        bool    canDeployAssets,
-        bool    canReturnAssets,
-        bool    canRealizeYield
-    );
+    event PermissionSet(address indexed account, bool canDeployAssets, bool canReturnAssets, bool canRealizeYield);
 
     /**
      *  @dev   Emitted when the strategy delegate fee rate is set.
@@ -151,8 +146,8 @@ interface IMapleAllocationStrategy is IMapleAllocationStrategyStorage, IMaplePro
         uint256 delegateFee,
         uint256 protocolFee,
         uint256 recordedAssets,
-        uint32  duration,
-        bytes   metadata
+        uint32 duration,
+        bytes metadata
     );
 
     /**************************************************************************************************************************************/
@@ -290,10 +285,11 @@ interface IMapleAllocationStrategy is IMapleAllocationStrategyStorage, IMaplePro
      */
     function setPermissions(
         address[] calldata accounts,
-        bool[]    calldata canDeployAssets,
-        bool[]    calldata canReturnAssets,
-        bool[]    calldata canRealizeYield
-    ) external;
+        bool[] calldata canDeployAssets,
+        bool[] calldata canReturnAssets,
+        bool[] calldata canRealizeYield
+    )
+        external;
 
     /**
      *  @dev   Sets the percentage of yield collected by the strategy delegate.

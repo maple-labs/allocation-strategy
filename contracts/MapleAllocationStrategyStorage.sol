@@ -5,29 +5,29 @@ import { IMapleAllocationStrategyStorage, Permissions } from "./interfaces/IMapl
 
 contract MapleAllocationStrategyStorage is IMapleAllocationStrategyStorage {
 
-    uint256 internal _locked;  // Used when checking for reentrancy.
+    uint256 internal _locked; // Used when checking for reentrancy.
 
-    address public override fundsAsset;       // Address of the underlying asset.
-    address public override strategyManager;  // Address of the strategy manager.
+    address public override fundsAsset; // Address of the underlying asset.
+    address public override strategyManager; // Address of the strategy manager.
 
-    uint256 public override impairedAssets;        // Total amount of assets impaired.
-    uint256 public override recordedAssets;        // Assets recorded being held by the strategy.
-    uint256 public override scheduledYieldAssets;  // Total assets in the yield buffer since last update.
-    uint256 public override totalDeployedAssets;   // Total assets deployed across all managed wallets.
-    uint256 public override yieldCap;              // Maximum amount of assets that can be realized as yield in a single call.
+    uint256 public override impairedAssets; // Total amount of assets impaired.
+    uint256 public override recordedAssets; // Assets recorded being held by the strategy.
+    uint256 public override scheduledYieldAssets; // Total assets in the yield buffer since last update.
+    uint256 public override totalDeployedAssets; // Total assets deployed across all managed wallets.
+    uint256 public override yieldCap; // Maximum amount of assets that can be realized as yield in a single call.
 
-    uint32 public override yieldDeadline;      // Timestamp when all yield assets are fully realized.
-    uint32 public override yieldLastRealized;  // Timestamp of the last successful yield realization.
-    uint32 public override yieldStart;         // Timestamp when the yield buffer was last updated.
+    uint32 public override yieldDeadline; // Timestamp when all yield assets are fully realized.
+    uint32 public override yieldLastRealized; // Timestamp of the last successful yield realization.
+    uint32 public override yieldStart; // Timestamp when the yield buffer was last updated.
 
-    uint32 public override strategyDelegateFeeRate;  // Percentage of yield collected by the strategy delegate.
-    uint32 public override strategyProtocolFeeRate;  // Percentage of yield collected by the Maple treasury.
+    uint32 public override strategyDelegateFeeRate; // Percentage of yield collected by the strategy delegate.
+    uint32 public override strategyProtocolFeeRate; // Percentage of yield collected by the Maple treasury.
 
-    string public override strategyMetadata;  // Optional metadata associated with the allocation strategy.
+    string public override strategyMetadata; // Optional metadata associated with the allocation strategy.
 
-    mapping(address => uint256) public override deployedAssetsOf;  // Per-address amount currently deployed.
-    mapping(address => uint256) public override deploymentCapOf;   // Per-address deployment cap.
+    mapping(address => uint256) public override deployedAssetsOf; // Per-address amount currently deployed.
+    mapping(address => uint256) public override deploymentCapOf; // Per-address deployment cap.
 
-    mapping(address => Permissions) public override permissions;  // Per-address permission flags.
+    mapping(address => Permissions) public override permissions; // Per-address permission flags.
 
 }

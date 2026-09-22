@@ -7,17 +7,9 @@ import { AllocationStrategyInitializerParams } from "../../contracts/interfaces/
 
 import { MapleAllocationStrategyFactory } from "../../contracts/MapleAllocationStrategyFactory.sol";
 
-import {
-    MapleAllocationStrategyHarness,
-    MapleAllocationStrategyInitializerHarness
-} from "./Harnesses.sol";
+import { MapleAllocationStrategyHarness, MapleAllocationStrategyInitializerHarness } from "./Harnesses.sol";
 
-import {
-    MockAsset,
-    MockFactory,
-    MockGlobals,
-    MockStrategyManager
-} from "./Mocks.sol";
+import { MockAsset, MockFactory, MockGlobals, MockStrategyManager } from "./Mocks.sol";
 
 contract TestBase is Test {
 
@@ -66,11 +58,11 @@ contract TestBase is Test {
         vm.stopPrank();
 
         params = AllocationStrategyInitializerParams({
-            fundsAsset:              address(asset),
-            strategyMetadata:        "MacAttack - 02a",
+            fundsAsset: address(asset),
+            strategyMetadata: "MacAttack - 02a",
             strategyDelegateFeeRate: 0.02e6,
             strategyProtocolFeeRate: 0.03e6,
-            yieldCap:                1_000_000e6
+            yieldCap: 1_000_000e6
         });
 
         manager.__setStrategyDelegate(strategyDelegate);
@@ -136,17 +128,14 @@ contract TestBase is Test {
 
     function assertPermissions(
         address account_,
-        bool    expectedCanDeployAssets_,
-        bool    expectedCanReturnAssets_,
-        bool    expectedCanRealizeYield_
+        bool expectedCanDeployAssets_,
+        bool expectedCanReturnAssets_,
+        bool expectedCanRealizeYield_
     )
-        internal view
+        internal
+        view
     {
-        (
-            bool actualCanDeployAssets_,
-            bool actualCanReturnAssets_,
-            bool actualCanRealizeYield_
-        ) = strategy.permissions(account_);
+        (bool actualCanDeployAssets_, bool actualCanReturnAssets_, bool actualCanRealizeYield_) = strategy.permissions(account_);
 
         assertEq(actualCanDeployAssets_, expectedCanDeployAssets_);
         assertEq(actualCanReturnAssets_, expectedCanReturnAssets_);

@@ -5,15 +5,10 @@ import { ERC20Helper } from "../modules/erc20-helper/src/ERC20Helper.sol";
 
 import { MapleProxiedInternals } from "../modules/proxy-factory/contracts/MapleProxiedInternals.sol";
 
-import {
-    IERC20Like,
-    IGlobalsLike,
-    IProxyFactoryLike,
-    IStrategyManagerLike
-} from "./interfaces/Interfaces.sol";
+import { IERC20Like, IGlobalsLike, IProxyFactoryLike, IStrategyManagerLike } from "./interfaces/Interfaces.sol";
 
 import { IMapleAllocationStrategy } from "./interfaces/IMapleAllocationStrategy.sol";
-import { Permissions }              from "./interfaces/IMapleAllocationStrategyStorage.sol";
+import { Permissions } from "./interfaces/IMapleAllocationStrategyStorage.sol";
 
 import { MapleAllocationStrategyStorage } from "./MapleAllocationStrategyStorage.sol";
 
@@ -76,13 +71,7 @@ contract MapleAllocationStrategy is IMapleAllocationStrategy, MapleAllocationStr
     }
 
     modifier onlyOpsAdminOrStrategyDelegate() {
-        address globals_ = globals();
-
-        require(
-            msg.sender == IStrategyManagerLike(strategyManager).strategyDelegate() ||
-            msg.sender == IGlobalsLike(globals_).operationalAdmin(),
-            "MAS:NOT_AUTHORIZED"
-        );
+        require(msg.sender == strategyDelegate() || msg.sender == IGlobalsLike(globals()).operationalAdmin(), "MAS:NOT_AUTHORIZED");
 
         _;
     }
@@ -90,21 +79,13 @@ contract MapleAllocationStrategy is IMapleAllocationStrategy, MapleAllocationStr
     modifier onlyProtocolAdmins() {
         address globals_ = globals();
 
-        require(
-            msg.sender == IGlobalsLike(globals_).governor() ||
-            msg.sender == IGlobalsLike(globals_).operationalAdmin(),
-            "MAS:NOT_ADMIN"
-        );
+        require(msg.sender == IGlobalsLike(globals_).governor() || msg.sender == IGlobalsLike(globals_).operationalAdmin(), "MAS:NOT_ADMIN");
 
         _;
     }
 
     modifier onlySecurityAdminOrStrategyDelegate() {
-        require(
-            msg.sender == strategyDelegate() ||
-            msg.sender == securityAdmin(),
-            "MAS:NOT_AUTHORIZED"
-        );
+        require(msg.sender == strategyDelegate() || msg.sender == securityAdmin(), "MAS:NOT_AUTHORIZED");
 
         _;
     }
@@ -155,7 +136,12 @@ contract MapleAllocationStrategy is IMapleAllocationStrategy, MapleAllocationStr
         uint256 assetsIn_,
         bytes calldata /* data_ */
     )
-        external override whenNotPaused nonReentrant onlyStrategyManager returns (uint256 assetsOut_)
+        external
+        override
+        whenNotPaused
+        nonReentrant
+        onlyStrategyManager
+        returns (uint256 assetsOut_)
     {
         uint256 updatedRecordedAssets_ = recordedAssets += assetsIn_;
 
@@ -169,7 +155,11 @@ contract MapleAllocationStrategy is IMapleAllocationStrategy, MapleAllocationStr
         uint256 assets_,
         bytes calldata /* data_ */
     )
-        external override whenNotPaused nonReentrant onlyStrategyManager
+        external
+        override
+        whenNotPaused
+        nonReentrant
+        onlyStrategyManager
     {
         require(assets_ <= availableToWithdraw(), "MAS:WFUS:INSUFFICIENT_ASSETS");
 
@@ -180,15 +170,10 @@ contract MapleAllocationStrategy is IMapleAllocationStrategy, MapleAllocationStr
         emit StrategyWithdrawn(strategyManager, destination_, assets_, updatedRecordedAssets_);
     }
 
-    function deployAssets(
-        uint256 assets_,
-        bytes   calldata metadata_
-    )
-        external override whenNotPaused nonReentrant onlyManagedWallet
-    {
+    function deployAssets(uint256 assets_, bytes calldata metadata_) external override whenNotPaused nonReentrant onlyManagedWallet {
         require(permissions[msg.sender].canDeployAssets, "MAS:DA:NOT_ALLOWED");
 
-        require(assets_ >  0,                     "MAS:DA:ZERO_ASSETS");
+        require(assets_ > 0,                      "MAS:DA:ZERO_ASSETS");
         require(assets_ <= availableToWithdraw(), "MAS:DA:INSUFFICIENT_ASSETS");
 
         uint256 deployedAssets_ = deployedAssetsOf[msg.sender] + assets_;
@@ -208,9 +193,13 @@ contract MapleAllocationStrategy is IMapleAllocationStrategy, MapleAllocationStr
     function returnAssets(
         uint256 assets_,
         address onBehalfOf_,
-        bytes   calldata metadata_
+        bytes calldata metadata_
     )
-        external override whenNotPaused nonReentrant onlyManagedWallet
+        external
+        override
+        whenNotPaused
+        nonReentrant
+        onlyManagedWallet
     {
         require(permissions[msg.sender].canReturnAssets, "MAS:RA:NOT_ALLOWED");
 
@@ -229,10 +218,14 @@ contract MapleAllocationStrategy is IMapleAllocationStrategy, MapleAllocationStr
 
     function realizeYield(
         uint256 yield_,
-        uint32  duration_,
-        bytes   calldata metadata_
+        uint32 duration_,
+        bytes calldata metadata_
     )
-        external override whenNotPaused nonReentrant onlyManagedWallet
+        external
+        override
+        whenNotPaused
+        nonReentrant
+        onlyManagedWallet
     {
         require(permissions[msg.sender].canRealizeYield, "MAS:RY:NOT_ALLOWED");
         require(yield_ <= yieldCap,                      "MAS:RY:CAP_EXCEEDED");
@@ -244,7 +237,7 @@ contract MapleAllocationStrategy is IMapleAllocationStrategy, MapleAllocationStr
             require(ERC20Helper.transferFrom(fundsAsset_, msg.sender, address(this), yield_), "MAS:RY:TRANSFER_FROM_FAILED");
         }
 
-        ( uint256 netYield_, uint256 delegateFee_, uint256 protocolFee_ ) = _accrueFees(fundsAsset_, yield_);
+        (uint256 netYield_, uint256 delegateFee_, uint256 protocolFee_) = _accrueFees(fundsAsset_, yield_);
 
         uint256 unrealizedYield_       = unrealizedYield();
         uint256 updatedRecordedAssets_ = recordedAssets += netYield_;
@@ -271,7 +264,11 @@ contract MapleAllocationStrategy is IMapleAllocationStrategy, MapleAllocationStr
         uint256 assets_,
         address recipient_
     )
-        external override whenNotPaused nonReentrant onlySecurityAdminOrStrategyDelegate
+        external
+        override
+        whenNotPaused
+        nonReentrant
+        onlySecurityAdminOrStrategyDelegate
     {
         uint256 unrealizedYield_ = unrealizedYield();
         uint256 cancelledAssets_ = assets_ == type(uint256).max ? unrealizedYield_ : assets_;
@@ -312,7 +309,11 @@ contract MapleAllocationStrategy is IMapleAllocationStrategy, MapleAllocationStr
         uint256 assetsUnimpaired_,
         address deployer_
     )
-        external override whenNotPaused nonReentrant onlyOpsAdminOrStrategyDelegate
+        external
+        override
+        whenNotPaused
+        nonReentrant
+        onlyOpsAdminOrStrategyDelegate
     {
         _recognizeLoss(assetsLost_, deployer_);
         _removeImpairment(assetsUnimpaired_);
@@ -326,7 +327,11 @@ contract MapleAllocationStrategy is IMapleAllocationStrategy, MapleAllocationStr
         address[] calldata accounts_,
         uint256[] calldata amounts_
     )
-        external override whenNotPaused nonReentrant onlySecurityAdminOrStrategyDelegate
+        external
+        override
+        whenNotPaused
+        nonReentrant
+        onlySecurityAdminOrStrategyDelegate
     {
         require(accounts_.length != 0,               "MAS:SDC:ZERO_LENGTH");
         require(accounts_.length == amounts_.length, "MAS:SDC:LENGTH_MISMATCH");
@@ -337,10 +342,7 @@ contract MapleAllocationStrategy is IMapleAllocationStrategy, MapleAllocationStr
             address account_ = accounts_[i_];
             uint256 cap_     = amounts_[i_];
 
-            require(
-                IGlobalsLike(globals_).isInstanceOf(INSTANCE_KEY, account_) || cap_ == 0,
-                "MAS:SDC:NOT_MAPLE_MANAGED_WALLET"
-            );
+            require(IGlobalsLike(globals_).isInstanceOf(INSTANCE_KEY, account_) || cap_ == 0, "MAS:SDC:NOT_MAPLE_MANAGED_WALLET");
 
             require(deploymentCapOf[account_] != cap_, "MAS:SDC:NO_CHANGE");
 
@@ -360,19 +362,21 @@ contract MapleAllocationStrategy is IMapleAllocationStrategy, MapleAllocationStr
 
     function setPermissions(
         address[] calldata accounts_,
-        bool[]    calldata canDeployAssets_,
-        bool[]    calldata canReturnAssets_,
-        bool[]    calldata canRealizeYield_
+        bool[] calldata canDeployAssets_,
+        bool[] calldata canReturnAssets_,
+        bool[] calldata canRealizeYield_
     )
-        external override whenNotPaused nonReentrant onlySecurityAdminOrStrategyDelegate
+        external
+        override
+        whenNotPaused
+        nonReentrant
+        onlySecurityAdminOrStrategyDelegate
     {
         uint256 length_ = accounts_.length;
 
         require(length_ != 0, "MAS:SP:ZERO_LENGTH");
         require(
-            length_ == canDeployAssets_.length &&
-            length_ == canReturnAssets_.length &&
-            length_ == canRealizeYield_.length,
+            length_ == canDeployAssets_.length && length_ == canReturnAssets_.length && length_ == canRealizeYield_.length,
             "MAS:SP:LENGTH_MISMATCH"
         );
 
@@ -390,9 +394,9 @@ contract MapleAllocationStrategy is IMapleAllocationStrategy, MapleAllocationStr
             Permissions memory currentPermissions_ = permissions[account_];
 
             require(
-                currentPermissions_.canDeployAssets != canDeployAssetsFlag_ ||
-                currentPermissions_.canReturnAssets != canReturnAssetsFlag_ ||
-                currentPermissions_.canRealizeYield != canRealizeYieldFlag_,
+                (currentPermissions_.canDeployAssets != canDeployAssetsFlag_)
+                    || (currentPermissions_.canReturnAssets != canReturnAssetsFlag_)
+                    || (currentPermissions_.canRealizeYield != canRealizeYieldFlag_),
                 "MAS:SP:NO_CHANGE"
             );
 
@@ -448,7 +452,7 @@ contract MapleAllocationStrategy is IMapleAllocationStrategy, MapleAllocationStr
 
     function multicall(bytes[] calldata data_) external override {
         for (uint256 i = 0; i < data_.length; i++) {
-            ( bool success_, bytes memory returnData_ ) = address(this).delegatecall(data_[i]);
+            (bool success_, bytes memory returnData_) = address(this).delegatecall(data_[i]);
 
             if (!success_) {
                 assembly ("memory-safe") {
@@ -534,11 +538,8 @@ contract MapleAllocationStrategy is IMapleAllocationStrategy, MapleAllocationStr
         address fundsAsset_,
         uint256 yield_
     )
-        internal returns (
-            uint256 netYield_,
-            uint256 delegateFee_,
-            uint256 protocolFee_
-        )
+        internal
+        returns (uint256 netYield_, uint256 delegateFee_, uint256 protocolFee_)
     {
         delegateFee_ = yield_ * strategyDelegateFeeRate / HUNDRED_PERCENT;
         protocolFee_ = yield_ * strategyProtocolFeeRate / HUNDRED_PERCENT;

@@ -137,12 +137,7 @@ interface IMapleAllocationStrategyStorage {
      *  @return canReturnAssets Defines if an address can return assets.
      *  @return canRealizeYield Defines if an address can realize yield.
      */
-    function permissions(address account)
-        external view returns (
-            bool canDeployAssets,
-            bool canReturnAssets,
-            bool canRealizeYield
-        );
+    function permissions(address account) external view returns (bool canDeployAssets, bool canReturnAssets, bool canRealizeYield);
 
     /**************************************************************************************************************************************/
     /*** Miscellaneous                                                                                                                  ***/

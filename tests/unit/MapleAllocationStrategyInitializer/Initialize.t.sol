@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import { IMapleAllocationStrategyInitializer } from "../../../contracts/interfaces/IMapleAllocationStrategyInitializer.sol";
 
 import { MapleAllocationStrategyInitializerHarness } from "../../utils/Harnesses.sol";
-import { TestBase }                                  from "../../utils/TestBase.sol";
+import { TestBase } from "../../utils/TestBase.sol";
 
 contract InitializeTests is TestBase {
 
@@ -70,14 +70,14 @@ contract InitializeTests is TestBase {
         vm.prank(address(strategyFactory));
         proxy.__initialize(address(manager), params);
 
-        assertEq(proxy.fundsAsset(),                address(asset));
-        assertEq(proxy.yieldLastRealized(),         0);
-        assertEq(proxy.locked(),                    1);
-        assertEq(proxy.strategyDelegateFeeRate(),   0.02e6);
-        assertEq(proxy.strategyProtocolFeeRate(),   0.03e6);
-        assertEq(proxy.strategyManager(),           address(manager));
-        assertEq(proxy.strategyMetadata(),          "MacAttack - 02a");
-        assertEq(proxy.yieldCap(),                  1_000_000e6);
+        assertEq(proxy.fundsAsset(),              address(asset));
+        assertEq(proxy.yieldLastRealized(),       0);
+        assertEq(proxy.locked(),                  1);
+        assertEq(proxy.strategyDelegateFeeRate(), 0.02e6);
+        assertEq(proxy.strategyProtocolFeeRate(), 0.03e6);
+        assertEq(proxy.strategyManager(),         address(manager));
+        assertEq(proxy.strategyMetadata(),        "MacAttack - 02a");
+        assertEq(proxy.yieldCap(),                1_000_000e6);
     }
 
 }

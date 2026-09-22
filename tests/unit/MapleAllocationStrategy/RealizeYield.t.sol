@@ -9,21 +9,21 @@ contract RealizeYieldTestBase is TestBase {
 
     address managedWallet = makeAddr("managedWallet");
 
-    uint256 newYieldAmount       = 75_000e6;  // Amount of yield to realize during the test.
-    uint256 strategyBalance      = 30_000e6;  // Amount of cash sitting in the strategy initially.
-    uint256 scheduledYieldAssets = 25_000e6;  // Amount of yield assets in the initial buffer.
-    uint256 tinyYieldAmount      = 33;        // Amount of yield which will round fees down to zero.
+    uint256 newYieldAmount       = 75_000e6; // Amount of yield to realize during the test.
+    uint256 strategyBalance      = 30_000e6; // Amount of cash sitting in the strategy initially.
+    uint256 scheduledYieldAssets = 25_000e6; // Amount of yield assets in the initial buffer.
+    uint256 tinyYieldAmount      = 33; // Amount of yield which will round fees down to zero.
 
-    uint32 newYieldDuration = 0.5 days;  // Duration over which yield will be realized during the test.
-    uint32 yieldDuration    = 3 days;    // Duration over which the initial buffer will be fully realized.
+    uint32 newYieldDuration = 0.5 days; // Duration over which yield will be realized during the test.
+    uint32 yieldDuration    = 3 days; // Duration over which the initial buffer will be fully realized.
 
-    uint32 delegateFeeRate = 0.02e6;  // Delegate fee rate: 2%
-    uint32 protocolFeeRate = 0.03e6;  // Protocol fee rate: 3%
+    uint32 delegateFeeRate = 0.02e6; // Delegate fee rate: 2%
+    uint32 protocolFeeRate = 0.03e6; // Protocol fee rate: 3%
 
-    uint32 yieldStart;     // Timestamp at which the initial yield buffer will be set.
-    uint32 yieldAccruing;  // Timestamp at which a portion of the initial buffer will be realized.
-    uint32 yieldDeadline;  // Timestamp at which the entire initial buffer will be realized.
-    uint32 yieldFinished;  // Timestamp past the point at which the entire initial buffer will be realized.
+    uint32 yieldStart; // Timestamp at which the initial yield buffer will be set.
+    uint32 yieldAccruing; // Timestamp at which a portion of the initial buffer will be realized.
+    uint32 yieldDeadline; // Timestamp at which the entire initial buffer will be realized.
+    uint32 yieldFinished; // Timestamp past the point at which the entire initial buffer will be realized.
 
     function setUp() public override {
         super.setUp();
@@ -55,7 +55,7 @@ contract RealizeYieldTestBase is TestBase {
         assertEq(strategy.availableToWithdraw(), 0);
 
         // Prepare assets for the managed wallet and the strategy.
-        asset.mint(address(strategy),      strategyBalance - scheduledYieldAssets);
+        asset.mint(address(strategy), strategyBalance - scheduledYieldAssets);
         asset.mint(address(managedWallet), scheduledYieldAssets + newYieldAmount);
 
         strategy.__setRecordedAssets(strategyBalance - scheduledYieldAssets);
@@ -235,7 +235,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
     }
 
     /**************************************************************************************************************************************/
-    /*** Zero Yield — Zero Duration - With Fees                                                                                         ***/
+    /*** Zero Yield - Zero Duration - With Fees                                                                                         ***/
     /**************************************************************************************************************************************/
 
     function test_realizeYield_success_zeroYield_zeroDuration_withFees_noBuffer() external {
@@ -320,8 +320,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
     }
 
     function test_realizeYield_success_zeroYield_zeroDuration_withFees_bufferAccruing() external {
-        uint256 elapsedDuration  = yieldAccruing - yieldStart;
-        uint256 totalDuration    = yieldDeadline - yieldStart;
+        uint256 elapsedDuration = yieldAccruing - yieldStart;
+        uint256 totalDuration   = yieldDeadline - yieldStart;
 
         uint256 realizedYield   = scheduledYieldAssets * elapsedDuration / totalDuration;
         uint256 unrealizedYield = scheduledYieldAssets - realizedYield;
@@ -444,7 +444,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
     }
 
     /**************************************************************************************************************************************/
-    /*** Zero Yield — Non-Zero Duration — With Fees                                                                                     ***/
+    /*** Zero Yield - Non-Zero Duration - With Fees                                                                                     ***/
     /**************************************************************************************************************************************/
 
     function test_realizeYield_success_zeroYield_nonZeroDuration_withFees_noBuffer() external {
@@ -529,8 +529,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
     }
 
     function test_realizeYield_success_zeroYield_nonZeroDuration_withFees_bufferAccruing() external {
-        uint256 elapsedDuration  = yieldAccruing - yieldStart;
-        uint256 totalDuration    = yieldDeadline - yieldStart;
+        uint256 elapsedDuration = yieldAccruing - yieldStart;
+        uint256 totalDuration   = yieldDeadline - yieldStart;
 
         uint256 realizedYield   = scheduledYieldAssets * elapsedDuration / totalDuration;
         uint256 unrealizedYield = scheduledYieldAssets - realizedYield;
@@ -653,7 +653,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
     }
 
     /**************************************************************************************************************************************/
-    /*** Non-Zero Yield — Zero Duration — No Fees                                                                                       ***/
+    /*** Non-Zero Yield - Zero Duration - No Fees                                                                                       ***/
     /**************************************************************************************************************************************/
 
     function test_realizeYield_success_nonZeroYield_zeroDuration_noFees_noBuffer() external {
@@ -753,8 +753,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
     function test_realizeYield_success_nonZeroYield_zeroDuration_noFees_bufferAccruing() external {
         strategy.__setFeeRates(0, 0);
 
-        uint256 elapsedDuration  = yieldAccruing - yieldStart;
-        uint256 totalDuration    = yieldDeadline - yieldStart;
+        uint256 elapsedDuration = yieldAccruing - yieldStart;
+        uint256 totalDuration   = yieldDeadline - yieldStart;
 
         uint256 realizedYield   = scheduledYieldAssets * elapsedDuration / totalDuration;
         uint256 unrealizedYield = scheduledYieldAssets - realizedYield;
@@ -890,7 +890,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
     }
 
     /**************************************************************************************************************************************/
-    /*** Non-Zero Yield — Zero Duration — With Fees                                                                                     ***/
+    /*** Non-Zero Yield - Zero Duration - With Fees                                                                                     ***/
     /**************************************************************************************************************************************/
 
     function test_realizeYield_success_nonZeroYield_zeroDuration_withFees_noBuffer() external {
@@ -1001,8 +1001,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
     }
 
     function test_realizeYield_success_nonZeroYield_zeroDuration_withFees_bufferAccruing() external {
-        uint256 elapsedDuration  = yieldAccruing - yieldStart;
-        uint256 totalDuration    = yieldDeadline - yieldStart;
+        uint256 elapsedDuration = yieldAccruing - yieldStart;
+        uint256 totalDuration   = yieldDeadline - yieldStart;
 
         uint256 realizedYield   = scheduledYieldAssets * elapsedDuration / totalDuration;
         uint256 unrealizedYield = scheduledYieldAssets - realizedYield;
@@ -1164,7 +1164,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
     }
 
     /**************************************************************************************************************************************/
-    /*** Non-Zero Yield — Zero Duration — Fees Round to Zero                                                                            ***/
+    /*** Non-Zero Yield - Zero Duration - Fees Round to Zero                                                                            ***/
     /**************************************************************************************************************************************/
 
     function test_realizeYield_success_nonZeroYield_zeroDuration_feesRoundToZero_noBuffer() external {
@@ -1258,8 +1258,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
     }
 
     function test_realizeYield_success_nonZeroYield_zeroDuration_feesRoundToZero_bufferAccruing() external {
-        uint256 elapsedDuration  = yieldAccruing - yieldStart;
-        uint256 totalDuration    = yieldDeadline - yieldStart;
+        uint256 elapsedDuration = yieldAccruing - yieldStart;
+        uint256 totalDuration   = yieldDeadline - yieldStart;
 
         uint256 realizedYield   = scheduledYieldAssets * elapsedDuration / totalDuration;
         uint256 unrealizedYield = scheduledYieldAssets - realizedYield;
@@ -1505,7 +1505,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
     }
 
     /**************************************************************************************************************************************/
-    /*** Non-Zero Yield — Non-Zero Duration — No Fees                                                                                   ***/
+    /*** Non-Zero Yield - Non-Zero Duration - No Fees                                                                                   ***/
     /**************************************************************************************************************************************/
 
     function test_realizeYield_success_nonZeroYield_nonZeroDuration_noFees_noBuffer() external {
@@ -1614,8 +1614,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
     function test_realizeYield_success_nonZeroYield_nonZeroDuration_noFees_bufferAccruing() external {
         strategy.__setFeeRates(0, 0);
 
-        uint256 elapsedDuration  = yieldAccruing - yieldStart;
-        uint256 totalDuration    = yieldDeadline - yieldStart;
+        uint256 elapsedDuration = yieldAccruing - yieldStart;
+        uint256 totalDuration   = yieldDeadline - yieldStart;
 
         uint256 realizedYield   = scheduledYieldAssets * elapsedDuration / totalDuration;
         uint256 unrealizedYield = scheduledYieldAssets - realizedYield;
@@ -1769,7 +1769,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
     }
 
     /**************************************************************************************************************************************/
-    /*** Non-Zero Yield — Non-Zero Duration — With Fees                                                                                 ***/
+    /*** Non-Zero Yield - Non-Zero Duration - With Fees                                                                                 ***/
     /**************************************************************************************************************************************/
 
     function test_realizeYield_success_nonZeroYield_nonZeroDuration_withFees_noBuffer() external {
@@ -1880,8 +1880,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
     }
 
     function test_realizeYield_success_nonZeroYield_nonZeroDuration_withFees_bufferAccruing() external {
-        uint256 elapsedDuration  = yieldAccruing - yieldStart;
-        uint256 totalDuration    = yieldDeadline - yieldStart;
+        uint256 elapsedDuration = yieldAccruing - yieldStart;
+        uint256 totalDuration   = yieldDeadline - yieldStart;
 
         uint256 realizedYield   = scheduledYieldAssets * elapsedDuration / totalDuration;
         uint256 unrealizedYield = scheduledYieldAssets - realizedYield;
@@ -2043,7 +2043,7 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
     }
 
     /**************************************************************************************************************************************/
-    /*** Non-Zero Yield — Non-Zero Duration — Fees Round to Zero                                                                        ***/
+    /*** Non-Zero Yield - Non-Zero Duration - Fees Round to Zero                                                                        ***/
     /**************************************************************************************************************************************/
 
     function test_realizeYield_success_nonZeroYield_nonZeroDuration_feesRoundToZero_noBuffer() external {
@@ -2146,8 +2146,8 @@ contract RealizeYieldSuccessTests is RealizeYieldTestBase {
     }
 
     function test_realizeYield_success_nonZeroYield_nonZeroDuration_feesRoundToZero_bufferAccruing() external {
-        uint256 elapsedDuration  = yieldAccruing - yieldStart;
-        uint256 totalDuration    = yieldDeadline - yieldStart;
+        uint256 elapsedDuration = yieldAccruing - yieldStart;
+        uint256 totalDuration   = yieldDeadline - yieldStart;
 
         uint256 realizedYield   = scheduledYieldAssets * elapsedDuration / totalDuration;
         uint256 unrealizedYield = scheduledYieldAssets - realizedYield;

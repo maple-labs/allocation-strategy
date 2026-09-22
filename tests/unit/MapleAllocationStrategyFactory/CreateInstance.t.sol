@@ -6,7 +6,7 @@ import { IMapleProxyFactory } from "../../../modules/proxy-factory/contracts/int
 import { IMapleAllocationStrategyInitializer } from "../../../contracts/interfaces/IMapleAllocationStrategyInitializer.sol";
 
 import { MapleAllocationStrategyHarness } from "../../utils/Harnesses.sol";
-import { TestBase }                       from "../../utils/TestBase.sol";
+import { TestBase } from "../../utils/TestBase.sol";
 
 contract CreateInstanceTests is TestBase {
 

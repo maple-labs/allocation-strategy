@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import { IMapleAllocationStrategy } from "../../../contracts/interfaces/IMapleAllocationStrategy.sol";
-import { MapleAllocationStrategy }  from "../../../contracts/MapleAllocationStrategy.sol";
+import { MapleAllocationStrategy } from "../../../contracts/MapleAllocationStrategy.sol";
 
 import { TestBase } from "../../utils/TestBase.sol";
 

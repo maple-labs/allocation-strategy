@@ -9,15 +9,15 @@ contract CancelYieldTestBase is TestBase {
 
     address recipient = makeAddr("recipient");
 
-    uint256 strategyBalance = 35_200e6;  // Total initial balance, includes yieldAssets.
-    uint256 yieldAssets     = 10_001e6;  // Net yield assets in the buffer (post-fee).
-    uint256 cancelAmount    = 3_000e6;   // Partial cancellation amount used in partial cancel tests.
+    uint256 strategyBalance = 35_200e6; // Total initial balance, includes yieldAssets.
+    uint256 yieldAssets     = 10_001e6; // Net yield assets in the buffer (post-fee).
+    uint256 cancelAmount    = 3_000e6; // Partial cancellation amount used in partial cancel tests.
 
-    uint32 yieldDuration = 3 days;  // Yield buffer window.
+    uint32 yieldDuration = 3 days; // Yield buffer window.
 
-    uint32 yieldStart;     // Timestamp at which the buffer is initialized.
-    uint32 yieldAccruing;  // Timestamp at which 67% of the buffer has been realized.
-    uint32 yieldDeadline;  // Timestamp at which the entire buffer has been realized.
+    uint32 yieldStart; // Timestamp at which the buffer is initialized.
+    uint32 yieldAccruing; // Timestamp at which 67% of the buffer has been realized.
+    uint32 yieldDeadline; // Timestamp at which the entire buffer has been realized.
 
     function setUp() public override {
         super.setUp();

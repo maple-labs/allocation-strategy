@@ -1,11 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.34;
 
-import {
-    IGlobalsLike,
-    IProxyFactoryLike,
-    IStrategyManagerLike
-} from "./interfaces/Interfaces.sol";
+import { IGlobalsLike, IProxyFactoryLike, IStrategyManagerLike } from "./interfaces/Interfaces.sol";
 
 import {
     AllocationStrategyInitializerParams,
@@ -43,8 +39,9 @@ contract MapleAllocationStrategyInitializer is IMapleAllocationStrategyInitializ
     }
 
     fallback() external {
-        address                             strategyManager_ = abi.decode(msg.data[:32], (address));
-        AllocationStrategyInitializerParams memory params_   = abi.decode(msg.data[32:], (AllocationStrategyInitializerParams));
+        address strategyManager_ = abi.decode(msg.data[:32], (address));
+
+        AllocationStrategyInitializerParams memory params_ = abi.decode(msg.data[32:], (AllocationStrategyInitializerParams));
 
         _initialize(strategyManager_, params_);
     }

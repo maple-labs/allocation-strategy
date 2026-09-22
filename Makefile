@@ -9,3 +9,9 @@ test:
 
 deploy:
 	@scripts/deploy.sh
+
+format:
+	@node scripts/align_fmt.js
+
+check-format:
+	@node scripts/align_fmt.js --check

@@ -16,7 +16,7 @@ contract SetStrategyDelegateFeeRateFailureTests is TestBase {
     }
 
     function test_setStrategyDelegateFeeRate_revert_functionPaused() external {
-        uint32 strategyDelegateFeeRate = 0.04e6;  // 4% delegate fee
+        uint32 strategyDelegateFeeRate = 0.04e6; // 4% delegate fee
 
         globals.__setIsFunctionPaused(MapleAllocationStrategy.setStrategyDelegateFeeRate.selector, true);
 
@@ -26,7 +26,7 @@ contract SetStrategyDelegateFeeRateFailureTests is TestBase {
     }
 
     function test_setStrategyDelegateFeeRate_revert_reentrancy() external {
-        uint32 strategyDelegateFeeRate = 0.04e6;  // 4% delegate fee
+        uint32 strategyDelegateFeeRate = 0.04e6; // 4% delegate fee
 
         strategy.__setLocked(2);
 
@@ -36,14 +36,14 @@ contract SetStrategyDelegateFeeRateFailureTests is TestBase {
     }
 
     function test_setStrategyDelegateFeeRate_revert_notStrategyDelegate() external {
-        uint32 strategyDelegateFeeRate = 0.04e6;  // 4% delegate fee
+        uint32 strategyDelegateFeeRate = 0.04e6; // 4% delegate fee
 
         vm.expectRevert("MAS:SSDFR:NOT_STRATEGY_DELEGATE");
         strategy.setStrategyDelegateFeeRate(strategyDelegateFeeRate);
     }
 
     function test_setStrategyDelegateFeeRate_revert_notStrategyDelegate_governor() external {
-        uint32 strategyDelegateFeeRate = 0.04e6;  // 4% delegate fee
+        uint32 strategyDelegateFeeRate = 0.04e6; // 4% delegate fee
 
         vm.prank(governor);
         vm.expectRevert("MAS:SSDFR:NOT_STRATEGY_DELEGATE");
@@ -51,7 +51,7 @@ contract SetStrategyDelegateFeeRateFailureTests is TestBase {
     }
 
     function test_setStrategyDelegateFeeRate_revert_notStrategyDelegate_operationalAdmin() external {
-        uint32 strategyDelegateFeeRate = 0.04e6;  // 4% delegate fee
+        uint32 strategyDelegateFeeRate = 0.04e6; // 4% delegate fee
 
         vm.prank(operationalAdmin);
         vm.expectRevert("MAS:SSDFR:NOT_STRATEGY_DELEGATE");
@@ -59,8 +59,8 @@ contract SetStrategyDelegateFeeRateFailureTests is TestBase {
     }
 
     function test_setStrategyDelegateFeeRate_revert_noChange() external {
-        uint32 strategyDelegateFeeRate = 0.04e6;  // 4% delegate fee
-        uint32 strategyProtocolFeeRate = 0.03e6;  // 3% protocol fee
+        uint32 strategyDelegateFeeRate = 0.04e6; // 4% delegate fee
+        uint32 strategyProtocolFeeRate = 0.03e6; // 3% protocol fee
 
         strategy.__setFeeRates(strategyDelegateFeeRate, strategyProtocolFeeRate);
 
@@ -70,7 +70,7 @@ contract SetStrategyDelegateFeeRateFailureTests is TestBase {
     }
 
     function test_setStrategyDelegateFeeRate_revert_invalidFeeRate() external {
-        uint32 strategyDelegateFeeRate = 1.5e6;  // 150% delegate fee
+        uint32 strategyDelegateFeeRate = 1.5e6; // 150% delegate fee
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MAS:SSDFR:INVALID_FEE_RATE");
@@ -78,8 +78,8 @@ contract SetStrategyDelegateFeeRateFailureTests is TestBase {
     }
 
     function test_setStrategyDelegateFeeRate_revert_invalidSumFeeRate() external {
-        uint32 strategyDelegateFeeRate = 0.97e6 + 1;  // > 97% delegate fee
-        uint32 strategyProtocolFeeRate = 0.03e6;      // 3% protocol fee
+        uint32 strategyDelegateFeeRate = 0.97e6 + 1; // > 97% delegate fee
+        uint32 strategyProtocolFeeRate = 0.03e6; // 3% protocol fee
 
         strategy.__setFeeRates(0, strategyProtocolFeeRate);
 
@@ -101,7 +101,7 @@ contract SetStrategyDelegateFeeRateSuccessTests is TestBase {
     }
 
     function test_setStrategyDelegateFeeRate_success() external {
-        uint32 strategyDelegateFeeRate = 0.04e6;  // 4% delegate fee
+        uint32 strategyDelegateFeeRate = 0.04e6; // 4% delegate fee
 
         assertEq(strategy.strategyDelegateFeeRate(), 0);
         assertEq(strategy.strategyProtocolFeeRate(), 0);
@@ -117,8 +117,8 @@ contract SetStrategyDelegateFeeRateSuccessTests is TestBase {
     }
 
     function test_setStrategyDelegateFeeRate_success_maxSumFeeRate() external {
-        uint32 strategyDelegateFeeRate = 0.97e6;  // 97% delegate fee
-        uint32 strategyProtocolFeeRate = 0.03e6;  // 3% protocol fee
+        uint32 strategyDelegateFeeRate = 0.97e6; // 97% delegate fee
+        uint32 strategyProtocolFeeRate = 0.03e6; // 3% protocol fee
 
         strategy.__setFeeRates(0, strategyProtocolFeeRate);
 
@@ -136,7 +136,7 @@ contract SetStrategyDelegateFeeRateSuccessTests is TestBase {
     }
 
     function test_setStrategyDelegateFeeRate_success_maxFeeRate() external {
-        uint32 strategyDelegateFeeRate = 1e6;  // 100% delegate fee
+        uint32 strategyDelegateFeeRate = 1e6; // 100% delegate fee
 
         assertEq(strategy.strategyDelegateFeeRate(), 0);
         assertEq(strategy.strategyProtocolFeeRate(), 0);
@@ -152,7 +152,7 @@ contract SetStrategyDelegateFeeRateSuccessTests is TestBase {
     }
 
     function test_setStrategyDelegateFeeRate_success_minFeeRate() external {
-        uint32 strategyDelegateFeeRate = 1;  // Minimum non-zero delegate fee
+        uint32 strategyDelegateFeeRate = 1; // Minimum non-zero delegate fee
 
         assertEq(strategy.strategyDelegateFeeRate(), 0);
         assertEq(strategy.strategyProtocolFeeRate(), 0);
@@ -168,8 +168,8 @@ contract SetStrategyDelegateFeeRateSuccessTests is TestBase {
     }
 
     function test_setStrategyDelegateFeeRate_success_zeroFeeRate() external {
-        uint32 strategyDelegateFeeRate = 0.04e6;  // 4% delegate fee
-        uint32 strategyProtocolFeeRate = 0.03e6;  // 3% protocol fee
+        uint32 strategyDelegateFeeRate = 0.04e6; // 4% delegate fee
+        uint32 strategyProtocolFeeRate = 0.03e6; // 3% protocol fee
 
         strategy.__setFeeRates(strategyDelegateFeeRate, strategyProtocolFeeRate);
 
@@ -187,9 +187,9 @@ contract SetStrategyDelegateFeeRateSuccessTests is TestBase {
     }
 
     function test_setStrategyDelegateFeeRate_success_noFeeCollection() external {
-        uint32 newStrategyDelegateFeeRate = 0.04e6;  // 4% delegate fee
-        uint32 strategyDelegateFeeRate    = 0.02e6;  // 2% delegate fee
-        uint32 strategyProtocolFeeRate    = 0.03e6;  // 3% protocol fee
+        uint32 newStrategyDelegateFeeRate = 0.04e6; // 4% delegate fee
+        uint32 strategyDelegateFeeRate    = 0.02e6; // 2% delegate fee
+        uint32 strategyProtocolFeeRate    = 0.03e6; // 3% protocol fee
 
         uint256 strategyBalance      = 30_000e6;
         uint256 scheduledYieldAssets = 20_000e6;
@@ -231,8 +231,8 @@ contract SetStrategyDelegateFeeRateSuccessTests is TestBase {
     }
 
     function test_setStrategyDelegateFeeRate_success_appliesToSubsequentRealizeYield() external {
-        uint32 strategyDelegateFeeRate = 0.04e6;  // 4% delegate fee
-        uint32 strategyProtocolFeeRate = 0.03e6;  // 3% protocol fee
+        uint32 strategyDelegateFeeRate = 0.04e6; // 4% delegate fee
+        uint32 strategyProtocolFeeRate = 0.03e6; // 3% protocol fee
         uint32 yieldDuration           = 1 days;
 
         uint256 yieldAmount = 100_000e6;
@@ -253,16 +253,7 @@ contract SetStrategyDelegateFeeRateSuccessTests is TestBase {
         strategy.setStrategyDelegateFeeRate(strategyDelegateFeeRate);
 
         vm.expectEmit();
-        emit IMapleAllocationStrategy.YieldRealized(
-            managedWallet,
-            0,
-            netYield,
-            delegateFee,
-            protocolFee,
-            netYield,
-            yieldDuration,
-            "SETTER"
-        );
+        emit IMapleAllocationStrategy.YieldRealized(managedWallet, 0, netYield, delegateFee, protocolFee, netYield, yieldDuration, "SETTER");
 
         vm.prank(managedWallet);
         strategy.realizeYield(yieldAmount, yieldDuration, "SETTER");
