@@ -261,6 +261,112 @@ function renderPlain(kind, rows) {
     return new Map([...rows].map(([i, r]) => [i, r.map((s) => s.trimEnd()).join(" ")]));
 }
 
+// A call whose sole argument is a named-argument block, written on one line:
+// `head({ a: 1, b: 2 });`. The head is lazy, so the first `({` wins, and the line
+// must end at `});` - which keeps nested uses such as `assertEq(f({ a: 1 }), 2);`
+// out of scope, since those end at `);`.
+const INLINE_NAMED_CALL = /^([ \t]*)(.*?[\w\])]\(\s*)\{\s*(.*?)\s*\}\s*\)\s*;(\s*\/\/.*)?$/;
+
+// The opening line of a block `forge fmt` already broke, and one `key: value` entry
+// inside it.
+const OPEN_NAMED_CALL = /^([ \t]*)(.*?[\w\])]\(\s*)\{$/;
+const NAMED_ARG = /^\s*([A-Za-z_]\w*)\s*:\s*(\S.*?)(,?)$/;
+const CLOSE_NAMED_CALL = /^[ \t]*\}\s*\)\s*;$/;
+
+// Split `s` at its top-level commas, or null if it has none.
+//
+// Depth- and quote-aware, so a nested `g({ a: 1, b: 2 })` or a string containing a
+// comma stays inside one entry.
+function splitTopLevelCommas(s) {
+    const parts = [];
+    let depth = 0;
+    let quote = null;
+    let start = 0;
+    for (let i = 0; i < s.length; i++) {
+        const c = s[i];
+        if (quote) {
+            if (c === "\\") i += 1;
+            else if (c === quote) quote = null;
+            continue;
+        }
+        if (c === '"' || c === "'") quote = c;
+        else if ("([{".includes(c)) depth += 1;
+        else if (")]}".includes(c)) depth -= 1;
+        else if (c === "," && depth === 0) {
+            parts.push(s.slice(start, i));
+            start = i + 1;
+        }
+    }
+    parts.push(s.slice(start));
+    const trimmed = parts.map((x) => x.trim()).filter((x) => x !== "");
+    return trimmed.length === 0 ? null : trimmed;
+}
+
+// Render a named-argument block one entry per line, values in a column.
+//
+// Returns null if any entry is not a plain `key: value`, or if a line would end up
+// past `lineLength` - in both cases the block is left as `forge fmt` wrote it.
+function renderNamedArgs(indent, head, args, indentUnit, lineLength, suffix = "") {
+    const parsed = args.map((a) => a.match(NAMED_ARG));
+    if (parsed.some((m) => m === null)) return null;
+
+    const width = Math.max(...parsed.map((m) => m[1].length)) + 2; // `key:` plus a space
+    const inner = indent + indentUnit;
+    const lines = [
+        `${indent}${head}{`,
+        ...parsed.map((m, i) => `${inner}${(m[1] + ":").padEnd(width)}${m[2]}${i < parsed.length - 1 ? "," : ""}`),
+        `${indent}});${suffix}`,
+    ];
+    return lines.some((l) => l.length > lineLength) ? null : lines;
+}
+
+// Give every named argument its own line, with the values aligned.
+//
+// `forge fmt` collapses `f({ a: 1, b: 2 })` onto one line whenever it fits, which
+// buries the field names this codebase reads by; this puts them back, and lines up
+// blocks forge had already broken. A block carrying a comment is left untouched -
+// reflowing it would move the comment away from the entry it describes.
+function expandNamedArgs(text, indentUnit, lineLength) {
+    const lines = text.split("\n");
+    const out = [];
+
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+
+        const inline = line.match(INLINE_NAMED_CALL);
+        if (inline !== null && !/\/\/|\/\*/.test(inline[3])) {
+            const args = splitTopLevelCommas(inline[3]);
+            const built =
+                args && renderNamedArgs(inline[1], inline[2], args, indentUnit, lineLength, inline[4] || "");
+            if (built !== null) {
+                out.push(...built);
+                continue;
+            }
+        }
+
+        // A block forge already broke: realign its values in place.
+        const open = line.match(OPEN_NAMED_CALL);
+        if (open !== null) {
+            let end = i + 1;
+            while (end < lines.length && !CLOSE_NAMED_CALL.test(lines[end])) end += 1;
+            const body = lines.slice(i + 1, end);
+            if (end < lines.length && body.length > 0 && !body.some((l) => /\/\/|\/\*/.test(l))) {
+                const args = body.map((l) => l.trim().replace(/,$/, ""));
+                const built = renderNamedArgs(open[1], open[2], args, indentUnit, lineLength);
+                if (built !== null) {
+                    out.push(...built);
+                    i = end;
+                    continue;
+                }
+            }
+        }
+
+        out.push(line);
+    }
+
+    return out.join("\n");
+}
+
 // Pad runs of single-line statements so their columns line up.
 //
 // A run is a group of same-kind statements on consecutive lines; anything else - a
@@ -413,6 +519,7 @@ function main() {
 
     const config = forgeConfig(root);
     const lineLength = config.fmt.line_length;
+    const indentUnit = config.fmt.style === "tab" ? "\t" : " ".repeat(config.fmt.tab_width);
     const testDir = path.resolve(root, config.test);
     const original = new Map(files.map((f) => [f, readText(f)]));
 
@@ -427,7 +534,11 @@ function main() {
         results = new Map(
             files.map((f) => [
                 f,
-                align(readText(f), lineLength, alignedKinds(f, testDir)),
+                align(
+                    expandNamedArgs(readText(f), indentUnit, lineLength),
+                    lineLength,
+                    alignedKinds(f, testDir),
+                ),
             ]),
         );
     } finally {

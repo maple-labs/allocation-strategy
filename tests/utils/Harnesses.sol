@@ -32,7 +32,11 @@ contract MapleAllocationStrategyHarness is MapleAllocationStrategy {
     }
 
     function __setPermissions(address account_, bool allowed_) external {
-        permissions[account_] = Permissions({ canDeployAssets: allowed_, canReturnAssets: allowed_, canRealizeYield: allowed_ });
+        permissions[account_] = Permissions({
+            canDeployAssets: allowed_,
+            canReturnAssets: allowed_,
+            canRealizeYield: allowed_
+        });
     }
 
     function __setRecordedAssets(uint256 recordedAssets_) external {

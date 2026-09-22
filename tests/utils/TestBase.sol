@@ -58,11 +58,11 @@ contract TestBase is Test {
         vm.stopPrank();
 
         params = AllocationStrategyInitializerParams({
-            fundsAsset: address(asset),
-            strategyMetadata: "MacAttack - 02a",
+            fundsAsset:              address(asset),
+            strategyMetadata:        "MacAttack - 02a",
             strategyDelegateFeeRate: 0.02e6,
             strategyProtocolFeeRate: 0.03e6,
-            yieldCap: 1_000_000e6
+            yieldCap:                1_000_000e6
         });
 
         manager.__setStrategyDelegate(strategyDelegate);
